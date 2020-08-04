@@ -1,0 +1,10 @@
+/logs/chromedriver*
+/chromedriver.exe
+/ffmpeg.dll
+/icudtl.dat
+/LICENSE
+/.idea/
+/node_modules/
+/dist/
+/out/
+/lsp/

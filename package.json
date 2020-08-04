@@ -1,0 +1,129 @@
+{
+  "name": "YiyiNet",
+  "version": "1.3.8",
+  "productName": "YiyiNet",
+  "description": "YiyiNet",
+  "author": "fuxianwu <bluefuxianwu@qq.com>",
+  "author2": {
+    "name": "fuxianwu",
+    "email": "bluefuxianwu@gmail.com"
+  },
+  "repository": {
+    "url": "https://github.com/zxniuniu/YiyiNet"
+  },
+  "main": "main.js",
+  "scripts": {
+    "start": "chcp 65001 && electron .",
+    "dev": "chcp 65001 && electron . --debug",
+    "delete": "rmdir /S /Q node_modules",
+    "rebuild": "electron-rebuild",
+    "postinstall": "electron-builder install-app-deps",
+    "pack": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --dir",
+    "pack:mac": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --mac",
+    "pack:linux": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --linux",
+    "pack:win": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --windows --x64",
+    "pack:all": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --platform=all",
+    "publish": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --publish always",
+    "package": "npm-run-all package:*",
+    "package:mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --out=out --icon=icon/app.icns --osx-sign.identity='Developer ID Application: GitHub'",
+    "package:win": "electron-packager . --overwrite --platform=win32 --arch=x64 --out=out --icon=icon/app.ico",
+    "package:linux": "electron-packager . --overwrite --platform=linux --arch=x64 --out=out",
+    "package:sign-exe": "signcode './out/YiyiNet-win32-x64/YiyiNet.exe' --cert ~/YiyiNet.p12 --prompt --name 'YiyiNet' --url 'http://blog.suremotoo.site/e-tools/'",
+    "package:installer": "node ./script/installer.js",
+    "package:sign-installer": "signcode './out/windows-installer/YiyiNetSetup.exe' --cert ~/YiyiNet.p12 --prompt --name 'YiyiNet' --url 'http://blog.suremotoo.site/e-tools/'",
+    "package:mas": "./script/mas.sh",
+    "windows-store": "node ./script/windows-store.js",
+    "release": "node ./script/release.js",
+    "bundle": "browserify --ignore-missing --no-builtins --no-commondir --insert-global-vars=\"global\" --no-browser-field main.js | uglifyjs -c > main.bundle.js"
+  },
+  "keywords": [
+    "YiyiNet"
+  ],
+  "license": "MIT",
+  "homepage": "https://fuyiyi.imdo.co",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "cheerio": "^1.0.0-rc.3",
+    "electron-context-menu": "^2.2.0",
+    "electron-updater": "^4.3.1",
+    "live-plugin-manager": "^0.15.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.2",
+    "electron": "9.1.2",
+    "electron-builder": "^22.7.0",
+    "electron-rebuild": "^1.11.0",
+    "extract-zip": "^2.0.1"
+  },
+  "build": {
+    "appId": "github.zxniuniu.yiyinet",
+    "productName": "YiyiNet",
+    "copyright": "Copyright © 2020",
+    "afterPack": "./build/afterPack.js",
+    "directories": {
+      "output": "dist",
+      "app": "./",
+      "buildResources": "build"
+    },
+    "files": [
+      "package.json",
+      "init.js",
+      "main.js",
+      "assets/",
+      "node_modules/"
+    ],
+    "extraFiles": [
+      "dll/"
+    ],
+    "forceCodeSigning": false,
+    "asar": true,
+    "mac": {
+      "icon": "./assets/icon/app.icns",
+      "category": "your.app.category.type",
+      "target": [
+        "zip",
+        "dmg"
+      ]
+    },
+    "mas": {},
+    "dmg": {},
+    "pkg": {},
+    "win": {
+      "icon": "./assets/icon/app.ico",
+      "target": [
+        {
+          "target": "nsis-web",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
+      "requestedExecutionLevel": "highestAvailable"
+    },
+    "linux": {
+      "icon": "./assets/icon/app.png"
+    },
+    "nsisWeb": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "menuCategory": false,
+      "shortcutName": "依网(YiyiNet)"
+    },
+    "buildDependenciesFromSource": true,
+    "npmRebuild": true,
+    "electronDownload": {
+      "mirror": "http://npm.taobao.org/mirrors/electron/"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "zxniuniu",
+      "repo": "YiyiNet",
+      "publishAutoUpdate": true
+    }
+  }
+}

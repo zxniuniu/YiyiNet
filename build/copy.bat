@@ -1,0 +1,1 @@
+xcopy %~dp0node\mzitu-spider3.js %~dp0 /F /Y
