@@ -74,7 +74,7 @@ function deleteOther(context) {
 
 function getElectronVer() {
     var packageJson = require('./../package.json');
-    let ver = packageJson.devDependencies.electron;
+    let ver = packageJson.devDependencies.electron.replace('^', '').replace('~', '');
     console.log('\t打包采用的Electron版本：' + ver);
     return ver;
 }
@@ -116,11 +116,11 @@ async function afterPack(context) {
         fs.unlinkSync(readmePath);
     }*/
 
-    console.log('\toutDir：' + context.outDir);
-    console.log('\tappOutDir：' + context.appOutDir);
+    // console.log('\toutDir：' + context.outDir);
+    // console.log('\tappOutDir：' + context.appOutDir);
     // console.log('packager：' + context.packager);
-    console.log('\telectronPlatformName：' + context.electronPlatformName);
-    console.log('\tarch：' + archEnum[context.arch]);
+    // console.log('\telectronPlatformName：' + context.electronPlatformName);
+    // console.log('\tarch：' + archEnum[context.arch]);
     // console.log('targets：' + context.targets);
 
     deleteLocalFile(context);
