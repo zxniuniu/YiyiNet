@@ -1,6 +1,6 @@
 {
   "name": "YiyiNet",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "productName": "依网(YiyiNet)",
   "description": "依网-YiyiNet",
   "author": "fuxianwu <bluefuxianwu@qq.com>",
@@ -56,8 +56,6 @@
     "productName": "YiyiNet",
     "copyright": "Copyright © 2020",
     "afterPack": "./build/afterPack.js",
-    "artifactBuildCompleted": "./build/artifactBuildCompleted.js",
-    "artifactName": "${productName}-Setup-${os}-${arch}-${version}.${ext}",
     "directories": {
       "output": "dist",
       "app": "./",
