@@ -3,6 +3,7 @@
   "version": "1.4.2",
   "productName": "依网(YiyiNet)",
   "description": "依网, YiyiNet, 定时任务, 自动签到, 自动任务, 任务管理",
+  "about": "依网(YiyiNet)：自动任务执行，如自动签到，自动浏览等",
   "author": "zxniuniu <bluefuxianwu@gmail.com>",
   "repository": {
     "url": "https://github.com/zxniuniu/YiyiNet"

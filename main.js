@@ -284,13 +284,13 @@ function createWindow() {
                 buttons: [(isShow ? '隐藏到托盘' : '保留在托盘'), '停止任务并退出']
             }).then(res => {
                 // console.log('index:' + res.response + ', e:' + e + ', mainWindow:' + mainWindow);
-                if (res.response === 0) {
+                if (res && res.response && res.response === 1) {
+                    forceQuit = true;
+                    app.exit(0); // exit()直接关闭客户端，不会执行quit();
+                } else {
                     if (isShow) {
                         mainWindow.hide();
                     }
-                } else {
-                    forceQuit = true;
-                    app.exit(0); // exit()直接关闭客户端，不会执行quit();
                 }
             })
         }
@@ -393,36 +393,113 @@ function createWindow() {
     // 实现tray托盘图标及上下文菜单 https://newsn.net/say/electron-tray.html
     // https://newsn.net/say/electron-tray-switch.html
     // https://newsn.net/say/electron-tray-template-colorful.html
-    let trayIcon = path.join(__dirname, "./assets/icon/app.ico");
-    const trayIconImage = nativeImage.createFromPath(trayIcon);
+    const trayIconImage = getIco('app.ico', 0);
     trayIconImage.setTemplateImage(true)
-    let trayPress = path.join(__dirname, "./assets/icon/app-gray.ico");
+    // let trayPress = path.join(__dirname, "./assets/icon/app-gray.ico");
     if (null == tray) {
         // tray = new Tray(trayIcon);
         tray = new Tray(trayIconImage)
     } else {
         tray.setImage(trayIconImage);
     }
-    tray.setPressedImage(trayPress);
+    // tray.setPressedImage(trayPress);
+
     const contextMenu = Menu.buildFromTemplate([
         {
-            label: '强制退出', click: function () {
+            label: "友情链接",
+            icon: getIco('link.ico'),
+            type: 'submenu',
+            submenu: [{
+                label: "博客地址",
+                click: function () {
+                    shell.openExternal(new URL(mainUrl).origin + '/blog');
+                }
+            }, {
+                label: "作者博客",
+                click: function () {
+                    shell.openExternal('https://fuyiyi.imdo.co');
+                }
+            }, {
+                label: "项目地址",
+                click: function () {
+                    shell.openExternal('https://github.com/zxniuniu/YiyiNet');
+                }
+            }]
+        }, {
+            type: "separator",
+        }, {
+            label: "检查更新",
+            icon: getIco('update.ico'),
+            click: function () {
+                autoUpdater.checkForUpdatesAndNotify();
+                autoUpdater.once("update-not-available", function(info) {
+                    sendStatusToWindow('Update not available.');
+                    dialog.showMessageBoxSync({
+                        "type": 'info',
+                        "buttons": ['确定'],
+                        "title": '版本更新',
+                        "message": '当前版本[' + app.getVersion() + ']为最新版，您不需要更新^_^'
+                    });
+                });
+                autoUpdater.once('update-available', (info) => {
+                    sendStatusToWindow('Update available.');
+                    dialog.showMessageBoxSync({
+                        "type": 'info',
+                        "buttons": ['确定'],
+                        "title": '版本更新',
+                        "message": '检测到新版本[' + info + ']，将自动更新当前版本[' + app.getVersion() + ']到最新版^_^'
+                    });
+                })
+            }
+        }, {
+            type: "separator",
+        }, {
+            label: "显示/隐藏",
+            icon: getIco('show.ico'),
+            click: function () {
+                if (mainWindow.isVisible()) {
+                    mainWindow.hide()
+                } else {
+                    mainWindow.show()
+                    autoUpdater.checkForUpdatesAndNotify();
+                }
+            }
+        }, {
+            label: '强制退出...',
+            icon: getIco('app-gray.ico'),
+            click: function () {
                 // https://discuss.atom.io/t/how-to-catch-the-event-of-clicking-the-app-windows-close-button-in-electron-app/21425
                 forceQuit = true;
                 // mainWindow = null;
                 app.quit();
             }
+        }, {
+            label: '关于软件...',
+            icon: getIco('click.ico'),
+            click: function () {
+                let json = require('./package.json');
+                dialog.showMessageBoxSync({
+                    "type": 'info',
+                    "buttons": [],
+                    "title": '关于' + json.productName,
+                    "message": json.about + '\r\n版本：' + json.version + '\r\n\r\n主页：' + json.homepage + '\r\n项目：'
+                        + json.repository.url + '\r\n作者：' + json.author
+                });
+            }
         }
-    ])
-    tray.setToolTip('YiyiNet系统');
+    ]);
+    tray.setToolTip('依网(YiyiNet)');
     tray.setContextMenu(contextMenu);
 
     // 实现改写关闭事件为最小化到托盘 https://newsn.net/say/electron-tray-min.html
     tray.on("click", () => {
-        if (mainWindow !== null) {
-            if (mainWindow.isVisible()) {
+        if (mainWindow) {
+            /*if (mainWindow.isVisible()) {
                 mainWindow.hide()
             } else {
+                mainWindow.show()
+            }*/
+            if (!mainWindow.isVisible()) {
                 mainWindow.show()
             }
         }
@@ -459,6 +536,17 @@ function createWindow() {
 
     // autoUpdater.checkForUpdates();
     autoUpdater.checkForUpdatesAndNotify();
+}
+
+function getIco(name, size) {
+    if (size === undefined) {
+        size = 16;
+    }
+    let img = nativeImage.createFromPath(path.join(__dirname, './assets/icon/' + name));
+    if (size > 0) {
+        img = img.resize({width:size});
+    }
+    return img;
 }
 
 function sendStatusToWindow(text) {
