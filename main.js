@@ -11,6 +11,9 @@ const path = require('path');
 const {autoUpdater} = require("electron-updater");
 const windowStateKeeper = require('electron-window-state');
 
+const mainUrl = 'http://localhost:8070/index';
+const protocol = 'yiyinet';
+
 /*// const log = require('electron-log');
 //-------------------------------------------------------------------
 // Logging
@@ -38,7 +41,7 @@ const store = new Store();*/
 
 // electron如何集成绿色版flash插件 https://newsn.net/say/electron-flash-crossplatform.html
 try {
-    var pepflashplayer = app.getPath('pepperFlashSystemPlugin');
+    let pepflashplayer = app.getPath('pepperFlashSystemPlugin');
     if (process.platform === "win32") {
         if (process.arch === 'x64') {
             pepflashplayer = path.join(__dirname, 'dll/pepflashplayer64_32.0.0.403.dll');
@@ -55,7 +58,7 @@ try {
 
 // 是否调试模式
 const debug = process.argv.indexOf("--debug") >= 0;
-console.log("当前模式[" + (debug ? "调试" : "正常") + "]，可用模式[调试|正常]")
+console.log("当前模式[" + (debug ? "调试" : "正常") + "]，可用模式[调试|正常]");
 
 // 下载模块
 // const electronDl = require('electron-dl');
@@ -142,7 +145,6 @@ if (!app.isPackaged) {
 
 // 如何接收识别协议URL https://newsn.net/say/electron-fake-protocol-url.html
 // 获取URL相关系列参数总结 https://newsn.net/say/electron-fake-protocol-args.html
-var protocol = 'yiyinet';
 if (app.isPackaged) {
     app.setAsDefaultProtocolClient(protocol, process.execPath, ["--"]);
 } else {
@@ -152,22 +154,22 @@ if (app.isPackaged) {
 // 自动更新 https://github.com/electron-userland/electron-builder/wiki/Auto-Update#events
 autoUpdater.on('checking-for-update', () => {
     sendStatusToWindow('Checking for update...');
-})
+});
 autoUpdater.on('update-available', (info) => {
     sendStatusToWindow('Update available.');
-})
+});
 autoUpdater.on('update-not-available', (info) => {
     sendStatusToWindow('Update not available.');
-})
+});
 autoUpdater.on('error', (err) => {
     sendStatusToWindow('Error in auto-updater. ' + err);
-})
+});
 autoUpdater.on('download-progress', (progressObj) => {
     let log_message = "Download speed: " + progressObj.bytesPerSecond;
     log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
     log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
     sendStatusToWindow(log_message);
-})
+});
 autoUpdater.on('update-downloaded', (info) => {
     sendStatusToWindow('Update downloaded');
     // autoUpdater.quitAndInstall();
@@ -175,8 +177,8 @@ autoUpdater.on('update-downloaded', (info) => {
 
 // 当 Electron 完成了初始化并且准备创建浏览器窗口的时候
 // 如何实现单实例？两种方案解决单实例问题 https://newsn.net/say/electron-single-instance-lock.html
-var gotTheLock = app.requestSingleInstanceLock()
-console.log('requestSingleInstanceLock：' + gotTheLock)
+var gotTheLock = app.requestSingleInstanceLock();
+console.log('requestSingleInstanceLock：' + gotTheLock);
 if (!gotTheLock) {
     app.quit();
 } else {
@@ -192,7 +194,7 @@ if (!gotTheLock) {
             }
             mainWindow.focus();
         }
-    })
+    });
     // macOS
     app.on('open-url', (event, urlStr) => {
         handleUrl(urlStr);
@@ -200,7 +202,6 @@ if (!gotTheLock) {
 
     app.on('ready', createWindow)
 }
-
 
 // Simple data persistence for your Electron app or module - Save and load user preferences, app state, cache, etc
 // const Store = require('electron-store');
@@ -213,7 +214,7 @@ function createWindow() {
     });
 
     // https://www.electronjs.org/docs/api/browser-window#class-browserwindow
-    var windowOptions = {
+    const windowOptions = {
         'x': mainWindowState.x,
         'y': mainWindowState.y,
         'width': mainWindowState.width,
@@ -239,7 +240,7 @@ function createWindow() {
             experimentalFeatures: true,
             plugins: true
         }
-    }
+    };
 
     mainWindow = new BrowserWindow(windowOptions);
     mainWindowState.manage(mainWindow);
@@ -262,7 +263,6 @@ function createWindow() {
         protocol: 'file:',
         slashes: true
     });*/
-    let mainUrl = 'http://localhost:8070/index';
     mainWindow.loadURL(mainUrl);
 
     // 打开开发工具 https://newsn.net/say/electron-param-debug.html
@@ -337,10 +337,8 @@ function createWindow() {
 
     // DOM READY事件
     mainWindow.webContents.on('dom-ready', function () {
-        if (!app.isPackaged) {
-            mainWindow.webContents.openDevTools({mode: 'right'}); // right, bottom, left, detach, undocked
-        }
-    })
+        openDevTools();
+    });
 
     // 如何监控文件下载进度，并显示进度条 https://newsn.net/say/electron-download-progress.html
     mainWindow.webContents.session.on('will-download', (event, item, webContents) => {
@@ -403,7 +401,7 @@ function createWindow() {
     // https://newsn.net/say/electron-tray-switch.html
     // https://newsn.net/say/electron-tray-template-colorful.html
     const trayIconImage = getIco('app.ico', 0);
-    trayIconImage.setTemplateImage(true)
+    trayIconImage.setTemplateImage(true);
     // let trayPress = path.join(__dirname, "./assets/icon/app-gray.ico");
     if (null == tray) {
         // tray = new Tray(trayIcon);
@@ -514,7 +512,7 @@ function createWindow() {
                 mainWindow.focus();
             }
         }
-    })
+    });
 
     // 托盘图标像QQ一样闪动 https://newsn.net/say/electron-tray-flash.html
     /* var count = 0;
@@ -538,7 +536,7 @@ function createWindow() {
         if (mainWindow !== null) {
             mainWindow.show();
         }
-    })
+    });
     if (!regSucc) {
         console.log('快捷键 ' + shortcutKey + ' 注册失败！')
     }
@@ -546,6 +544,11 @@ function createWindow() {
     console.log('快捷键 ' + shortcutKey + ' 是否注册成功：' + globalShortcut.isRegistered(shortcutKey))
 }
 
+function openDevTools() {
+    if (!app.isPackaged || (app.isPackaged && mainUrl.indexOf('localhost') >= 0)) {
+        mainWindow.webContents.openDevTools({mode: 'right'}); // right, bottom, left, detach, undocked
+    }
+}
 function checkUpdate(){
     try {
         // autoUpdater.checkForUpdates();
@@ -607,7 +610,7 @@ async function installModule(needInstall, type) {
                 console.log('设置NPM参数值，包括以下字段：' + configKeys);
                 configKeys.forEach(key => {
                     npm.config.set(key, npmConfig[key]);
-                })
+                });
 
                 console.log('安装模块(NPM)：' + needInstall);
                 // 安装模块
@@ -729,8 +732,8 @@ function checkDarkmode() {
         ico_1 = "tray-light.png";
         ico_2 = "tray-light-press.png";
     }
-    ico_1 = path.join(__dirname, "./img/" + ico_1)
-    ico_2 = path.join(__dirname, "./img/" + ico_2)
+    ico_1 = path.join(__dirname, "./img/" + ico_1);
+    ico_2 = path.join(__dirname, "./img/" + ico_2);
     if (tray == null) {
         tray = new Tray(ico_1);
     } else {
@@ -741,12 +744,11 @@ function checkDarkmode() {
 
 // Require each JS file in the main dir
 function loadMainJS() {
-    const glob = require('glob')
-    var files = glob.sync(path.join(__dirname, 'main/*.js'))
+    const glob = require('glob');
+    var files = glob.sync(path.join(__dirname, 'main/*.js'));
     files.forEach(function (file) {
         require(file);
     })
-    // autoUpdater.updateMenu();
 }
 
 function handleSquirrelEvent() {
@@ -754,7 +756,7 @@ function handleSquirrelEvent() {
         return false;
     }
 
-    const ChildProcess = require('child_process');
+    const childProcess = require('child_process');
     const path = require('path');
 
     const appFolder = path.resolve(process.execPath, '..');
@@ -766,10 +768,9 @@ function handleSquirrelEvent() {
         let spawnedProcess, error;
 
         try {
-            spawnedProcess = ChildProcess.spawn(command, args, {detached: true});
+            spawnedProcess = childProcess.spawn(command, args, {detached: true});
         } catch (error) {
         }
-
         return spawnedProcess;
     };
 
