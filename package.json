@@ -2,35 +2,36 @@
   "name": "YiyiNet",
   "version": "1.4.2",
   "productName": "依网(YiyiNet)",
-  "description": "依网-YiyiNet",
-  "author": "fuxianwu <bluefuxianwu@qq.com>",
-  "author2": {
-    "name": "fuxianwu",
-    "email": "bluefuxianwu@gmail.com"
-  },
+  "description": "依网, YiyiNet, 定时任务, 自动签到, 自动任务, 任务管理",
+  "author": "zxniuniu <bluefuxianwu@gmail.com>",
   "repository": {
     "url": "https://github.com/zxniuniu/YiyiNet"
   },
-  "main": "main.js",
+  "main": "main.min.js",
   "scripts": {
-    "start": "chcp 65001 && electron .",
-    "dev": "chcp 65001 && electron . --debug",
+    "start": "chcp 65001 && npm run obfuscator && electron . --debug",
+
     "delete": "rmdir /S /Q node_modules",
     "rebuild": "electron-rebuild",
     "postinstall": "electron-builder install-app-deps",
-    "pack": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --dir",
-    "pack:mac": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --mac",
-    "pack:linux": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --linux --publish never",
-    "pack:win:web": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --windows --publish never",
-    "pack:win:x64": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --windows --x64 -c.win.target.target=nsis -c.win.target.arch=x64 --publish never",
-    "pack:win:ia32": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --windows --ia32 -c.win.target.target=nsis -c.win.target.arch=ia32 --publish never",
-    "pack:win": "npm-run-all pack:win:*",
-    "publish:win:x64": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --windows --x64 --prepackaged=./dist/win-unpacked -c.win.target.target=nsis -c.win.target.arch=x64 --publish always",
-    "publish:win:ia32": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --windows --ia32 --prepackaged=./dist/win-ia32-unpacked -c.win.target.target=nsis -c.win.target.arch=ia32 --publish always",
-    "publish:win:web": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --windows --publish always",
-    "publish:win": "npm-run-all publish:win:web --comment_tmp='由于x64，ia32会覆盖latest.yml文件，因此只打包web文件，目前直接的setup文件理论上也不需要'",
+    "nodeOption": "cross-env NODE_OPTIONS='--max-old-space-size=819200' && npm run obfuscator",
+    "obfuscator": "javascript-obfuscator main.js -o main.min.js",
+
+    "pack": "npm run nodeOption && electron-builder --dir",
+    "pack:mac": "npm run nodeOption && electron-builder --mac",
+    "pack:linux": "npm run nodeOption && electron-builder --linux --publish never",
+    "pack:win:web": "npm run nodeOption && electron-builder --windows --publish never",
+    "pack:win:x64": "npm run nodeOption && electron-builder --windows --x64 -c.win.target.target=nsis -c.win.target.arch=x64 --publish never",
+    "pack:win:ia32": "npm run nodeOption && electron-builder --windows --ia32 -c.win.target.target=nsis -c.win.target.arch=ia32 --publish never",
+    "pack:win": "npm-run-all pack:win:web",
     "pack:all": "npm-run-all pack:*",
-    "publish": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --publish always",
+
+    "publish:win:x64": "npm run nodeOption && electron-builder --windows --x64 --prepackaged=./dist/win-unpacked -c.win.target.target=nsis -c.win.target.arch=x64 --publish always",
+    "publish:win:ia32": "npm run nodeOption && electron-builder --windows --ia32 --prepackaged=./dist/win-ia32-unpacked -c.win.target.target=nsis -c.win.target.arch=ia32 --publish always",
+    "publish:win:web": "npm run nodeOption && electron-builder --windows --publish always",
+    "publish:win": "npm-run-all publish:win:web",
+    "publish": "npm run nodeOption && electron-builder --publish always",
+
     "bundle": "browserify --ignore-missing --no-builtins --no-commondir --insert-global-vars=\"global\" --no-browser-field main.js | uglifyjs -c > main.bundle.js"
   },
   "keywords": [
@@ -49,6 +50,7 @@
     "electron-builder": "^22.7.0",
     "electron-rebuild": "^1.11.0",
     "extract-zip": "^2.0.1",
+    "javascript-obfuscator": "^1.9.0",
     "npm-run-all": "^4.1.5"
   },
   "build": {
@@ -63,8 +65,7 @@
     },
     "files": [
       "package.json",
-      "init.js",
-      "main.js",
+      "main.min.js",
       "assets/",
       "node_modules/"
     ],
