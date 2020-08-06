@@ -1,6 +1,6 @@
 {
   "name": "YiyiNet",
-  "version": "1.3.9",
+  "version": "1.4.0",
   "productName": "依网(YiyiNet)",
   "description": "依网-YiyiNet",
   "author": "fuxianwu <bluefuxianwu@qq.com>",
@@ -25,10 +25,10 @@
     "pack:win:x64": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --windows --x64 -c.win.target.target=nsis -c.win.target.arch=x64 --publish never",
     "pack:win:ia32": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --windows --ia32 -c.win.target.target=nsis -c.win.target.arch=ia32 --publish never",
     "pack:win": "npm-run-all pack:win:*",
+    "publish:win:x64": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --windows --x64 --prepackaged=./dist/win-unpacked -c.win.target.target=nsis -c.win.target.arch=x64 --publish always",
+    "publish:win:ia32": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --windows --ia32 --prepackaged=./dist/win-ia32-unpacked -c.win.target.target=nsis -c.win.target.arch=ia32 --publish always",
     "publish:win:web": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --windows --publish always",
-    "publish:win:x64": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --windows --x64 -c.win.target.target=nsis -c.win.target.arch=x64 --publish always",
-    "publish:win:ia32": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --windows --ia32 -c.win.target.target=nsis -c.win.target.arch=ia32 --publish always",
-    "publish:win": "npm-run-all publish:win:*",
+    "publish:win": "npm-run-all publish:win:web --comment_tmp='由于x64，ia32会覆盖latest.yml文件，因此只打包web文件，目前直接的setup文件理论上也不需要'",
     "pack:all": "npm-run-all pack:*",
     "publish": "cross-env NODE_OPTIONS='--max-old-space-size=819200' electron-builder --publish always",
     "bundle": "browserify --ignore-missing --no-builtins --no-commondir --insert-global-vars=\"global\" --no-browser-field main.js | uglifyjs -c > main.bundle.js"
@@ -56,8 +56,8 @@
     "productName": "YiyiNet",
     "copyright": "Copyright © 2020",
     "afterPack": "./build/afterPack.js",
-    "afterAllArtifactBuild": "./build/afterAllArtifactBuild.js",
-    "artifactName": "依网(${productName})-Setup-${os}-${arch}-${version}.${ext}",
+    "artifactBuildCompleted": "./build/artifactBuildCompleted.js",
+    "artifactName": "${productName}-Setup-${os}-${arch}-${version}.${ext}",
     "directories": {
       "output": "dist",
       "app": "./",
@@ -75,20 +75,9 @@
     ],
     "forceCodeSigning": false,
     "asar": true,
-    "mac": {
-      "icon": "./assets/icon/app.icns",
-      "category": "your.app.category.type",
-      "target": [
-        "zip",
-        "dmg"
-      ]
-    },
-    "mas": {},
-    "dmg": {},
-    "pkg": {},
     "win": {
-      "publish": null,
       "icon": "./assets/icon/app.ico",
+      "artifactName": null,
       "target": {
         "target": "nsis-web",
         "arch": [
@@ -97,6 +86,14 @@
         ]
       },
       "requestedExecutionLevel": "requireAdministrator"
+    },
+    "mac": {
+      "icon": "./assets/icon/app.icns",
+      "category": "your.app.category.type",
+      "target": [
+        "zip",
+        "dmg"
+      ]
     },
     "linux": {
       "icon": "./assets/icon/app.png"

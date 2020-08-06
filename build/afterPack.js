@@ -5,6 +5,7 @@ const https = require("https");
 
 const deleteFiles = ['LICENSE.electron.txt', 'LICENSES.chromium.html'];
 const archEnum = ['ia32', 'x64', 'armv7l', 'arm64'];
+const debug = false;
 
 /**
  * Downloads file from remote HTTP[S] host and puts its contents to the specified location.
@@ -116,12 +117,14 @@ async function afterPack(context) {
         fs.unlinkSync(readmePath);
     }*/
 
-    // console.log('\toutDir：' + context.outDir);
-    // console.log('\tappOutDir：' + context.appOutDir);
-    // console.log('packager：' + context.packager);
-    // console.log('\telectronPlatformName：' + context.electronPlatformName);
-    // console.log('\tarch：' + archEnum[context.arch]);
-    // console.log('targets：' + context.targets);
+    if (debug) {
+        console.log('\toutDir：' + context.outDir);
+        console.log('\tappOutDir：' + context.appOutDir);
+        console.log('packager：' + context.packager);
+        console.log('\telectronPlatformName：' + context.electronPlatformName);
+        console.log('\tarch：' + archEnum[context.arch]);
+        console.log('targets：' + context.targets);
+    }
 
     deleteLocalFile(context);
     deleteOther(context);
