@@ -25,7 +25,6 @@ autoUpdater.logger.transports.file.level = 'info';
 console.info('App starting...');*/
 
 /*const url = require('url')
-const autoUpdater = require('./auto-updater')
 
 const Store = require('electron-store');
 const store = new Store();*/
@@ -315,6 +314,7 @@ function createWindow() {
 
     mainWindow.on('ready-to-show', function () {
         mainWindow.show();
+        checkUpdate();
     });
 
     /*mainWindow.on('resize', function () {
@@ -440,7 +440,8 @@ function createWindow() {
             label: "检查更新",
             icon: getIco('update.ico'),
             click: function () {
-                autoUpdater.checkForUpdatesAndNotify();
+                checkUpdate();
+
                 autoUpdater.once("update-not-available", function(info) {
                     sendStatusToWindow('Update not available.');
                     dialog.showMessageBoxSync({
@@ -456,7 +457,7 @@ function createWindow() {
                         "type": 'info',
                         "buttons": ['确定'],
                         "title": '版本更新',
-                        "message": '检测到新版本[' + info + ']，将自动更新当前版本[' + app.getVersion() + ']到最新版^_^'
+                        "message": '检测到新版本[' + info.version + ']，将自动更新当前版本[' + app.getVersion() + ']到最新版^_^'
                     });
                 })
             }
@@ -471,7 +472,6 @@ function createWindow() {
                 } else {
                     mainWindow.show();
                     mainWindow.focus();
-                    // autoUpdater.checkForUpdatesAndNotify();
                 }
             }
         }, {
@@ -544,9 +544,14 @@ function createWindow() {
     }
     // 检查快捷键是否注册成功
     console.log('快捷键 ' + shortcutKey + ' 是否注册成功：' + globalShortcut.isRegistered(shortcutKey))
+}
 
-    // autoUpdater.checkForUpdates();
-    autoUpdater.checkForUpdatesAndNotify();
+function checkUpdate(){
+    try {
+        // autoUpdater.checkForUpdates();
+        autoUpdater.checkForUpdatesAndNotify();
+    }catch (e) {
+    }
 }
 
 function getIco(name, size) {
@@ -741,7 +746,7 @@ function loadMainJS() {
     files.forEach(function (file) {
         require(file);
     })
-    autoUpdater.updateMenu()
+    // autoUpdater.updateMenu();
 }
 
 function handleSquirrelEvent() {
@@ -805,24 +810,4 @@ function handleSquirrelEvent() {
             app.quit();
             return true;
     }
-};
-
-// Handle Squirrel on Windows startup events
-/*switch (process.argv[1]) {
-    case '--squirrel-install':
-        autoUpdater.createShortcut(function () {
-            app.quit()
-        })
-        break
-    case '--squirrel-uninstall':
-        autoUpdater.removeShortcut(function () {
-            app.quit()
-        })
-        break
-    case '--squirrel-obsolete':
-    case '--squirrel-updated':
-        app.quit()
-        break
-    default:
-        initialize()
-}*/
+}
