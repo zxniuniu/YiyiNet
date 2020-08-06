@@ -9,6 +9,7 @@ if (handleSquirrelEvent()) {
 const {app, BrowserWindow, ipcMain, shell, dialog, globalShortcut, Menu, Tray, systemPreferences, nativeImage} = require('electron');
 const path = require('path');
 const {autoUpdater} = require("electron-updater");
+const windowStateKeeper = require('electron-window-state');
 
 /*// const log = require('electron-log');
 //-------------------------------------------------------------------
@@ -206,12 +207,21 @@ if (!gotTheLock) {
 // const Store = require('electron-store');
 // global.store = new Store();
 function createWindow() {
+    // Load the previous state with fallback to defaults
+    let mainWindowState = windowStateKeeper({
+        defaultWidth: 1000,
+        defaultHeight: 800
+    });
+
     // https://www.electronjs.org/docs/api/browser-window#class-browserwindow
     var windowOptions = {
-        // width: 1188,
+        'x': mainWindowState.x,
+        'y': mainWindowState.y,
+        'width': mainWindowState.width,
+        'height': mainWindowState.height,
         // minWidth: 880,
-        // height: 650,
         // minHeight: 450,
+        show: false,
         // title: app.getName(),
         // skipTaskbar: false, // Whether to show the window in taskbar
         // autoHideMenuBar: true, // https://newsn.net/say/electron-no-application-menu.html
@@ -233,6 +243,7 @@ function createWindow() {
     }
 
     mainWindow = new BrowserWindow(windowOptions);
+    mainWindowState.manage(mainWindow);
 
     /*let getLocalLanguagueSetting = "index.html";
     let _let_language = store.get('languageStore');
@@ -304,14 +315,12 @@ function createWindow() {
 
     mainWindow.on('ready-to-show', function () {
         mainWindow.show();
-        mainWindow.focus();
     });
 
     /*mainWindow.on('resize', function () {
         const message = `大小: ${mainWindow.getSize()} - 位置: ${mainWindow.getPosition()}`
         console.log("mainWindow：" + message);
     });*/
-
     /*mainWindow.webContents.on('unresponsive', () => {
         const options = {
             type: 'info',
@@ -328,9 +337,9 @@ function createWindow() {
 
     // DOM READY事件
     mainWindow.webContents.on('dom-ready', function () {
-        mainWindow.webContents.openDevTools({mode: 'right'}); // right, bottom, left, detach, undocked
-        mainWindow.maximize();
-        mainWindow.show();
+        if (!app.isPackaged) {
+            mainWindow.webContents.openDevTools({mode: 'right'}); // right, bottom, left, detach, undocked
+        }
     })
 
     // 如何监控文件下载进度，并显示进度条 https://newsn.net/say/electron-download-progress.html
@@ -454,14 +463,15 @@ function createWindow() {
         }, {
             type: "separator",
         }, {
-            label: "显示/隐藏",
+            label: "显示/隐藏(F6)",
             icon: getIco('show.ico'),
             click: function () {
                 if (mainWindow.isVisible()) {
-                    mainWindow.hide()
+                    mainWindow.hide();
                 } else {
-                    mainWindow.show()
-                    autoUpdater.checkForUpdatesAndNotify();
+                    mainWindow.show();
+                    mainWindow.focus();
+                    // autoUpdater.checkForUpdatesAndNotify();
                 }
             }
         }, {
@@ -500,7 +510,8 @@ function createWindow() {
                 mainWindow.show()
             }*/
             if (!mainWindow.isVisible()) {
-                mainWindow.show()
+                mainWindow.show();
+                mainWindow.focus();
             }
         }
     })

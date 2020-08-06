@@ -11,13 +11,11 @@
   "main": "main.min.js",
   "scripts": {
     "start": "chcp 65001 && npm run obfuscator && electron . --debug",
-
     "delete": "rmdir /S /Q node_modules",
     "rebuild": "electron-rebuild",
     "postinstall": "electron-builder install-app-deps",
     "nodeOption": "cross-env NODE_OPTIONS='--max-old-space-size=819200' && npm run obfuscator",
     "obfuscator": "javascript-obfuscator main.js -o main.min.js",
-
     "pack": "npm run nodeOption && electron-builder --dir",
     "pack:mac": "npm run nodeOption && electron-builder --mac",
     "pack:linux": "npm run nodeOption && electron-builder --linux --publish never",
@@ -26,13 +24,11 @@
     "pack:win:ia32": "npm run nodeOption && electron-builder --windows --ia32 -c.win.target.target=nsis -c.win.target.arch=ia32 --publish never",
     "pack:win": "npm-run-all pack:win:web",
     "pack:all": "npm-run-all pack:*",
-
     "publish:win:x64": "npm run nodeOption && electron-builder --windows --x64 --prepackaged=./dist/win-unpacked -c.win.target.target=nsis -c.win.target.arch=x64 --publish always",
     "publish:win:ia32": "npm run nodeOption && electron-builder --windows --ia32 --prepackaged=./dist/win-ia32-unpacked -c.win.target.target=nsis -c.win.target.arch=ia32 --publish always",
     "publish:win:web": "npm run nodeOption && electron-builder --windows --publish always",
     "publish:win": "npm-run-all publish:win:web",
     "publish": "npm run nodeOption && electron-builder --publish always",
-
     "bundle": "browserify --ignore-missing --no-builtins --no-commondir --insert-global-vars=\"global\" --no-browser-field main.js | uglifyjs -c > main.bundle.js"
   },
   "keywords": [
@@ -43,6 +39,7 @@
   "dependencies": {
     "electron-context-menu": "^2.2.0",
     "electron-updater": "^4.3.1",
+    "electron-window-state": "^5.0.3",
     "live-plugin-manager": "^0.15.0"
   },
   "devDependencies": {
