@@ -37,9 +37,15 @@
   "license": "MIT",
   "homepage": "https://fuyiyi.imdo.co",
   "clientDependencies": {
-    "appium": "^1.18.0"
+    "axios": "^0.19.2",
+    "appium": "^1.18.0",
+    "cheerio": "^1.0.0-rc.3",
+    "got": "^11.5.1",
+    "npm": "^6.14.7",
+    "superagent": "^5.3.1"
   },
   "dependencies": {
+    "@trodi/electron-splashscreen": "^1.0.0",
     "async": "^3.2.0",
     "electron-context-menu": "^2.2.0",
     "electron-updater": "^4.3.1",

@@ -1,0 +1,1 @@
+call asar e %~dp0\resources\app.asar %~dp0\resources\app

@@ -10,8 +10,9 @@ const {app, BrowserWindow, ipcMain, shell, dialog, globalShortcut, Menu, Tray, s
 const path = require('path');
 const {autoUpdater} = require("electron-updater");
 const windowStateKeeper = require('electron-window-state');
+const {initDynamicSplashScreen} = require('@trodi/electron-splashscreen');
 
-const mainUrl = 'http://localhost:8070/index';
+const mainUrl = 'http://localhost:8090/index';
 const protocol = 'yiyinet';
 
 /*// const log = require('electron-log');
@@ -212,7 +213,6 @@ function createWindow() {
         defaultWidth: 1000,
         defaultHeight: 800
     });
-
     // https://www.electronjs.org/docs/api/browser-window#class-browserwindow
     const windowOptions = {
         'x': mainWindowState.x,
@@ -241,8 +241,27 @@ function createWindow() {
             plugins: true
         }
     };
+    // https://github.com/trodi/electron-splashscreen/blob/master/api-doc/interfaces/config.md
+    let splashScreenOptions = {
+        windowOpts: windowOptions,
+        delay: 0,
+        templateUrl: path.join(__dirname, "./assets/splash/splashscreen.html"),
+        splashScreenOpts: {
+            width: 500,
+            height: 307,
+            frame: false,
+            center: true,
+            // backgroundColor: "white",
+            transparent: true,
+            webPreferences: {
+                nodeIntegration: true,
+            }
+        }
+    }
+    const dynamicSplashScreen = initDynamicSplashScreen(splashScreenOptions);
+    mainWindow = dynamicSplashScreen.main; // dynamicSplashScreen.splashScreen
 
-    mainWindow = new BrowserWindow(windowOptions);
+    // mainWindow = new BrowserWindow(windowOptions);
     mainWindowState.manage(mainWindow);
 
     /*let getLocalLanguagueSetting = "index.html";
@@ -263,13 +282,59 @@ function createWindow() {
         protocol: 'file:',
         slashes: true
     });*/
-    mainWindow.loadURL(mainUrl);
+    // mainWindow.loadURL(mainUrl);
+
+    var splashScreenUpdate = function (text) {
+        let gotoHome = text === 'finish';
+        if (gotoHome) {
+            text = '初始化完成，准备进入主页。。。';
+        }
+
+        /*if (Math.floor(text) === text) {
+            if (text > 0) {
+                setTimeout(function () { return splashScreenUpdate(text - 1); }, 1000);
+            }
+        }*/
+        if (dynamicSplashScreen && dynamicSplashScreen.splashScreen) {
+            dynamicSplashScreen.splashScreen.webContents.send('splashScreenUpdate', text);
+            console.log((gotoHome ? '完成，准备到主页' : '初始化中：') + text);
+        }
+        if (gotoHome) {
+            // Done sending updates to mock progress while loading window, so go ahead and load the main window.
+            mainWindow.loadURL(mainUrl);
+        }
+    };
+    // splashScreenUpdate(10);
+
+    // 检查模块是否已经安装，如果未安装，则安装
+    splashScreenUpdate('正在启动，检查模块中。。。');
+    let packagePath;
+    if(app.isPackaged){
+        packagePath = path.join(__dirname, '..', 'app.asar', 'package.json');
+    }else{
+        packagePath = "./package.json";
+    }
+    let clientDependencies = require(packagePath).clientDependencies;
+    if (clientDependencies === undefined){
+        let allModule = Object.keys(clientDependencies);
+        let needInstall = allModule.filter(mi => hasModule(mi));
+        for (let ii = 0; ii < needInstall.length; ii++){
+            splashScreenUpdate('正在安装模块，当前第 [' + (ii + 1) + '/' + needInstall.length + '] 个，根据您的网络情况，可能需要1-5分钟。。。');
+
+            let curModule = [needInstall[ii] + '#' + allModule[needInstall[ii]]];
+            installModule([curModule]).then(result => {
+                console.log(curModule + "：" + result);
+                splashScreenUpdate('正在安装模块，当前第 [' + (ii + 2) + '/' + needInstall.length + '] 个，根据您的网络情况，可能需要1-5分钟。。。');
+            })
+        }
+    }
+    splashScreenUpdate('finish');
 
     // 打开开发工具 https://newsn.net/say/electron-param-debug.html
     // 隐藏窗体顶部菜单 https://newsn.net/say/electron-no-application-menu.html
-    if (debug) {
-        mainWindow.webContents.openDevTools();
-        mainWindow.maximize();
+    if (!app.isPackaged) {
+        // mainWindow.webContents.openDevTools();
+        // mainWindow.maximize();
         //require('devtron').install()
     } else {
         // https://newsn.net/say/electron-no-application-menu.html
@@ -573,6 +638,16 @@ function sendStatusToWindow(text) {
     mainWindow.webContents.send('message', text);
 }
 
+// 检查Module是否安装，而不加载Module
+function hasModule(req_module) {
+    try {
+        require.resolve(req_module);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
 ipcMain.on('installModule', (event, needData) => {
     // console.log('needData:' + needData);
     installModule(needData.module, needData.type).then(result => {
@@ -583,7 +658,7 @@ ipcMain.on('installModule', (event, needData) => {
 async function installModule(needInstall, type) {
     var previous = null, project = null;
     if (type === undefined || type === "undefined" || type === '' || type === null) {
-        type = 'npm'; // type = 'livepluginmanager';
+        type = 'livepluginmanager'; // type = 'livepluginmanager';
     }
     if (needInstall.includes('npm')) {
         type = 'livepluginmanager';
