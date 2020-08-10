@@ -1,7 +1,6 @@
 import {Tray} from 'electron';
-import {packageJson} from './../shared/package';
 import {genMenus} from './menus';
-import {getIco} from './../utils';
+import {getIco, packageJson} from './../utils';
 
 let tray = null;
 

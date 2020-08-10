@@ -1,10 +1,10 @@
 import {app, dialog} from 'electron';
 import settings from '../shared/settings';
 import path from 'path';
-import {windowStateKeeper} from 'electron-window-state';
 import {initDynamicSplashScreen} from '@trodi/electron-splashscreen';
 import config from '../configs/app.config';
 
+const windowStateKeeper = require('electron-window-state');
 let mainWindow = null;
 
 export function openBrowserWindow(opts) {
@@ -105,7 +105,7 @@ export function openBrowserWindow(opts) {
         }
         if (gotoHome) {
             // Done sending updates to mock progress while loading window, so go ahead and load the main window.
-            mainWindow.loadURL(mainUrl);
+            mainWindow.loadURL(config.mainUrl);
         }
     };
     // splashScreenUpdate(10);

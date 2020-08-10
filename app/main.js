@@ -5,85 +5,32 @@ import {app, ipcMain} from 'electron';
 import path from 'path';
 import shellEnv from 'shell-env';
 import fixPath from 'fix-path';
-/* const {autoUpdater} = require("electron-updater"); */
-
-import config from '../configs/app.config';
+import config from './configs/app.config';
 // import {addPepFlashCommandLine} from './main/pepflash';
 import {handleArgv, handleUrl, npmConfig} from './utils';
 import {setTray} from './main/tray';
 import {setShortcut, unSetShortcut} from './main/shortcut';
-import {openBrowserWindow, setSavedEnv, windowEvent} from './main/helpers';
+import {openBrowserWindow, setSavedEnv, windowEvent} from './main/window-helpers';
 import {killChromedriver} from './main/service';
 import {setAutoLaunch} from './main/auto-launch';
 import {setProtocol} from './main/protocal';
+import {addCommandLine} from './main/add-command-line';
+/* const {autoUpdater} = require("electron-updater"); */
 
-/*// const log = require('electron-log');
-//-------------------------------------------------------------------
-// Logging
-//
-// THIS SECTION IS NOT REQUIRED
-//
-// This logging setup is not required for auto-updates to work,
-// but it sure makes debugging easier :)
-//-------------------------------------------------------------------
-autoUpdater.logger = log;
-autoUpdater.logger.transports.file.level = 'info';
-console.info('App starting...');*/
-
-/*const url = require('url')
-
-const Store = require('electron-store');
-const store = new Store();*/
-
-// 个人保存位置
-// app.setPath("userData", __dirname + "/saved_recordings");
-
-// Chrome添加命令行参数
-// addPepFlashCommandLine(); // 是否设置Flash位置信息
-// app.commandLine.appendSwitch('--ignore-gpu-blacklist');
-// app.commandLine.appendSwitch("--disable-http-cache");
-
-// 禁用浏览器缓存（开发时使用，上线后需要关闭）
-// app.commandLine.appendSwitch("--disable-http-cache")
-
+addCommandLine();
 
 // 下载模块
 // const electronDl = require('electron-dl');
 
-// 保持一个对于 window 对象的全局引用，不然，当 JavaScript 被 GC，
-// window 会被自动地关闭
+// 保持一个对于 window 对象的全局引用，不然，当JavaScript被GC, window 会被自动地关闭
 var mainWindow = null;
 var tray = null;
 var forceQuit = false;
 const mainUrl = config.mainUrl;
 
-// 禁用内置模块
-// process.env.ELECTRON_HIDE_INTERNAL_MODULES = 'true';
-// require('electron').hideInternalModules();
-
 // const ua = require('universal-analytics');
 
-// https://www.electronjs.org/docs/tutorial/context-isolation
-// contextBridge.exposeInMainWorld('myAPI', {
-//  doAThing: () => {}
-// })
-
-// https://newsn.net/say/electron-detect-asar.html
-/*const path = require('path');
-var path_arr=__dirname.split(path.sep);
-var entry_relative = path.sep + ""; //入口文件相对于项目根目录
-var res_relative = path.sep + "res" + path.sep; //资源文件夹相对于入口文件js
-var res_dir=__dirname + res_relative;
-if(path_arr.indexOf("app.asar")>=0){
-  res_dir = __dirname + entry_relative + ".." + res_relative;
-}
-var res_path=path.join(res_dir, 'res_name.dll');
-console.log(res_path);
-
-__dirname.split(path.sep).indexOf("app.asar")&gt;=0*/
-
-// 是否调试模式
-console.log("当前模式[" + (config.isDev ? "调试" : "正常") + "]，可用模式[调试|正常]");
+// 是否调试模式 // console.log("当前模式[" + (config.isDev ? "调试" : "正常") + "]，可用模式[调试|正常]");
 if (config.isDev) {
     require('electron-debug')(); // eslint-disable-line global-require
 } else {
@@ -138,9 +85,9 @@ if (!gotTheLock) {
     handleArgv(process.argv);
 }
 
-// Simple data persistence for your Electron app or module - Save and load user preferences, app state, cache, etc
-// const Store = require('electron-store');
-// global.store = new Store();
+/**
+ * 新窗口
+ */
 function createWindow() {
     mainWindow = openBrowserWindow({});
 
@@ -149,28 +96,11 @@ function createWindow() {
     setShortcut(mainWindow);
 }
 
-function checkUpdate() {
-    try {
-        // autoUpdater.checkForUpdates();
-        // autoUpdater.checkForUpdatesAndNotify();
-    } catch (e) {
-    }
-}
-
 function sendStatusToWindow(text) {
     console.log(text);
     mainWindow.webContents.send('message', text);
 }
 
-// 检查Module是否安装，而不加载Module
-function hasModule(req_module) {
-    try {
-        require.resolve(req_module);
-        return true;
-    } catch (e) {
-        return false;
-    }
-}
 
 ipcMain.on('installModule', (event, needData) => {
     // console.log('needData:' + needData);
@@ -248,12 +178,3 @@ async function installModule(needInstall, type) {
     const win = BrowserWindow.getFocusedWindow();
     console.log(await electronDl(win, url));
 });*/
-
-// Require each JS file in the main dir
-function loadMainJS() {
-    const glob = require('glob');
-    var files = glob.sync(path.join(__dirname, 'main/*.js'));
-    files.forEach(function (file) {
-        require(file);
-    })
-}

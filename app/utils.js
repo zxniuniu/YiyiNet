@@ -265,6 +265,10 @@ export function getIco(name, size) {
     return img;
 }
 
+/**
+ * 参数处理（伪协议)
+ * @param argv
+ */
 export function handleArgv(argv) {
     // 开发阶段，跳过前两个参数（`electron.exe .`），打包后，跳过第一个参数（`myapp.exe`）
     const offset = app.isPackaged ? 2 : 3;
@@ -274,6 +278,10 @@ export function handleArgv(argv) {
     if (urlStr) handleUrl(urlStr);
 }
 
+/**
+ * 处理伪协议传输的地址
+ * @param urlStr
+ */
 export function handleUrl(urlStr) {
     /*const urlObj = new URL(urlStr);       // yiyinet://demo-wtf-param/?abc=124&refresh=true
     const { searchParams } = urlObj;      // 参数解析
@@ -300,4 +308,59 @@ export function handleUrl(urlStr) {
         // 并发送当前唤起应用的数据
         event.sender.send(PROTOCOLVIEW, reUrl)
     })*/
+}
+
+/**
+ * 检查Module是否安装，而不加载Module
+ * @param req_module
+ * @returns {boolean}
+ */
+function hasModule(req_module) {
+    try {
+        require.resolve(req_module);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
+ * Require each JS file in the main dir
+ */
+function loadMainJS() {
+    const glob = require('glob');
+    var files = glob.sync(path.join(__dirname, 'main/*.js'));
+    files.forEach(function (file) {
+        require(file);
+    })
+}
+
+function asarPath() {
+    // https://newsn.net/say/electron-detect-asar.html
+    /*const path = require('path');
+    var path_arr=__dirname.split(path.sep);
+    var entry_relative = path.sep + ""; //入口文件相对于项目根目录
+    var res_relative = path.sep + "res" + path.sep; //资源文件夹相对于入口文件js
+    var res_dir=__dirname + res_relative;
+    if(path_arr.indexOf("app.asar")>=0){
+      res_dir = __dirname + entry_relative + ".." + res_relative;
+    }
+    var res_path=path.join(res_dir, 'res_name.dll');
+    console.log(res_path);
+
+    __dirname.split(path.sep).indexOf("app.asar")&gt;=0*/
+}
+
+/**
+ * package.json的内容
+ * @returns {*}
+ */
+export function packageJson() {
+    let packagePath;
+    if (app.isPackaged) {
+        packagePath = path.join(__dirname, '..', 'package.json');
+    } else {
+        packagePath = "./../../package.json";
+    }
+    return require(packagePath);
 }

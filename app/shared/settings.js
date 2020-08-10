@@ -1,7 +1,7 @@
 import settings from 'electron-settings';
 
 // set default persistent settings, do it here because settings are kind of like state!
-settings.setAll({
+settings.set({
   'presets': {},
 
   'SAVED_SESSIONS': [],
