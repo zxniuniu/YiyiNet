@@ -1,8 +1,7 @@
 import settings from 'electron-settings';
 
 // set default persistent settings, do it here because settings are kind of like state!
-settings.defaults({
-  'DEFAULT_LANGUAGE': 'zh-CN',
+settings.setAll({
   'presets': {},
 
   'SAVED_SESSIONS': [],

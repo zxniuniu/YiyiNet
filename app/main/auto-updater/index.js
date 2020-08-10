@@ -4,11 +4,11 @@
  * Similar to https://electronjs.org/docs/api/auto-updater#events
  * See https://electronjs.org/docs/tutorial/updates for documentation
  */
-import { app, autoUpdater, dialog } from 'electron';
+import {app, autoUpdater, dialog} from 'electron';
 import moment from 'moment';
 import B from 'bluebird';
-import { checkUpdate } from './update-checker';
-import { getFeedUrl } from './config';
+import {checkUpdate} from './update-checker';
+import {getFeedUrl} from './config';
 import _ from 'lodash';
 import env from '../../env';
 import i18n from '../../configs/i18next.config';
@@ -118,4 +118,28 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
 
 }
 
-export { checkNewUpdates };
+export {checkNewUpdates};
+
+// 自动更新 https://github.com/electron-userland/electron-builder/wiki/Auto-Update#events
+/*autoUpdater.on('checking-for-update', () => {
+    sendStatusToWindow('Checking for update...');
+});
+autoUpdater.on('update-available', (info) => {
+    sendStatusToWindow('Update available.');
+});
+autoUpdater.on('update-not-available', (info) => {
+    sendStatusToWindow('Update not available.');
+});
+autoUpdater.on('error', (err) => {
+    sendStatusToWindow('Error in auto-updater. ' + err);
+});
+autoUpdater.on('download-progress', (progressObj) => {
+    let log_message = "Download speed: " + progressObj.bytesPerSecond;
+    log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+    log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+    sendStatusToWindow(log_message);
+});
+autoUpdater.on('update-downloaded', (info) => {
+    sendStatusToWindow('Update downloaded');
+    // autoUpdater.quitAndInstall();
+});*/

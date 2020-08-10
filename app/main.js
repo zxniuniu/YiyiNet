@@ -1,22 +1,21 @@
 // https://github.com/sindresorhus/awesome-electron
 
 // Modules to control application life and create native browser window
-const {app, BrowserWindow, ipcMain, shell, dialog, globalShortcut, Menu, Tray, systemPreferences, nativeImage} = require('electron');
-const path = require('path');
-const {autoUpdater} = require("electron-updater");
-const windowStateKeeper = require('electron-window-state');
-const {initDynamicSplashScreen} = require('@trodi/electron-splashscreen');
+import {app, ipcMain} from 'electron';
+import path from 'path';
+import shellEnv from 'shell-env';
+import fixPath from 'fix-path';
+/* const {autoUpdater} = require("electron-updater"); */
 
-import config from './configs/app.config';
+import config from '../configs/app.config';
 // import {addPepFlashCommandLine} from './main/pepflash';
-
-import {packageJson} from './shared/package';
-import {npmConfig} from './utils';
-
+import {handleArgv, handleUrl, npmConfig} from './utils';
 import {setTray} from './main/tray';
-import {setShortcut} from './main/shortcut';
-
-const mainUrl = config.mainUrl;
+import {setShortcut, unSetShortcut} from './main/shortcut';
+import {openBrowserWindow, setSavedEnv, windowEvent} from './main/helpers';
+import {killChromedriver} from './main/service';
+import {setAutoLaunch} from './main/auto-launch';
+import {setProtocol} from './main/protocal';
 
 /*// const log = require('electron-log');
 //-------------------------------------------------------------------
@@ -47,9 +46,6 @@ const store = new Store();*/
 // 禁用浏览器缓存（开发时使用，上线后需要关闭）
 // app.commandLine.appendSwitch("--disable-http-cache")
 
-// 是否调试模式
-const debug = process.argv.indexOf("--debug") >= 0;
-console.log("当前模式[" + (debug ? "调试" : "正常") + "]，可用模式[调试|正常]");
 
 // 下载模块
 // const electronDl = require('electron-dl');
@@ -59,6 +55,7 @@ console.log("当前模式[" + (debug ? "调试" : "正常") + "]，可用模式[
 var mainWindow = null;
 var tray = null;
 var forceQuit = false;
+const mainUrl = config.mainUrl;
 
 // 禁用内置模块
 // process.env.ELECTRON_HIDE_INTERNAL_MODULES = 'true';
@@ -85,372 +82,78 @@ console.log(res_path);
 
 __dirname.split(path.sep).indexOf("app.asar")&gt;=0*/
 
-// 默认参数，渲染线程中使用或修改，需要先在主进程中定义
-global.sharedObject = {
-    openUrl: ''
-};
+// 是否调试模式
+console.log("当前模式[" + (config.isDev ? "调试" : "正常") + "]，可用模式[调试|正常]");
+if (config.isDev) {
+    require('electron-debug')(); // eslint-disable-line global-require
+} else {
+    // if we're running from the app package, we won't have access to env vars
+    // normally loaded in a shell, so work around with the shell-env module
+    const decoratedEnv = shellEnv.sync();
+    process.env = {...process.env, ...decoratedEnv};
 
+    // and we need to do the same thing with PATH
+    fixPath();
+}
+setSavedEnv();
 
+// 设置app的事件监听
 app.on('activate', function () {
     if (mainWindow === null/* || BrowserWindow.getAllWindows().length === 0*/) {
         createWindow();
     }
 });
-
 app.on('will-quit', () => {
-    // https://newsn.net/say/electron-shortcut.html
-    // https://newsn.net/say/electron-globalshortcut.html
-    globalShortcut.unregisterAll(); // 清空所有快捷键
-    // globalShortcut.unregister('CommandOrControl+X'); // 注销快捷键
+    unSetShortcut();
+    killChromedriver();
+});
+app.on('second-instance', (event, commandLine, workingDirectory) => {
+    handleArgv(commandLine);
 
-    // 关闭chromedriver
-    let exec = require('child_process');
-    exec('TASKKILL.EXE /F /IM chromedriver.exe', function (err, stdout, stderr) {
-    });
+    if (mainWindow) {
+        if (mainWindow.isMinimized()) {
+            mainWindow.restore();
+        }
+        mainWindow.focus();
+    }
+});
+// macOS
+app.on('open-url', (event, urlStr) => {
+    handleUrl(urlStr);
 });
 
-// electron加入开机启动项 https://newsn.net/say/node-auto-launch.html
-// 设置加入开机启动项 https://newsn.net/say/electron-auto-launch.html
-if (!app.isPackaged) {
-    app.setLoginItemSettings({
-        openAtLogin: true,
-        openAsHidden: false,
-        path: process.execPath,
-        args: [path.resolve(process.argv[1])]
-    });
-} else {
-    app.setLoginItemSettings({});
-}
+setAutoLaunch();
+setProtocol();
 
-// 协议注册 https://newsn.net/say/electron-fake-protocal-debug.html
-// 如何通过伪协议唤起本地exe程序 https://newsn.net/say/fake-protocol-win.html
-
-// 如何接收识别协议URL https://newsn.net/say/electron-fake-protocol-url.html
-// 获取URL相关系列参数总结 https://newsn.net/say/electron-fake-protocol-args.html
-if (app.isPackaged) {
-    app.setAsDefaultProtocolClient(config.protocol, process.execPath, ["--"]);
-} else {
-    app.setAsDefaultProtocolClient(config.protocol, process.execPath, [path.resolve(process.argv[1]), "--"]);
-}
-
-// 自动更新 https://github.com/electron-userland/electron-builder/wiki/Auto-Update#events
-autoUpdater.on('checking-for-update', () => {
-    sendStatusToWindow('Checking for update...');
-});
-autoUpdater.on('update-available', (info) => {
-    sendStatusToWindow('Update available.');
-});
-autoUpdater.on('update-not-available', (info) => {
-    sendStatusToWindow('Update not available.');
-});
-autoUpdater.on('error', (err) => {
-    sendStatusToWindow('Error in auto-updater. ' + err);
-});
-autoUpdater.on('download-progress', (progressObj) => {
-    let log_message = "Download speed: " + progressObj.bytesPerSecond;
-    log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
-    log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
-    sendStatusToWindow(log_message);
-});
-autoUpdater.on('update-downloaded', (info) => {
-    sendStatusToWindow('Update downloaded');
-    // autoUpdater.quitAndInstall();
-});
+app.on('ready', createWindow)
 
 // 当 Electron 完成了初始化并且准备创建浏览器窗口的时候
 // 如何实现单实例？两种方案解决单实例问题 https://newsn.net/say/electron-single-instance-lock.html
-var gotTheLock = app.requestSingleInstanceLock();
+const gotTheLock = app.requestSingleInstanceLock();
 console.log('requestSingleInstanceLock：' + gotTheLock);
 if (!gotTheLock) {
     app.quit();
 } else {
     console.log('process.argv：' + process.argv);
     handleArgv(process.argv);
-
-    app.on('second-instance', (event, commandLine, workingDirectory) => {
-        handleArgv(commandLine);
-
-        if (mainWindow) {
-            if (mainWindow.isMinimized()) {
-                mainWindow.restore();
-            }
-            mainWindow.focus();
-        }
-    });
-    // macOS
-    app.on('open-url', (event, urlStr) => {
-        handleUrl(urlStr);
-    });
-
-    app.on('ready', createWindow)
 }
 
 // Simple data persistence for your Electron app or module - Save and load user preferences, app state, cache, etc
 // const Store = require('electron-store');
 // global.store = new Store();
 function createWindow() {
-    // Load the previous state with fallback to defaults
-    let mainWindowState = windowStateKeeper({
-        defaultWidth: 1000,
-        defaultHeight: 800
-    });
-    // https://www.electronjs.org/docs/api/browser-window#class-browserwindow
-    const windowOptions = {
-        'x': mainWindowState.x,
-        'y': mainWindowState.y,
-        'width': mainWindowState.width,
-        'height': mainWindowState.height,
-        // minWidth: 880,
-        // minHeight: 450,
-        show: false,
-        // title: app.getName(),
-        // skipTaskbar: false, // Whether to show the window in taskbar
-        // autoHideMenuBar: true, // https://newsn.net/say/electron-no-application-menu.html
-        webPreferences: {
-            // preload: path.join(__dirname, 'preload.js'),
-            nodeIntegration: true,
-            nodeIntegrationInSubFrames: true,
-            nodeIntegrationInWorker: true,
-            enableRemoteModule: true,
+    mainWindow = openBrowserWindow({});
 
-            webSecurity: false,
-            allowRunningInsecureContent: true,
-            // contextIsolation: true, // 不能设置为true，否则electron无法使用
-
-            webviewTag: true,
-            experimentalFeatures: true,
-            plugins: true
-        }
-    };
-    // https://github.com/trodi/electron-splashscreen/blob/master/api-doc/interfaces/config.md
-    let splashScreenOptions = {
-        windowOpts: windowOptions,
-        delay: 0,
-        templateUrl: path.join(__dirname, "./assets/splash/splashscreen.html"),
-        splashScreenOpts: {
-            width: 500,
-            height: 307,
-            frame: false,
-            center: true,
-            // backgroundColor: "white",
-            transparent: true,
-            webPreferences: {
-                nodeIntegration: true,
-            }
-        }
-    }
-    const dynamicSplashScreen = initDynamicSplashScreen(splashScreenOptions);
-    mainWindow = dynamicSplashScreen.main; // dynamicSplashScreen.splashScreen
-
-    // mainWindow = new BrowserWindow(windowOptions);
-    mainWindowState.manage(mainWindow);
-
-    /*let getLocalLanguagueSetting = "index.html";
-    let _let_language = store.get('languageStore');
-    console.log(_let_language);
-    switch (_let_language) {
-        case "us":
-            getLocalLanguagueSetting = "index-us.html"
-            break;
-        case "cn":
-            getLocalLanguagueSetting = "index.html"
-            break;
-    }*/
-
-    // let mainUrl = 'index.html';
-    /*let mainUrl = url.format({
-        pathname: path.join(__dirname, getLocalLanguagueSetting),
-        protocol: 'file:',
-        slashes: true
-    });*/
-    // mainWindow.loadURL(mainUrl);
-
-    var splashScreenUpdate = function (text) {
-        let gotoHome = text === 'finish';
-        if (gotoHome) {
-            text = '初始化完成，准备进入主页。。。';
-        }
-
-        /*if (Math.floor(text) === text) {
-            if (text > 0) {
-                setTimeout(function () { return splashScreenUpdate(text - 1); }, 1000);
-            }
-        }*/
-        if (dynamicSplashScreen && dynamicSplashScreen.splashScreen) {
-            dynamicSplashScreen.splashScreen.webContents.send('splashScreenUpdate', text);
-            console.log((gotoHome ? '完成，准备到主页' : '初始化中：') + text);
-        }
-        if (gotoHome) {
-            // Done sending updates to mock progress while loading window, so go ahead and load the main window.
-            mainWindow.loadURL(mainUrl);
-        }
-    };
-    // splashScreenUpdate(10);
-
-    // 检查模块是否已经安装，如果未安装，则安装
-    splashScreenUpdate('正在启动，检查模块中。。。');
-    let clientDependencies = {}; // packageJson().clientDependencies;
-    if (clientDependencies === undefined){
-        let allModule = Object.keys(clientDependencies);
-        let needInstall = allModule.filter(mi => hasModule(mi));
-        for (let ii = 0; ii < needInstall.length; ii++){
-            splashScreenUpdate('正在安装模块，当前第 [' + (ii + 1) + '/' + needInstall.length + '] 个，根据您的网络情况，可能需要1-5分钟。。。');
-
-            let curModule = [needInstall[ii] + '#' + allModule[needInstall[ii]]];
-            installModule([curModule]).then(result => {
-                console.log(curModule + "：" + result);
-                splashScreenUpdate('正在安装模块，当前第 [' + (ii + 2) + '/' + needInstall.length + '] 个，根据您的网络情况，可能需要1-5分钟。。。');
-            })
-        }
-    }
-    splashScreenUpdate('finish');
-
-    // 打开开发工具 https://newsn.net/say/electron-param-debug.html
-    // 隐藏窗体顶部菜单 https://newsn.net/say/electron-no-application-menu.html
-    if (!app.isPackaged) {
-        // mainWindow.webContents.openDevTools();
-        // mainWindow.maximize();
-        //require('devtron').install()
-    } else {
-        // https://newsn.net/say/electron-no-application-menu.html
-        Menu.setApplicationMenu(null);
-    }
-
-    // 当 window 被关闭，这个事件会被发出
-    mainWindow.on('close', function (e) {
-        e.preventDefault();
-        if (!forceQuit) {
-            // console.log('event:'+ e);
-            if (mainWindow !== null) {
-                mainWindow.hide();
-            }
-        } else {
-            let isShow = mainWindow.isVisible();
-            dialog.showMessageBox(mainWindow, {
-                type: 'warning',
-                title: 'YiyiNet提示（退出后运行的任务将停止）',
-                defaultId: 0,
-                message: '后台运行的定时任将会全部停止运行，您确定要强制退出YiyiNet吗？',
-                buttons: [(isShow ? '隐藏到托盘' : '保留在托盘'), '停止任务并退出']
-            }).then(res => {
-                // console.log('index:' + res.response + ', e:' + e + ', mainWindow:' + mainWindow);
-                if (res && res.response && res.response === 1) {
-                    forceQuit = true;
-                    app.exit(0); // exit()直接关闭客户端，不会执行quit();
-                } else {
-                    if (isShow) {
-                        mainWindow.hide();
-                    }
-                }
-            })
-        }
-    });
-
-    // 当 window 被关闭，这个事件会被发出
-    mainWindow.on('closed', function (e) {
-        // 取消引用 window 对象，如果你的应用支持多窗口的话，通常会把多个 window 对象存放在一个数组里面，
-        mainWindow = null;
-    });
-
-    mainWindow.on('ready-to-show', function () {
-        mainWindow.show();
-        checkUpdate();
-    });
-
-    /*mainWindow.on('resize', function () {
-        const message = `大小: ${mainWindow.getSize()} - 位置: ${mainWindow.getPosition()}`
-        console.log("mainWindow：" + message);
-    });*/
-    /*mainWindow.webContents.on('unresponsive', () => {
-        const options = {
-            type: 'info',
-            title: 'Yiyi-Plus无响应',
-            message: 'Yiyi-Plus当前无响应，是否重新打开？',
-            buttons: ['重新打开', '关闭']
-        }
-
-        dialog.showMessageBox(options, (index) => {
-            if (index === 0) mainWindow.reload()
-            else mainWindow.close()
-        })
-    })*/
-
-    // DOM READY事件
-    mainWindow.webContents.on('dom-ready', function () {
-        openDevTools();
-    });
-
-    // 如何监控文件下载进度，并显示进度条 https://newsn.net/say/electron-download-progress.html
-    mainWindow.webContents.session.on('will-download', (event, item, webContents) => {
-        const filePath = path.join(app.getPath('downloads'), item.getFilename());
-        item.setSavePath(filePath);
-
-        item.on('updated', (event, state) => {
-            if (state === 'progressing') {
-                if (!item.isPaused()) {
-                    console.log(item.getFilename(), item.getReceivedBytes(), item.getTotalBytes(), (item.getReceivedBytes() * 100 / item.getTotalBytes()).toFixed(2) + "%");
-
-                    if (mainWindow.isDestroyed()) {
-                        return;
-                    }
-                    mainWindow.webContents.send('down-process', {
-                        name: item.getFilename(),
-                        receive: item.getReceivedBytes(),
-                        total: item.getTotalBytes(),
-                    });
-                    mainWindow.setProgressBar(item.getReceivedBytes() / item.getTotalBytes());
-                }
-            } else if (state === 'interrupted') {
-                console.log('Download is interrupted but can be resumed')
-            }
-        });
-
-        item.once('done', (event, state) => {
-            if (state === 'completed') {
-                if (process.platform === 'darwin') {
-                    app.dock.downloadFinished(item.getSavePath());
-                }
-                if (!mainWindow.isDestroyed()) {
-                    return;
-                }
-                mainWindow.webContents.send('down-done', {
-                    name: item.getFilename(),
-                    path: item.getSavePath(),
-                    receive: item.getReceivedBytes(),
-                    total: item.getTotalBytes(),
-                });
-                mainWindow.setProgressBar(-1);
-            } else if (state === "cancelled") {
-                mainWindow.webContents.send('down-cancle', {
-                    name: item.getFilename()
-                });
-            } else {
-                //state === 'interrupted'
-                // console.log(`Download failed: ${state}`)
-                dialog.showErrorBox('下载失败', `文件 ${item.getFilename()} 因为某些原因被中断下载`);
-                mainWindow.webContents.send('down-fail', {
-                    name: item.getFilename()
-                });
-            }
-        });
-    });
-    // 也可以静默下载指定的文件
-    // mainWindow.webContents.downloadURL("http://searchbox.bj.bcebos.com/miniapp/demo-1.0.1.zip");
-
+    windowEvent();
     setTray(mainWindow);
     setShortcut(mainWindow);
 }
 
-function openDevTools() {
-    if (!app.isPackaged || (app.isPackaged && mainUrl.indexOf('localhost') >= 0)) {
-        mainWindow.webContents.openDevTools({mode: 'right'}); // right, bottom, left, detach, undocked
-    }
-}
-function checkUpdate(){
+function checkUpdate() {
     try {
         // autoUpdater.checkForUpdates();
-        autoUpdater.checkForUpdatesAndNotify();
-    }catch (e) {
+        // autoUpdater.checkForUpdatesAndNotify();
+    } catch (e) {
     }
 }
 
@@ -538,43 +241,6 @@ async function installModule(needInstall, type) {
         }
     }
     return {'module': needInstall, 'type': type, 'succ': true, 'msg': '安装成功'};
-}
-
-function handleArgv(argv) {
-    // 开发阶段，跳过前两个参数（`electron.exe .`），打包后，跳过第一个参数（`myapp.exe`）
-    const offset = app.isPackaged ? 2 : 3;
-    const urlStr = argv.find((arg, i) => i >= offset && arg.startsWith(config.protocol + ':'));
-    // let urlStr = process.argv.splice(app.isPackaged ? 2 : 3).join("")
-    // let urlStr2 = process.argv[process.argv.length - 1]
-    if (urlStr) handleUrl(urlStr);
-}
-
-function handleUrl(urlStr) {
-    /*const urlObj = new URL(urlStr);       // yiyinet://demo-wtf-param/?abc=124&refresh=true
-    const { searchParams } = urlObj;      // 参数解析
-
-    console.log(urlObj.protocol);         // yiyinet:
-    console.log(urlObj.pathname);         // / ？是不是有问题？不应该是//demo-wtf-param/么
-    console.log(urlObj.search);           // ?abc=124&refresh=true
-    console.log(searchParams.get('abc')); // 123
-    console.log(urlObj.pathname + urlObj.search);*/
-
-    // 渲染进程获取方式：require('electron').remote.getGlobal('sharedObject').openUrl;
-    let openUrl = urlStr.startsWith(config.protocol + "://") ? urlStr.substring(config.protocol.length + 3) : urlStr;
-
-    console.log('伪协议[' + config.protocol + ']地址：' + openUrl);
-    // 主进程通讯监听渲染进程派发的OPENVIEW事件
-    if (mainWindow === null) {
-        global.sharedObject.openUrl = openUrl;
-    } else {
-        mainWindow.webContents.send('protocol-open', openUrl);
-        global.sharedObject.openUrl = '';
-    }
-
-    /*ipcMain.on(PROTOCOLVIEW, (event)=> {
-        // 并发送当前唤起应用的数据
-        event.sender.send(PROTOCOLVIEW, reUrl)
-    })*/
 }
 
 // 下载按钮进行下载, https://github.com/sindresorhus/electron-dl

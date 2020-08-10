@@ -1,1 +1,1 @@
-call asar e %~dp0\resources\app.asar %~dp0\resources\app
+call asar e %~dp0resources\app.asar resources\app

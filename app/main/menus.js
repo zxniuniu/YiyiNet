@@ -1,4 +1,4 @@
-import {app, shell, dialog, Menu} from 'electron';
+import {app, dialog, Menu, shell} from 'electron';
 // import { createNewSessionWindow, createNewConfigWindow} from './appium';
 import {checkNewUpdates} from './auto-updater';
 import config from '../configs/app.config';
@@ -8,6 +8,7 @@ import {packageJson} from './../shared/package';
 
 let menuTemplates = {mac: {}, other: {}};
 let mainWindow = null;
+let tray = null;
 
 function languageMenu() {
     return config.languages.map((languageCode) => ({
@@ -232,7 +233,7 @@ function otherMenuFile() {
     };
 }
 
-function otherMenuView(mainWindow) {
+function otherMenuView() {
     const submenu = [];
     submenu.push({
         label: i18n.t('Toggle &Full Screen'),
@@ -292,7 +293,7 @@ function otherMenuHelp() {
     };
 }
 
-function myMenu(mainWindow){
+function myMenu() {
     return {
         label: 'TEST',// i18n.t('Help'),
         submenu: [
@@ -361,7 +362,7 @@ function myMenu(mainWindow){
                 icon: getIco('app-gray.ico'),
                 click: function () {
                     // https://discuss.atom.io/t/how-to-catch-the-event-of-clicking-the-app-windows-close-button-in-electron-app/21425
-                    forceQuit = true;
+                    // forceQuit = true;
                     // mainWindow = null;
                     app.quit();
                 }
@@ -384,18 +385,21 @@ function myMenu(mainWindow){
 }
 
 menuTemplates.other = async () => [
-    otherMenuFile(mainWindow),
-    await otherMenuView(mainWindow),
+    otherMenuFile(),
+    await otherMenuView(),
     otherMenuHelp(),
-    myMenu(mainWindow)
+    myMenu()
 ];
 
-async function genMenus(mainWin = null) {
+export async function genMenus(mainWin = null, trayIn = null) {
     if (mainWin) {
         mainWindow = mainWin;
     }
     if (!mainWindow) {
         return;
+    }
+    if (trayIn) {
+        tray = trayIn;
     }
 
     let template;
@@ -409,15 +413,18 @@ async function genMenus(mainWin = null) {
         // mainWindow.setMenu(menu);
     }
 
-    var curMenu = Menu.buildFromTemplate(template);
-    if(config.showMenuBar){
+    let curMenu = await Menu.buildFromTemplate(template);
+    if (config.showMenuBar && !app.isPackaged) {
         if (config.platform === 'darwin') {
+            // https://newsn.net/say/electron-no-application-menu.html
             Menu.setApplicationMenu(curMenu);
         } else {
             mainWindow.setMenu(curMenu);
         }
     }
+
+    if (trayIn) {
+        tray.setContextMenu(curMenu);
+    }
     return curMenu;
 }
-
-export default genMenus;

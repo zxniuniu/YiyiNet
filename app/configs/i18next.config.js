@@ -2,7 +2,6 @@ import i18n from 'i18next';
 import i18nextBackend from 'i18next-node-fs-backend';
 import config from './app.config';
 import path from 'path';
-import settings from '../shared/settings';
 
 const i18nextOptions = {
   backend: {
@@ -15,7 +14,7 @@ const i18nextOptions = {
   interpolation: {
     escapeValue: false
   },
-  lng: settings && settings.getSync('DEFAULT_LANGUAGE', 'zh-CN') || 'zh-CN',
+  lng: config.defaultLanguage || 'zh-CN',
   fallbackLng: config.fallbackLng,
   whitelist: config.languages,
   react: {

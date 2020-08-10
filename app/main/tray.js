@@ -1,8 +1,9 @@
-import {app, Menu, Tray, nativeImage, shell, dialog} from 'electron';
-import path from 'path';
+import {Tray} from 'electron';
 import {packageJson} from './../shared/package';
 import {genMenus} from './menus';
 import {getIco} from './../utils';
+
+let tray = null;
 
 /**
  * 设置托盘菜单
@@ -15,7 +16,7 @@ export function setTray(mainWindow) {
     const trayIconImage = getIco('app.ico', 0);
     trayIconImage.setTemplateImage(true);
     // let trayPress = path.join(__dirname, "./assets/icon/app-gray.ico");
-    if (null == tray) {
+    if (null === tray) {
         // tray = new Tray(trayIcon);
         tray = new Tray(trayIconImage)
     } else {
@@ -24,7 +25,7 @@ export function setTray(mainWindow) {
     // tray.setPressedImage(trayPress);
 
     tray.setToolTip(packageJson().productName);
-    tray.setContextMenu(genMenus(mainWindow));
+    genMenus(mainWindow, tray);
 
     // 实现改写关闭事件为最小化到托盘 https://newsn.net/say/electron-tray-min.html
     tray.on("click", () => {

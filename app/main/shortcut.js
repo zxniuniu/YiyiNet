@@ -19,5 +19,14 @@ export function setShortcut(mainWindow) {
     }
     // 检查快捷键是否注册成功
     console.log('快捷键 ' + shortcutKey + ' 是否注册成功：' + globalShortcut.isRegistered(shortcutKey))
+}
 
+/**
+ * 取消设置快捷键
+ */
+export function unSetShortcut() {
+    // https://newsn.net/say/electron-shortcut.html
+    // https://newsn.net/say/electron-globalshortcut.html
+    globalShortcut.unregisterAll(); // 清空所有快捷键
+    // globalShortcut.unregister('CommandOrControl+X'); // 注销快捷键
 }

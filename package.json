@@ -10,7 +10,7 @@
   },
   "main": "dist/main.js",
   "scripts": {
-    "start": "chcp 65001 && npm run obfuscator && electron . --debug",
+    "start": "chcp 65001 && npm run obfuscator && electron . --debug --inspect=8888",
     "delete": "rmdir /S /Q node_modules",
     "rebuild": "electron-rebuild",
     "postinstall": "electron-builder install-app-deps",
@@ -52,6 +52,7 @@
     "bluebird": "^3.7.2",
     "cheerio": "^1.0.0-rc.3",
     "electron-context-menu": "^2.2.0",
+    "electron-debug": "^3.1.0",
     "electron-settings": "^4.0.2",
     "electron-updater": "^4.3.1",
     "electron-window-state": "^5.0.3",

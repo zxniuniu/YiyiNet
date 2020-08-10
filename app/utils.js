@@ -1,4 +1,4 @@
-import {app, net, BrowserWindow, session, nativeImage} from 'electron';
+import {app, BrowserWindow, nativeImage, net, session} from 'electron';
 import fs from 'fs';
 import path from 'path';
 import https from 'https';
@@ -6,6 +6,9 @@ import https from 'https';
 import rimraf from 'rimraf';
 import unzip from 'unzip-crx-3';
 import semver from 'semver';
+
+import config from './configs/app.config';
+import settings from './shared/settings';
 
 // Use https.get fallback for Electron < 1.4.5
 const request = net ? net.request : https.get;
@@ -225,7 +228,7 @@ export const installExtension = (extensionReference, forceDownload = false) => {
  * @returns {{registry: string, phantomjs_cdnurl: string, node_sqlite3_binary_host_mirror: string, electron_mirror: string, puppeteer_download_host: string, selenium_cdnurl: string, disturl: string, operadriver_cdnurl: string, npm_config_disturl: string, profiler_binary_host_mirror: string, node_inspector_cdnurl: string, python_mirror: string, chromedriver_cdnurl: string, electron_builder_binaries_mirror: string, sass_binary_site: string, npm_config_profiler_binary_host_mirror: string}}
  */
 export const npmConfig = () => {
-    return npmConfig = {
+    return {
         'registry': 'https://registry.npm.taobao.org/',
         'disturl': 'https://npm.taobao.org/dist',
         'electron_mirror': 'https://npm.taobao.org/mirrors/electron/',
@@ -262,4 +265,39 @@ export function getIco(name, size) {
     return img;
 }
 
+export function handleArgv(argv) {
+    // 开发阶段，跳过前两个参数（`electron.exe .`），打包后，跳过第一个参数（`myapp.exe`）
+    const offset = app.isPackaged ? 2 : 3;
+    const urlStr = argv.find((arg, i) => i >= offset && arg.startsWith(config.protocol + ':'));
+    // let urlStr = process.argv.splice(app.isPackaged ? 2 : 3).join("")
+    // let urlStr2 = process.argv[process.argv.length - 1]
+    if (urlStr) handleUrl(urlStr);
+}
 
+export function handleUrl(urlStr) {
+    /*const urlObj = new URL(urlStr);       // yiyinet://demo-wtf-param/?abc=124&refresh=true
+    const { searchParams } = urlObj;      // 参数解析
+
+    console.log(urlObj.protocol);         // yiyinet:
+    console.log(urlObj.pathname);         // / ？是不是有问题？不应该是//demo-wtf-param/么
+    console.log(urlObj.search);           // ?abc=124&refresh=true
+    console.log(searchParams.get('abc')); // 123
+    console.log(urlObj.pathname + urlObj.search);*/
+
+    // 渲染进程获取方式：require('electron').remote.getGlobal('sharedObject').openUrl;
+    let openUrl = urlStr.startsWith(config.protocol + "://") ? urlStr.substring(config.protocol.length + 3) : urlStr;
+
+    console.log('伪协议[' + config.protocol + ']地址：' + openUrl);
+    // 主进程通讯监听渲染进程派发的OPENVIEW事件
+    if (mainWindow === null) {
+        settings.set('openUrl', openUrl);
+    } else {
+        mainWindow.webContents.send('protocol-open', openUrl);
+        settings.set('openUrl', '');
+    }
+
+    /*ipcMain.on(PROTOCOLVIEW, (event)=> {
+        // 并发送当前唤起应用的数据
+        event.sender.send(PROTOCOLVIEW, reUrl)
+    })*/
+}
