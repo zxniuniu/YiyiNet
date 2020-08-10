@@ -4,7 +4,9 @@
 /icudtl.dat
 /LICENSE
 /.idea/
+/.cache/
 /node_modules/
 /dist/
+/release/
 /out/
 /lsp/

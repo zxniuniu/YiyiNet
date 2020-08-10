@@ -8,19 +8,19 @@
   "repository": {
     "url": "https://github.com/zxniuniu/YiyiNet"
   },
-  "main": "main.min.js",
+  "main": "dist/main.js",
   "scripts": {
     "start": "chcp 65001 && npm run obfuscator && electron . --debug",
     "delete": "rmdir /S /Q node_modules",
     "rebuild": "electron-rebuild",
     "postinstall": "electron-builder install-app-deps",
-    "nodeOption": "cross-env NODE_OPTIONS='--max-old-space-size=819200' && npm run obfuscator",
-    "obfuscator": "javascript-obfuscator main.js -o main.min.js",
+    "nodeOption": "cross-env NODE_OPTIONS='--max-old-space-size=819200'",
+    "obfuscator": "javascript-obfuscator app/main.js -o app/main.min.js",
     "pack": "npm run nodeOption && electron-builder --dir",
     "pack:mac": "npm run nodeOption && electron-builder --mac",
     "pack:linux": "npm run nodeOption && electron-builder --linux --publish never",
     "pack:win:web": "npm run nodeOption && electron-builder --windows --publish never",
-    "pack:win:x64": "npm run nodeOption && electron-builder --windows --x64 -c.win.target.target=nsis -c.win.target.arch=x64 --publish never",
+    "pack:win:x64": "npm run nodeOption && npm run build:main && electron-builder --windows --x64 -c.win.target.target=nsis -c.win.target.arch=x64 --publish never",
     "pack:win:ia32": "npm run nodeOption && electron-builder --windows --ia32 -c.win.target.target=nsis -c.win.target.arch=ia32 --publish never",
     "pack:win": "npm-run-all pack:win:web",
     "pack:all": "npm-run-all pack:*",
@@ -29,7 +29,12 @@
     "publish:win:web": "npm run nodeOption && electron-builder --windows --publish always",
     "publish:win": "npm-run-all publish:win:web",
     "publish": "npm run nodeOption && electron-builder --publish always",
-    "bundle": "browserify --ignore-missing --no-builtins --no-commondir --insert-global-vars=\"global\" --no-browser-field main.js | uglifyjs -c > main.bundle.js"
+    "bundle": "browserify --ignore-missing --no-builtins --no-commondir --insert-global-vars=\"global\" --no-browser-field main.js | uglifyjs -c > main.bundle.js",
+    "build": "run-s build:*",
+    "build:main": "cross-env NODE_ENV=production parcel build --target node --public-url . --out-dir ./dist --out-file main.js ./app/main.js",
+    "build:renderer": "cross-env NODE_ENV=production parcel build --no-content-hash --out-dir ./dist --target electron --public-url . ./app/renderer/index.html",
+    "build-main-dev": "cross-env NODE_ENV=development parcel build --target node --out-dir ./dist --out-file main.js ./app/main.js",
+    "build-renderer-dev": "cross-env NODE_ENV=development parcel build --out-dir ./dist --target electron --public-url . ./app/renderer/index.html"
   },
   "keywords": [
     "YiyiNet"
@@ -37,20 +42,33 @@
   "license": "MIT",
   "homepage": "https://fuyiyi.imdo.co",
   "clientDependencies": {
-    "axios": "^0.19.2",
     "appium": "^1.18.0",
-    "cheerio": "^1.0.0-rc.3",
-    "got": "^11.5.1",
-    "npm": "^6.14.7",
-    "superagent": "^5.3.1"
+    "npm": "^6.14.7"
   },
   "dependencies": {
     "@trodi/electron-splashscreen": "^1.0.0",
     "async": "^3.2.0",
+    "axios": "^0.19.2",
+    "bluebird": "^3.7.2",
+    "cheerio": "^1.0.0-rc.3",
     "electron-context-menu": "^2.2.0",
+    "electron-settings": "^4.0.2",
     "electron-updater": "^4.3.1",
     "electron-window-state": "^5.0.3",
-    "live-plugin-manager": "^0.15.0"
+    "fix-path": "^3.0.0",
+    "got": "^11.5.2",
+    "i18next": "^19.6.3",
+    "i18next-node-fs-backend": "^2.1.3",
+    "live-plugin-manager": "^0.15.0",
+    "lodash": "^4.17.19",
+    "moment": "^2.27.0",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.6",
+    "rimraf": "^3.0.2",
+    "semver": "^7.3.2",
+    "shell-env": "^3.0.0",
+    "superagent": "^5.3.1",
+    "unzip-crx-3": "^0.2.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.2",
@@ -59,7 +77,8 @@
     "electron-rebuild": "^1.11.0",
     "extract-zip": "^2.0.1",
     "javascript-obfuscator": "^1.9.0",
-    "npm-run-all": "^4.1.5"
+    "npm-run-all": "^4.1.5",
+    "parcel-bundler": "^1.12.4"
   },
   "build": {
     "appId": "zxniuniu.yiyinet",
@@ -67,15 +86,14 @@
     "copyright": "Copyright © 2020",
     "afterPack": "./build/afterPack.js",
     "directories": {
-      "output": "dist",
-      "app": "./",
+      "output": "release",
       "buildResources": "build"
     },
     "files": [
-      "package.json",
-      "main.min.js",
+      "dist/",
       "assets/",
-      "node_modules/"
+      "node_modules/",
+      "package.json"
     ],
     "extraFiles": [
       "dll/"

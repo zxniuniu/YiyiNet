@@ -1,10 +1,5 @@
 // https://github.com/sindresorhus/awesome-electron
 
-/*if (require('electron-squirrel-startup')) return;
-if (handleSquirrelEvent()) {
-    return;
-}*/
-
 // Modules to control application life and create native browser window
 const {app, BrowserWindow, ipcMain, shell, dialog, globalShortcut, Menu, Tray, systemPreferences, nativeImage} = require('electron');
 const path = require('path');
@@ -12,8 +7,16 @@ const {autoUpdater} = require("electron-updater");
 const windowStateKeeper = require('electron-window-state');
 const {initDynamicSplashScreen} = require('@trodi/electron-splashscreen');
 
-const mainUrl = 'http://localhost:8090/index';
-const protocol = 'yiyinet';
+import config from './configs/app.config';
+// import {addPepFlashCommandLine} from './main/pepflash';
+
+import {packageJson} from './shared/package';
+import {npmConfig} from './utils';
+
+import {setTray} from './main/tray';
+import {setShortcut} from './main/shortcut';
+
+const mainUrl = config.mainUrl;
 
 /*// const log = require('electron-log');
 //-------------------------------------------------------------------
@@ -37,25 +40,12 @@ const store = new Store();*/
 // app.setPath("userData", __dirname + "/saved_recordings");
 
 // Chrome添加命令行参数
+// addPepFlashCommandLine(); // 是否设置Flash位置信息
 // app.commandLine.appendSwitch('--ignore-gpu-blacklist');
 // app.commandLine.appendSwitch("--disable-http-cache");
 
-// electron如何集成绿色版flash插件 https://newsn.net/say/electron-flash-crossplatform.html
-try {
-    let pepflashplayer = app.getPath('pepperFlashSystemPlugin');
-    if (process.platform === "win32") {
-        if (process.arch === 'x64') {
-            pepflashplayer = path.join(__dirname, 'dll/pepflashplayer64_32.0.0.403.dll');
-        } else {
-            pepflashplayer = path.join(__dirname, 'dll/pepflashplayer32_32.0.0.403.dll');
-        }
-    } else if (process.platform === 'darwin') {
-        pepflashplayer = path.join(__dirname, 'dll/PepperFlashPlayer.plugin');
-    }
-    app.commandLine.appendSwitch('ppapi-flash-path', pepflashplayer);
-    console.log("添加Flash Player到启动参数")
-} catch (e) {
-}
+// 禁用浏览器缓存（开发时使用，上线后需要关闭）
+// app.commandLine.appendSwitch("--disable-http-cache")
 
 // 是否调试模式
 const debug = process.argv.indexOf("--debug") >= 0;
@@ -95,20 +85,11 @@ console.log(res_path);
 
 __dirname.split(path.sep).indexOf("app.asar")&gt;=0*/
 
-
 // 默认参数，渲染线程中使用或修改，需要先在主进程中定义
 global.sharedObject = {
     openUrl: ''
 };
 
-// https://www.jianshu.com/p/973320203c6a
-// 当所有窗口被关闭了，退出。
-/*app.on('window-all-closed', function() {
-  // 在 OS X 上，通常用户在明确地按下 Cmd + Q 之前应用会保持活动状态
-  if (process.platform != 'darwin') {
-    app.quit();
-  }
-});*/
 
 app.on('activate', function () {
     if (mainWindow === null/* || BrowserWindow.getAllWindows().length === 0*/) {
@@ -147,9 +128,9 @@ if (!app.isPackaged) {
 // 如何接收识别协议URL https://newsn.net/say/electron-fake-protocol-url.html
 // 获取URL相关系列参数总结 https://newsn.net/say/electron-fake-protocol-args.html
 if (app.isPackaged) {
-    app.setAsDefaultProtocolClient(protocol, process.execPath, ["--"]);
+    app.setAsDefaultProtocolClient(config.protocol, process.execPath, ["--"]);
 } else {
-    app.setAsDefaultProtocolClient(protocol, process.execPath, [path.resolve(process.argv[1]), "--"]);
+    app.setAsDefaultProtocolClient(config.protocol, process.execPath, [path.resolve(process.argv[1]), "--"]);
 }
 
 // 自动更新 https://github.com/electron-userland/electron-builder/wiki/Auto-Update#events
@@ -308,13 +289,7 @@ function createWindow() {
 
     // 检查模块是否已经安装，如果未安装，则安装
     splashScreenUpdate('正在启动，检查模块中。。。');
-    let packagePath;
-    if(app.isPackaged){
-        packagePath = path.join(__dirname, '..', 'app.asar', 'package.json');
-    }else{
-        packagePath = "./package.json";
-    }
-    let clientDependencies = require(packagePath).clientDependencies;
+    let clientDependencies = {}; // packageJson().clientDependencies;
     if (clientDependencies === undefined){
         let allModule = Object.keys(clientDependencies);
         let needInstall = allModule.filter(mi => hasModule(mi));
@@ -462,151 +437,8 @@ function createWindow() {
     // 也可以静默下载指定的文件
     // mainWindow.webContents.downloadURL("http://searchbox.bj.bcebos.com/miniapp/demo-1.0.1.zip");
 
-    // 实现tray托盘图标及上下文菜单 https://newsn.net/say/electron-tray.html
-    // https://newsn.net/say/electron-tray-switch.html
-    // https://newsn.net/say/electron-tray-template-colorful.html
-    const trayIconImage = getIco('app.ico', 0);
-    trayIconImage.setTemplateImage(true);
-    // let trayPress = path.join(__dirname, "./assets/icon/app-gray.ico");
-    if (null == tray) {
-        // tray = new Tray(trayIcon);
-        tray = new Tray(trayIconImage)
-    } else {
-        tray.setImage(trayIconImage);
-    }
-    // tray.setPressedImage(trayPress);
-
-    const contextMenu = Menu.buildFromTemplate([
-        {
-            label: "友情链接",
-            icon: getIco('link.ico'),
-            type: 'submenu',
-            submenu: [{
-                label: "博客地址",
-                click: function () {
-                    shell.openExternal(new URL(mainUrl).origin + '/blog');
-                }
-            }, {
-                label: "作者博客",
-                click: function () {
-                    shell.openExternal('https://fuyiyi.imdo.co');
-                }
-            }, {
-                label: "项目地址",
-                click: function () {
-                    shell.openExternal('https://github.com/zxniuniu/YiyiNet');
-                }
-            }]
-        }, {
-            type: "separator",
-        }, {
-            label: "检查更新",
-            icon: getIco('update.ico'),
-            click: function () {
-                checkUpdate();
-
-                autoUpdater.once("update-not-available", function(info) {
-                    sendStatusToWindow('Update not available.');
-                    dialog.showMessageBoxSync({
-                        "type": 'info',
-                        "buttons": ['确定'],
-                        "title": '版本更新',
-                        "message": '当前版本[' + app.getVersion() + ']为最新版，您不需要更新^_^'
-                    });
-                });
-                autoUpdater.once('update-available', (info) => {
-                    sendStatusToWindow('Update available.');
-                    dialog.showMessageBoxSync({
-                        "type": 'info',
-                        "buttons": ['确定'],
-                        "title": '版本更新',
-                        "message": '检测到新版本[' + info.version + ']，将自动更新当前版本[' + app.getVersion() + ']到最新版^_^'
-                    });
-                })
-            }
-        }, {
-            type: "separator",
-        }, {
-            label: "显示/隐藏(F6)",
-            icon: getIco('show.ico'),
-            click: function () {
-                if (mainWindow.isVisible()) {
-                    mainWindow.hide();
-                } else {
-                    mainWindow.show();
-                    mainWindow.focus();
-                }
-            }
-        }, {
-            label: '强制退出...',
-            icon: getIco('app-gray.ico'),
-            click: function () {
-                // https://discuss.atom.io/t/how-to-catch-the-event-of-clicking-the-app-windows-close-button-in-electron-app/21425
-                forceQuit = true;
-                // mainWindow = null;
-                app.quit();
-            }
-        }, {
-            label: '关于软件...',
-            icon: getIco('click.ico'),
-            click: function () {
-                let json = require('./package.json');
-                dialog.showMessageBoxSync({
-                    "type": 'info',
-                    "buttons": [],
-                    "title": '关于' + json.productName,
-                    "message": json.about + '\r\n版本：' + json.version + '\r\n\r\n主页：' + json.homepage + '\r\n项目：'
-                        + json.repository.url + '\r\n作者：' + json.author
-                });
-            }
-        }
-    ]);
-    tray.setToolTip('依网(YiyiNet)');
-    tray.setContextMenu(contextMenu);
-
-    // 实现改写关闭事件为最小化到托盘 https://newsn.net/say/electron-tray-min.html
-    tray.on("click", () => {
-        if (mainWindow) {
-            /*if (mainWindow.isVisible()) {
-                mainWindow.hide()
-            } else {
-                mainWindow.show()
-            }*/
-            if (!mainWindow.isVisible()) {
-                mainWindow.show();
-                mainWindow.focus();
-            }
-        }
-    });
-
-    // 托盘图标像QQ一样闪动 https://newsn.net/say/electron-tray-flash.html
-    /* var count = 0;
-    var ico_switch = setInterval(function () {
-        if (count++ % 2 === 0) {
-            tray.setImage(trayIconImage);
-        } else {
-            tray.setImage(trayPress);
-        }
-    }, 1000);
-    setTimeout(function () {
-        clearInterval(ico_switch);
-        tray.setImage(trayIconImage);
-    }, 100000);*/
-
-    // 快捷键注册方式对比最佳实践总结 https://newsn.net/say/electron-shortcut.html
-    // 注册全局快捷键，并执行某个事件 https://newsn.net/say/electron-globalshortcut.html
-    let shortcutKey = 'F6';
-    const regSucc = globalShortcut.register(shortcutKey, (event, arg) => { // CmdOrCtrl+Shift+A， CommandOrControl+X
-        // console.log('打开客户端')
-        if (mainWindow !== null) {
-            mainWindow.show();
-        }
-    });
-    if (!regSucc) {
-        console.log('快捷键 ' + shortcutKey + ' 注册失败！')
-    }
-    // 检查快捷键是否注册成功
-    console.log('快捷键 ' + shortcutKey + ' 是否注册成功：' + globalShortcut.isRegistered(shortcutKey))
+    setTray(mainWindow);
+    setShortcut(mainWindow);
 }
 
 function openDevTools() {
@@ -620,17 +452,6 @@ function checkUpdate(){
         autoUpdater.checkForUpdatesAndNotify();
     }catch (e) {
     }
-}
-
-function getIco(name, size) {
-    if (size === undefined) {
-        size = 16;
-    }
-    let img = nativeImage.createFromPath(path.join(__dirname, './assets/icon/' + name));
-    if (size > 0) {
-        img = img.resize({width:size});
-    }
-    return img;
 }
 
 function sendStatusToWindow(text) {
@@ -681,7 +502,7 @@ async function installModule(needInstall, type) {
             let npm = require('npm');
             await npm.load(function (err) {
                 // 设置NPM参数（注意必须放在npm.load函数中）
-                let configKeys = Object.keys(getNpmConfig());
+                let configKeys = Object.keys(npmConfig());
                 console.log('设置NPM参数值，包括以下字段：' + configKeys);
                 configKeys.forEach(key => {
                     npm.config.set(key, npmConfig[key]);
@@ -719,32 +540,10 @@ async function installModule(needInstall, type) {
     return {'module': needInstall, 'type': type, 'succ': true, 'msg': '安装成功'};
 }
 
-// NPM设置
-function getNpmConfig() {
-    return npmConfig = {
-        'registry': 'https://registry.npm.taobao.org/',
-        'disturl': 'https://npm.taobao.org/dist',
-        'electron_mirror': 'https://npm.taobao.org/mirrors/electron/',
-        'chromedriver_cdnurl': 'https://npm.taobao.org/mirrors/chromedriver',
-        'phantomjs_cdnurl': 'http://npm.taobao.org/mirrors/phantomjs',
-        'operadriver_cdnurl': 'http://npm.taobao.org/mirrors/operadriver',
-        'selenium_cdnurl': 'https://npm.taobao.org/mirrors/selenium',
-        'sass_binary_site': 'https://npm.taobao.org/mirrors/node-sass/',
-        'node_sqlite3_binary_host_mirror': 'http://npm.taobao.org/mirrors',
-        'python_mirror': 'http://npm.taobao.org/mirrors/python',
-        'electron_builder_binaries_mirror': 'http://npm.taobao.org/mirrors/electron-builder-binaries/',
-        'profiler_binary_host_mirror': 'http://npm.taobao.org/mirrors/node-inspector/',
-        'npm_config_profiler_binary_host_mirror': 'http://npm.taobao.org/mirrors/node-inspector/',
-        'node_inspector_cdnurl': 'http://npm.taobao.org/mirrors/node-inspector/',
-        'puppeteer_download_host': 'https://npm.taobao.org/mirrors',
-        'npm_config_disturl': 'https://npm.taobao.org/mirrors/atom-shell'
-    }
-}
-
 function handleArgv(argv) {
     // 开发阶段，跳过前两个参数（`electron.exe .`），打包后，跳过第一个参数（`myapp.exe`）
     const offset = app.isPackaged ? 2 : 3;
-    const urlStr = argv.find((arg, i) => i >= offset && arg.startsWith(protocol + ':'));
+    const urlStr = argv.find((arg, i) => i >= offset && arg.startsWith(config.protocol + ':'));
     // let urlStr = process.argv.splice(app.isPackaged ? 2 : 3).join("")
     // let urlStr2 = process.argv[process.argv.length - 1]
     if (urlStr) handleUrl(urlStr);
@@ -761,9 +560,9 @@ function handleUrl(urlStr) {
     console.log(urlObj.pathname + urlObj.search);*/
 
     // 渲染进程获取方式：require('electron').remote.getGlobal('sharedObject').openUrl;
-    let openUrl = urlStr.startsWith(protocol + "://") ? urlStr.substring(protocol.length + 3) : urlStr;
+    let openUrl = urlStr.startsWith(config.protocol + "://") ? urlStr.substring(config.protocol.length + 3) : urlStr;
 
-    console.log('伪协议[' + protocol + ']地址：' + openUrl);
+    console.log('伪协议[' + config.protocol + ']地址：' + openUrl);
     // 主进程通讯监听渲染进程派发的OPENVIEW事件
     if (mainWindow === null) {
         global.sharedObject.openUrl = openUrl;
@@ -778,44 +577,11 @@ function handleUrl(urlStr) {
     })*/
 }
 
-/*
-var urlStr = require('electron').remote.getGlobal('sharedObject').args;
-console.log(urlStr);
-*/
-
-
-/*document.getElementById('close').addEventListener('click', () => {
-  mainWindow.close();
-});*/
-
-// 禁用浏览器缓存（开发时使用，上线后需要关闭）
-// app.commandLine.appendSwitch("--disable-http-cache")
-
 // 下载按钮进行下载, https://github.com/sindresorhus/electron-dl
 /*ipcMain.on('download-button', async (event, {url}) => {
     const win = BrowserWindow.getFocusedWindow();
     console.log(await electronDl(win, url));
 });*/
-
-function checkDarkmode() {
-    let ico_1 = "";
-    let ico_2 = "";
-    if (systemPreferences.isDarkMode()) {
-        ico_1 = "tray-dark.png";
-        ico_2 = "tray-dark-press.png";
-    } else {
-        ico_1 = "tray-light.png";
-        ico_2 = "tray-light-press.png";
-    }
-    ico_1 = path.join(__dirname, "./img/" + ico_1);
-    ico_2 = path.join(__dirname, "./img/" + ico_2);
-    if (tray == null) {
-        tray = new Tray(ico_1);
-    } else {
-        tray.setImage(ico_1);
-    }
-    tray.setPressedImage(ico_2);
-}
 
 // Require each JS file in the main dir
 function loadMainJS() {
@@ -824,66 +590,4 @@ function loadMainJS() {
     files.forEach(function (file) {
         require(file);
     })
-}
-
-function handleSquirrelEvent() {
-    if (process.argv.length === 1) {
-        return false;
-    }
-
-    const childProcess = require('child_process');
-    const path = require('path');
-
-    const appFolder = path.resolve(process.execPath, '..');
-    const rootAtomFolder = path.resolve(appFolder, '..');
-    const updateDotExe = path.resolve(path.join(rootAtomFolder, 'Update.exe'));
-    const exeName = path.basename(process.execPath);
-
-    const spawn = function (command, args) {
-        let spawnedProcess, error;
-
-        try {
-            spawnedProcess = childProcess.spawn(command, args, {detached: true});
-        } catch (error) {
-        }
-        return spawnedProcess;
-    };
-
-    const spawnUpdate = function (args) {
-        return spawn(updateDotExe, args);
-    };
-
-    const squirrelEvent = process.argv[1];
-    switch (squirrelEvent) {
-        case '--squirrel-install':
-        case '--squirrel-updated':
-            // Optionally do things such as:
-            // - Add your .exe to the PATH
-            // - Write to the registry for things like file associations and
-            //   explorer context menus
-
-            // Install desktop and start menu shortcuts
-            spawnUpdate(['--createShortcut', exeName]);
-
-            setTimeout(app.quit, 1000);
-            return true;
-
-        case '--squirrel-uninstall':
-            // Undo anything you did in the --squirrel-install and
-            // --squirrel-updated handlers
-
-            // Remove desktop and start menu shortcuts
-            spawnUpdate(['--removeShortcut', exeName]);
-
-            setTimeout(app.quit, 1000);
-            return true;
-
-        case '--squirrel-obsolete':
-            // This is called on the outgoing version of your app before
-            // we update to the new version - it's the opposite of
-            // --squirrel-updated
-
-            app.quit();
-            return true;
-    }
 }
