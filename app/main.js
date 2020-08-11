@@ -25,15 +25,12 @@ addCommandLine();
 // 保持一个对于 window 对象的全局引用，不然，当JavaScript被GC, window 会被自动地关闭
 var mainWindow = null;
 var tray = null;
-var forceQuit = false;
 const mainUrl = config.mainUrl;
 
 // const ua = require('universal-analytics');
 
 // 是否调试模式 // console.log("当前模式[" + (config.isDev ? "调试" : "正常") + "]，可用模式[调试|正常]");
-if (config.isDev) {
-    require('electron-debug')(); // eslint-disable-line global-require
-} else {
+if (!config.isDev) {
     // if we're running from the app package, we won't have access to env vars
     // normally loaded in a shell, so work around with the shell-env module
     const decoratedEnv = shellEnv.sync();
@@ -53,6 +50,10 @@ app.on('activate', function () {
 app.on('will-quit', () => {
     unSetShortcut();
     killChromedriver();
+
+    if (tray) {
+        tray.destroy();
+    }
 });
 app.on('second-instance', (event, commandLine, workingDirectory) => {
     handleArgv(commandLine);

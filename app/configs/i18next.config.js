@@ -2,11 +2,12 @@ import i18n from 'i18next';
 import i18nextBackend from 'i18next-node-fs-backend';
 import config from './app.config';
 import path from 'path';
+import settings from '../shared/settings'
 
 const i18nextOptions = {
   backend: {
-    loadPath: path.join(__dirname, 'locales/{{lng}}/{{ns}}.json'),
-    addPath: path.join(__dirname, 'locales/{{lng}}/{{ns}}.json'),
+    loadPath: path.join(__dirname, './../assets/locales/{{lng}}/{{ns}}.json'),
+    addPath: path.join(__dirname, './../assets/locales/{{lng}}/{{ns}}.json'),
     jsonIndent: 2,
   },
   // debug: true,
@@ -14,7 +15,7 @@ const i18nextOptions = {
   interpolation: {
     escapeValue: false
   },
-  lng: config.defaultLanguage || 'zh-CN',
+  lng: settings.getSync('DEFAULT_LANGUAGE') || 'cn',
   fallbackLng: config.fallbackLng,
   whitelist: config.languages,
   react: {

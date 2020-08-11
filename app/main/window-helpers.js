@@ -147,7 +147,7 @@ export function windowEvent() {
     // 当 window 被关闭，这个事件会被发出
     mainWindow.on('close', function (e) {
         e.preventDefault();
-        if (!forceQuit) {
+        if (!settings.getSync("FORCE_QUIT_FLAG")) {
             // console.log('event:'+ e);
             if (mainWindow !== null) {
                 mainWindow.hide();
@@ -163,7 +163,7 @@ export function windowEvent() {
             }).then(res => {
                 // console.log('index:' + res.response + ', e:' + e + ', mainWindow:' + mainWindow);
                 if (res && res.response && res.response === 1) {
-                    forceQuit = true;
+                    settings.setSync("FORCE_QUIT_FLAG", true);
                     app.exit(0); // exit()直接关闭客户端，不会执行quit();
                 } else {
                     if (isShow) {

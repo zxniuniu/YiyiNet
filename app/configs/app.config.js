@@ -2,8 +2,7 @@ import {app} from 'electron';
 
 const config = {
   platform: process.platform,
-  languages: ['zh-CN', 'en'],
-  defaultLanguage: 'zh-CN',
+  languages: ['cn'], // ['cn', 'en']
   namespace: 'translation',
   mainUrl: 'http://localhost:8090/index',
   protocol: 'yiyinet',

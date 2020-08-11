@@ -4,6 +4,7 @@ import {checkNewUpdates} from './auto-updater';
 import config from '../configs/app.config';
 import i18n from '../configs/i18next.config';
 import {getIco, packageJson} from './../utils';
+import settings from 'electron-settings';
 
 let menuTemplates = {mac: {}, other: {}};
 let mainWindow = null;
@@ -18,15 +19,22 @@ function languageMenu() {
     }));
 }
 
-const showAppInfoClickAction = () => dialog.showMessageBox({
-    title: i18n.t('diagTitle'),
-    message: i18n.t('showAppInfo', {
-        appVersion: app.getVersion(),
-        electronVersion: process.versions.electron,
-        nodejsVersion: process.versions.node
-    }),
-});
+function showAppInfoClickAction() {
+    let json = packageJson();
+    dialog.showMessageBoxSync({
+        "type": 'info',
+        "buttons": [],
+        "title": '关于' + json.productName,
+        "message": json.about + '\r\n版本：' + json.version + '\r\n\r\n主页：' + json.homepage + '\r\n项目：'
+            + json.repository.url + '\r\n作者：' + json.author
+    });
+}
 
+function menuSep() {
+    return {
+        type: "separator"
+    }
+}
 /*function macMenuAppium () {
   return {
     label: 'Appium',
@@ -193,6 +201,7 @@ menuTemplates.mac = async () => [
   macMenuHelp(),
 ];*/
 
+/*
 function otherMenuFile() {
     let fileSubmenu = [{
         label: i18n.t('&Open'),
@@ -202,13 +211,13 @@ function otherMenuFile() {
         click: showAppInfoClickAction,
     }, {
         type: 'separator'
-    }, /*{
+    }, /!*{
     label: i18n.t('&New Session Window...'),
     accelerator: 'Ctrl+N',
     click () {
       createNewSessionWindow(mainWindow);
     }
-  }, */{
+  }, *!/{
         label: i18n.t('&Close'),
         accelerator: 'Ctrl+W',
         click() {
@@ -291,44 +300,168 @@ function otherMenuHelp() {
         }]
     };
 }
+*/
+
+function otherMenuFriend() {
+    let submenu = [{
+        label: "站内博客",
+        icon: getIco('asana.ico'),
+        click: function () {
+            shell.openExternal(new URL(config.mainUrl).origin + '/blog');
+        }
+    }, {
+        label: "作者博客",
+        icon: getIco('spotify.ico'),
+        click: function () {
+            shell.openExternal('https://fuyiyi.imdo.co');
+        }
+    }, menuSep(), {
+        label: "小妞图库",
+        icon: getIco('solo.ico'),
+        click: function () {
+            shell.openExternal('http://niuniu.hicp.net');
+        }
+    }];
+
+    return {
+        label: "友链", // "友情链接"
+        icon: getIco('link.ico'),
+        submenu: submenu
+    };
+}
+
+function otherMenuSetting() {
+    let submenu = [];
+    submenu.push({
+        label: i18n.t('Languages'),
+        icon: getIco('tallyfy.ico'),
+        submenu: languageMenu()
+    });
+
+    return {
+        label: i18n.t('Setting'),
+        icon: getIco('edit.ico'),
+        submenu: submenu
+    };
+}
+
+function otherMenuView() {
+    let submenu = [];
+    submenu.push({
+        label: i18n.t('Toggle Full Screen'),
+        icon: getIco('schoolloop.ico'),
+        accelerator: 'F11',
+        click() {
+            mainWindow.setFullScreen(!mainWindow.isFullScreen());
+        }
+    });
+
+    if (config.isDev || (app.isPackaged && config.mainUrl.indexOf('localhost') >= 0)) {
+        submenu.push({
+            label: i18n.t('Reload'),
+            accelerator: 'Ctrl+R',
+            click() {
+                mainWindow.webContents.reload();
+            }
+        });
+        submenu.push({
+            label: i18n.t('Toggle Developer Tools'),
+            accelerator: 'Alt+Ctrl+I',
+            click() {
+                if (!mainWindow.isVisible()) {
+                    mainWindow.show();
+                    mainWindow.focus();
+                }
+                mainWindow.toggleDevTools();
+            }
+        });
+    }
+
+    submenu.push(menuSep());
+    submenu.push({
+        label: i18n.t('Show / Hide'),
+        icon: getIco('codetree.ico'),
+        accelerator: 'F6',
+        // icon: getIco('show.ico'),
+        click: function () {
+            if (mainWindow.isVisible()) {
+                mainWindow.hide();
+            } else {
+                mainWindow.show();
+                mainWindow.focus();
+            }
+        }
+    });
+    submenu.push({
+        label: i18n.t('Force Quit'),
+        icon: getIco('unlockicon.ico'),
+        click: function () {
+            // https://discuss.atom.io/t/how-to-catch-the-event-of-clicking-the-app-windows-close-button-in-electron-app/21425
+            settings.setSync("FORCE_QUIT_FLAG", true);
+            // mainWindow = null;
+            app.quit();
+        }
+    });
+
+    return {
+        label: i18n.t('View'),
+        icon: getIco('programming.ico'),
+        submenu: submenu
+    };
+}
+
+function otherMenuAbout() {
+    return {
+        label: i18n.t('About'),
+        icon: getIco('update.ico'),
+        submenu: [{
+            label: i18n.t('About Software'),
+            icon: getIco('app-gray.ico'),
+            click: showAppInfoClickAction,
+        }, {
+            label: i18n.t('Check for updates'),
+            icon: getIco('update.ico'),
+            click() {
+                checkNewUpdates(true);
+            }
+        }, {
+            type: "separator",
+        }, {
+            label: "项目主页",
+            icon: getIco('basecamp.ico'),
+            click: function () {
+                shell.openExternal('https://github.com/zxniuniu/YiyiNet');
+            }
+        }, {
+            label: "使用文档",
+            icon: getIco('feedly.ico'),
+            click: function () {
+                shell.openExternal('https://fuyiyi.imdo.co/tags/YiyiNet');
+            }
+        }, {
+            label: i18n.t('Search Issues'),
+            icon: getIco('devdocs.ico'),
+            click() {
+                shell.openExternal('https://github.com/zxniuniu/YiyiNet/issues');
+            }
+        }]
+    };
+}
 
 function myMenu() {
     return {
         label: 'TEST',// i18n.t('Help'),
-        submenu: [
-            {
-                label: "友情链接",
-                icon: getIco('link.ico'),
-                type: 'submenu',
-                submenu: [{
-                    label: "博客地址",
-                    click: function () {
-                        shell.openExternal(new URL(mainUrl).origin + '/blog');
-                    }
-                }, {
-                    label: "作者博客",
-                    click: function () {
-                        shell.openExternal('https://fuyiyi.imdo.co');
-                    }
-                }, {
-                    label: "项目地址",
-                    click: function () {
-                        shell.openExternal('https://github.com/zxniuniu/YiyiNet');
-                    }
-                }]
-            }, {
-                type: "separator",
-            }, {
-                label: "检查更新",
-                icon: getIco('update.ico'),
-                click: function () {
-                    checkUpdate();
+        submenu: [{
+            label: "检查更新",
+            icon: getIco('update.ico'),
+            click: function () {
+                checkUpdate();
 
-                    autoUpdater.once("update-not-available", function (info) {
-                        sendStatusToWindow('Update not available.');
-                        dialog.showMessageBoxSync({
-                            "type": 'info',
-                            "buttons": ['确定'],
+                autoUpdater.once("update-not-available", function (info) {
+                    sendStatusToWindow('Update not available.');
+                    dialog.showMessageBoxSync({
+                        "type": 'info',
+                        "buttons": ['确定'],
                             "title": '版本更新',
                             "message": '当前版本[' + app.getVersion() + ']为最新版，您不需要更新^_^'
                         });
@@ -346,37 +479,9 @@ function myMenu() {
             }, {
                 type: "separator",
             }, {
-                label: "显示/隐藏(F6)",
-                icon: getIco('show.ico'),
-                click: function () {
-                    if (mainWindow.isVisible()) {
-                        mainWindow.hide();
-                    } else {
-                        mainWindow.show();
-                        mainWindow.focus();
-                    }
-                }
-            }, {
-                label: '强制退出...',
-                icon: getIco('app-gray.ico'),
-                click: function () {
-                    // https://discuss.atom.io/t/how-to-catch-the-event-of-clicking-the-app-windows-close-button-in-electron-app/21425
-                    // forceQuit = true;
-                    // mainWindow = null;
-                    app.quit();
-                }
-            }, {
                 label: '关于软件...',
                 icon: getIco('click.ico'),
                 click: function () {
-                    let json = packageJson();
-                    dialog.showMessageBoxSync({
-                        "type": 'info',
-                        "buttons": [],
-                        "title": '关于' + json.productName,
-                        "message": json.about + '\r\n版本：' + json.version + '\r\n\r\n主页：' + json.homepage + '\r\n项目：'
-                            + json.repository.url + '\r\n作者：' + json.author
-                    });
                 }
             }
         ]
@@ -384,10 +489,12 @@ function myMenu() {
 }
 
 menuTemplates.other = async () => [
-    otherMenuFile(),
+    otherMenuFriend(),
+    menuSep(),
+    otherMenuSetting(),
     await otherMenuView(),
-    otherMenuHelp(),
-    myMenu()
+    menuSep(),
+    otherMenuAbout()
 ];
 
 export async function genMenus(mainWin = null, trayIn = null) {

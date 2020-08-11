@@ -1,6 +1,7 @@
-import {Tray} from 'electron';
+import {Tray, webContents} from 'electron';
 import {genMenus} from './menus';
 import {getIco, packageJson} from './../utils';
+import i18n from '../configs/i18next.config';
 
 let tray = null;
 
@@ -24,6 +25,16 @@ export function setTray(mainWindow) {
     // tray.setPressedImage(trayPress);
 
     tray.setToolTip(packageJson().productName);
+
+    i18n.on('languageChanged', async (languageCode) => {
+        genMenus(mainWindow, tray);
+        // settings.setSync('DEFAULT_LANGUAGE', languageCode);
+        webContents.getAllWebContents().forEach((wc) => {
+            wc.send('language-changed', {
+                language: languageCode,
+            });
+        });
+    });
     genMenus(mainWindow, tray);
 
     // 实现改写关闭事件为最小化到托盘 https://newsn.net/say/electron-tray-min.html

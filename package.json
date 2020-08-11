@@ -1,7 +1,7 @@
 {
   "name": "YiyiNet",
   "version": "1.4.6",
-  "productName": "依网(YiyiNet)",
+  "productName": "YiyiNet",
   "description": "依网, YiyiNet, 定时任务, 自动签到, 自动任务, 任务管理",
   "about": "依网(YiyiNet)：自动任务执行，如自动签到，自动浏览等",
   "author": "zxniuniu <bluefuxianwu@gmail.com>",
@@ -10,7 +10,7 @@
   },
   "main": "dist/main.js",
   "scripts": {
-    "start": "chcp 65001 && npm run obfuscator && electron . --debug --inspect=8888",
+    "start": "chcp 65001 && npm run build-main-dev && electron . --debug --inspect=8888",
     "delete": "rmdir /S /Q node_modules",
     "rebuild": "electron-rebuild",
     "postinstall": "electron-builder install-app-deps",
@@ -20,7 +20,7 @@
     "pack:mac": "npm run nodeOption && electron-builder --mac",
     "pack:linux": "npm run nodeOption && electron-builder --linux --publish never",
     "pack:win:web": "npm run nodeOption && electron-builder --windows --publish never",
-    "pack:win:x64": "npm run nodeOption && npm run build:main && electron-builder --windows --x64 -c.win.target.target=nsis -c.win.target.arch=x64 --publish never",
+    "pack:win:x64": "npm run nodeOption && npm run build-main-dev && electron-builder --windows --x64 -c.win.target.target=nsis -c.win.target.arch=x64 --publish never",
     "pack:win:ia32": "npm run nodeOption && electron-builder --windows --ia32 -c.win.target.target=nsis -c.win.target.arch=ia32 --publish never",
     "pack:win": "npm-run-all pack:win:web",
     "pack:all": "npm-run-all pack:*",
@@ -32,8 +32,8 @@
     "bundle": "browserify --ignore-missing --no-builtins --no-commondir --insert-global-vars=\"global\" --no-browser-field main.js | uglifyjs -c > main.bundle.js",
     "build": "run-s build:*",
     "build:main": "cross-env NODE_ENV=production parcel build --target node --public-url . --out-dir ./dist --out-file main.js ./app/main.js",
-    "build:renderer": "cross-env NODE_ENV=production parcel build --no-content-hash --out-dir ./dist --target electron --public-url . ./app/renderer/index.html",
     "build-main-dev": "cross-env NODE_ENV=development parcel build --target node --out-dir ./dist --out-file main.js ./app/main.js",
+    "build:renderer": "cross-env NODE_ENV=production parcel build --no-content-hash --out-dir ./dist --target electron --public-url . ./app/renderer/index.html",
     "build-renderer-dev": "cross-env NODE_ENV=development parcel build --out-dir ./dist --target electron --public-url . ./app/renderer/index.html"
   },
   "keywords": [
@@ -52,7 +52,6 @@
     "bluebird": "^3.7.2",
     "cheerio": "^1.0.0-rc.3",
     "electron-context-menu": "^2.2.0",
-    "electron-debug": "^3.1.0",
     "electron-settings": "^4.0.2",
     "electron-window-state": "^5.0.3",
     "fix-path": "^3.0.0",

@@ -258,7 +258,7 @@ export function getIco(name, size) {
     if (size === undefined) {
         size = 16;
     }
-    let img = nativeImage.createFromPath(path.join(__dirname, './assets/icon/' + name));
+    let img = nativeImage.createFromPath(path.join(__dirname, './../assets/icon/' + name));
     if (size > 0) {
         img = img.resize({width: size});
     }
