@@ -19,6 +19,8 @@ export function openBrowserWindow(opts) {
         'y': mainWindowState.y,
         'width': mainWindowState.width,
         'height': mainWindowState.height,
+        'fullscreen': mainWindowState.isFullScreen,
+        // '': mainWindowState.isMaximized,
         // minWidth: 880,
         // minHeight: 450,
         show: false,
@@ -41,6 +43,7 @@ export function openBrowserWindow(opts) {
             plugins: true
         }
     };
+
     // https://github.com/trodi/electron-splashscreen/blob/master/api-doc/interfaces/config.md
     let splashScreenOptions = {
         windowOpts: {
@@ -48,10 +51,10 @@ export function openBrowserWindow(opts) {
             ...opts,
         },
         delay: 0,
-        templateUrl: path.join(__dirname, "./assets/splash/splashscreen.html"),
+        templateUrl: path.join(__dirname, "./../assets/splash/splashscreen.html"),
         splashScreenOpts: {
-            width: 500,
-            height: 307,
+            width: 400,
+            height: 225,
             frame: false,
             center: true,
             // backgroundColor: "white",
@@ -88,27 +91,27 @@ export function openBrowserWindow(opts) {
     });*/
     // mainWindow.loadURL(mainUrl);
 
-    var splashScreenUpdate = function (text) {
-        let gotoHome = text === 'finish';
-        if (gotoHome) {
-            text = '初始化完成，准备进入主页。。。';
-        }
-
-        /*if (Math.floor(text) === text) {
-            if (text > 0) {
-                setTimeout(function () { return splashScreenUpdate(text - 1); }, 1000);
-            }
-        }*/
-        if (dynamicSplashScreen && dynamicSplashScreen.splashScreen) {
-            dynamicSplashScreen.splashScreen.webContents.send('splashScreenUpdate', text);
-            console.log((gotoHome ? '完成，准备到主页' : '初始化中：') + text);
-        }
-        if (gotoHome) {
-            // Done sending updates to mock progress while loading window, so go ahead and load the main window.
+    let splashScreenUpdate = function (text) {
+        let finish = text === 'finish';
+        if (finish) {
             mainWindow.loadURL(config.mainUrl);
+        } else {
+            dynamicSplashScreen.splashScreen.webContents.send('splashScreenUpdate', text);
+            console.log((finish ? '已完成' : '初始化') + "：" + text);
+
+            if (Math.floor(text) === text) {
+                if (text > 0) {
+                    setTimeout(function () {
+                        return splashScreenUpdate(text - 1);
+                    }, 1000);
+                }
+            } else if (finish) {
+                // Done sending updates to mock progress while loading window, so go ahead and load the main window.
+                mainWindow.loadURL(config.mainUrl);
+            }
         }
     };
-    // splashScreenUpdate(10);
+    // splashScreenUpdate(5);
 
     // 检查模块是否已经安装，如果未安装，则安装
     splashScreenUpdate('正在启动，检查模块中。。。');
@@ -180,11 +183,6 @@ export function windowEvent() {
         mainWindow = null;
     });
 
-    mainWindow.on('ready-to-show', function () {
-        mainWindow.show();
-        // checkUpdate();
-    });
-
     /*mainWindow.on('resize', function () {
         const message = `大小: ${mainWindow.getSize()} - 位置: ${mainWindow.getPosition()}`
         console.log("mainWindow：" + message);
@@ -205,6 +203,7 @@ export function windowEvent() {
 
     // DOM READY事件
     mainWindow.webContents.on('dom-ready', function () {
+        mainWindow.show();
         openDevTools();
     });
 

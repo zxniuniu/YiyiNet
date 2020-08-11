@@ -1,6 +1,7 @@
-call xcopy D:\Workspace\git\YiyiNet\release\win-unpacked\*.* %~dp0 /F /E /Y
+call cls
+call xcopy D:\Workspace\git\YiyiNet\release\win-unpacked\*.* %~dp0 /E /Y
 
-call rmdir /S /Q %~dp0resources\app\
+:: call rmdir /S /Q %~dp0resources\app\
 :: call mkdir %~dp0resources\app\
 :: call asar e %~dp0resources\app.asar resources\app
 

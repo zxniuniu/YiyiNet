@@ -364,3 +364,30 @@ export function packageJson() {
     }
     return require(packagePath);
 }
+
+/**
+ * 切换显示/隐藏
+ */
+export function toggleShowHide(mainWindow) {
+    if (mainWindow !== null) {
+        if (mainWindow.isVisible()) {
+            if (mainWindow.isFocused()) {
+                mainWindow.hide();
+            } else {
+                mainWindow.focus();
+            }
+        } else {
+            mainWindow.show();
+            mainWindow.focus();
+        }
+    }
+}
+
+/**
+ * 发送消息
+ * @param text
+ */
+function sendStatusToWindow(text) {
+    console.log(text);
+    mainWindow.webContents.send('message', text);
+}

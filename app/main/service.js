@@ -7,3 +7,11 @@ export function killChromedriver() {
     exec('TASKKILL.EXE /F /IM chromedriver.exe', function (err, stdout, stderr) {
     });
 }
+
+/**
+ * 停止客户端启动的所有服务进程
+ */
+export function killAllServiceByYiyiNet() {
+    killChromedriver();
+
+}

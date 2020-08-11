@@ -68,6 +68,12 @@ export function setTray(mainWindow) {
 
 }
 
+export function destroyTray() {
+    if (tray) {
+        tray.destroy();
+    }
+}
+
 export function checkDarkmode() {
     /*let ico_1 = "";
     let ico_2 = "";

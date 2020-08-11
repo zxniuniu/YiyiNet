@@ -8,13 +8,15 @@ import fixPath from 'fix-path';
 import config from './configs/app.config';
 // import {addPepFlashCommandLine} from './main/pepflash';
 import {handleArgv, handleUrl, npmConfig} from './utils';
-import {setTray} from './main/tray';
+import {destroyTray, setTray} from './main/tray';
 import {setShortcut, unSetShortcut} from './main/shortcut';
 import {openBrowserWindow, setSavedEnv, windowEvent} from './main/window-helpers';
-import {killChromedriver} from './main/service';
+import {killAllServiceByYiyiNet} from './main/service';
 import {setAutoLaunch} from './main/auto-launch';
 import {setProtocol} from './main/protocal';
 import {addCommandLine} from './main/add-command-line';
+import {initializeIpc} from './main/ipcevent';
+
 /* const {autoUpdater} = require("electron-updater"); */
 
 addCommandLine();
@@ -24,9 +26,6 @@ addCommandLine();
 
 // 保持一个对于 window 对象的全局引用，不然，当JavaScript被GC, window 会被自动地关闭
 var mainWindow = null;
-var tray = null;
-const mainUrl = config.mainUrl;
-
 // const ua = require('universal-analytics');
 
 // 是否调试模式 // console.log("当前模式[" + (config.isDev ? "调试" : "正常") + "]，可用模式[调试|正常]");
@@ -49,12 +48,10 @@ app.on('activate', function () {
 });
 app.on('will-quit', () => {
     unSetShortcut();
-    killChromedriver();
-
-    if (tray) {
-        tray.destroy();
-    }
+    killAllServiceByYiyiNet();
+    destroyTray();
 });
+
 app.on('second-instance', (event, commandLine, workingDirectory) => {
     handleArgv(commandLine);
 
@@ -95,12 +92,10 @@ function createWindow() {
     windowEvent();
     setTray(mainWindow);
     setShortcut(mainWindow);
+
+    initializeIpc(mainWindow);
 }
 
-function sendStatusToWindow(text) {
-    console.log(text);
-    mainWindow.webContents.send('message', text);
-}
 
 
 ipcMain.on('installModule', (event, needData) => {

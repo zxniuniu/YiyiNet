@@ -3,7 +3,7 @@ import {app, dialog, Menu, shell} from 'electron';
 import {checkNewUpdates} from './auto-updater';
 import config from '../configs/app.config';
 import i18n from '../configs/i18next.config';
-import {getIco, packageJson} from './../utils';
+import {getIco, packageJson, toggleShowHide} from './../utils';
 import settings from 'electron-settings';
 
 let menuTemplates = {mac: {}, other: {}};
@@ -384,12 +384,7 @@ function otherMenuView() {
         accelerator: 'F6',
         // icon: getIco('show.ico'),
         click: function () {
-            if (mainWindow.isVisible()) {
-                mainWindow.hide();
-            } else {
-                mainWindow.show();
-                mainWindow.focus();
-            }
+            toggleShowHide(mainWindow);
         }
     });
     submenu.push({
