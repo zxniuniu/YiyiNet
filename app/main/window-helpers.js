@@ -53,8 +53,8 @@ export function openBrowserWindow(opts) {
         delay: 0,
         templateUrl: path.join(__dirname, "./../assets/splash/splashscreen.html"),
         splashScreenOpts: {
-            width: 400,
-            height: 225,
+            width: 533,
+            height: 300,
             frame: false,
             center: true,
             // backgroundColor: "white",
@@ -63,7 +63,7 @@ export function openBrowserWindow(opts) {
                 nodeIntegration: true,
             }
         }
-    }
+    };
 
     const dynamicSplashScreen = initDynamicSplashScreen(splashScreenOptions);
     mainWindow = dynamicSplashScreen.main; // dynamicSplashScreen.splashScreen

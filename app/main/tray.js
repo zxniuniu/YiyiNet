@@ -3,7 +3,7 @@ import {genMenus} from './menus';
 import {getIco, packageJson} from './../utils';
 import i18n from '../configs/i18next.config';
 
-let tray = null;
+var tray = null; // 全局变量
 
 /**
  * 设置托盘菜单

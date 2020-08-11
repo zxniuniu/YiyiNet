@@ -360,7 +360,7 @@ export function packageJson() {
     if (app.isPackaged) {
         packagePath = path.join(__dirname, '..', 'package.json');
     } else {
-        packagePath = "./../../package.json";
+        packagePath = "./../package.json";
     }
     return require(packagePath);
 }

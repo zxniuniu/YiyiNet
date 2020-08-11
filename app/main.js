@@ -70,7 +70,7 @@ app.on('open-url', (event, urlStr) => {
 setAutoLaunch();
 setProtocol();
 
-app.on('ready', createWindow)
+app.on('ready', createWindow);
 
 // 当 Electron 完成了初始化并且准备创建浏览器窗口的时候
 // 如何实现单实例？两种方案解决单实例问题 https://newsn.net/say/electron-single-instance-lock.html

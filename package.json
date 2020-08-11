@@ -70,6 +70,7 @@
     "unzip-crx-3": "^0.2.0"
   },
   "devDependencies": {
+    "appium": "^1.18.0",
     "cross-env": "^7.0.2",
     "electron": "^9.1.2",
     "electron-builder": "^22.7.0",
