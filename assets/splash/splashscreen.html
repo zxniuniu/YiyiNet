@@ -1,22 +1,33 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <html>
-    <head></head>
-    <body style="background-image: url('./background.gif')">
-    <!--<center>
-        <img src="./../svg/v2x.svg" width="250" height="250"></img>
-    </center>-->
-    <!--<center style="background-color: white;">-->
-    <center style="margin-top: 270px;">
-        <!--正在加载中，请稍候...-->
-        <span id="status" style="color: red">正在启动，请稍候。。。</span>
-    </center>
-    </body>
-    <script>
-        // Listen for data from browser process and update splashscreen
-        const {ipcRenderer} = require("electron");
-        ipcRenderer.on("splashScreenUpdate", function(event, status) {
-            document.getElementById("status").innerText = status;
-        })
-    </script>
+<head></head>
+<body id="body" onload="loadFunction()" style="overflow: hidden">
+<!--<center>
+    <img src="./../svg/v2x.svg" width="250" height="250"></img>
+</center>-->
+<!--<center style="background-color: white;">-->
+<center style="margin-top: 270px;">
+    <!--正在加载中，请稍候...-->
+    <span id="status" style="color: white; font-weight: bold; font-size: 20px;">依网(YiyiNet)：正在启动，请稍候。。。</span>
+    <span id="status2"></span>
+</center>
+<script>
+    // Listen for data from browser process and update splashscreen
+    const {ipcRenderer} = require("electron");
+    ipcRenderer.on("splashScreenUpdate", function (event, status) {
+        document.getElementById("status").innerText = '依网(YiyiNet)：' + status;
+    })
+
+    function loadFunction() {
+        let gifNum = 3;
+        /*require('fs').readdirSync('./').forEach(file => {
+            if (file.startsWith("background") || file.endsWith(".gif")){
+                gifNum++;
+            }
+        });*/
+        document.getElementById("body").style.backgroundImage = 'url(./background' + Math.floor((Math.random() * gifNum) + 1) + '.gif)';
+    }
+</script>
+</body>
 </html>
