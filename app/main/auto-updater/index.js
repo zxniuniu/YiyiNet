@@ -21,6 +21,9 @@ let menuClick = true; // 如果是菜单点击，则无更新时也提示
 if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
     // autoUpdater.setFeedURL(getFeedUrl(app.getVersion()));
 
+    // https://www.electron.build/auto-update#api
+    autoUpdater.fullChangelog = true;
+
     /**
      * Check for new updates
      */
