@@ -16,6 +16,7 @@ const runningLocally = isDev || process.env.RUNNING_LOCALLY;
 
 let checkNewUpdates = _.noop;
 let mainWindow = null;
+let menuClick = true; // 如果是菜单点击，则无更新时也提示
 
 if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
     // autoUpdater.setFeedURL(getFeedUrl(app.getVersion()));
@@ -23,8 +24,9 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
     /**
      * Check for new updates
      */
-    checkNewUpdates = async function (mainWin) {
+    checkNewUpdates = async function (mainWin, menuclick) {
         mainWindow = mainWin;
+        menuClick = menuclick;
 
         // autoupdate.checkForUpdates always downloads updates immediately
         // This method (getUpdate) let's us take a peek to see if there is an update
@@ -67,14 +69,14 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
 
             // If no updates found check for updates every hour
             await B.delay(60 * 60 * 1000);
-            checkNewUpdates();
+            checkNewUpdates(mainWindow, false);
         }*/
         autoUpdater.checkForUpdates();
     };
 
     // Handle error case
     autoUpdater.on('error', (message) => {
-        sendStatusToWindow('自动更新时出错：' + message);
+        sendStatusToWindow('更新时出错：' + message);
         dialog.showMessageBox({
             type: 'error',
             message: i18n.t('Could not download update'),
@@ -89,7 +91,7 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
     // Inform user when the download is starting and that they'll be notified again when it is complete
     autoUpdater.on('update-available', (info) => { // UpdateInfo: version, files, path, sha512, releaseName, releaseNotes, releaseDate, stagingPercentage
         let version = info.version;
-        sendStatusToWindow('有更新[' + info.version + ']可用，即将自动下载');
+        sendStatusToWindow('有更新[' + info.version + ']可用，即将自动开始下载');
         dialog.showMessageBox({
             type: 'info',
             buttons: [i18n.t('OK')],
@@ -102,18 +104,21 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
     autoUpdater.on('update-not-available', (info) => { // UpdateInfo: version, files, path, sha512, releaseName, releaseNotes, releaseDate, stagingPercentage
         let version = info.version;
         sendStatusToWindow('无可用更新，当前版本已是最新版本：' + version);
-        dialog.showMessageBox({
-            type: 'info',
-            buttons: [i18n.t('OK')],
-            message: i18n.t('No update available'),
-            detail: i18n.t('YiyiNet is up-to-date', {version}),
-        });
+        if (menuClick) {
+            dialog.showMessageBox({
+                type: 'info',
+                buttons: [i18n.t('OK')],
+                message: i18n.t('No update available'),
+                detail: i18n.t('YiyiNet is up-to-date', {version}),
+            });
+        }
     });
 
     autoUpdater.on('download-progress', (progressObj) => {// progress, bytesPerSecond, percent, total, transferred
-        let log_message = "Download speed: " + progressObj.bytesPerSecond + ', Downloaded: ' + progressObj.percent + '%' + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+        let log_message = "下载速度[" + (progressObj.bytesPerSecond / 1024).toFixed(2) + 'KB/S], 已下载[' + progressObj.percent.toFixed(2) + '%]'
+            + ' (' + (progressObj.transferred / 1024 / 1024).toFixed(2) + "/" + (progressObj.total / 1024 / 1024).toFixed(2) + 'M)';
         console.log(log_message);
-        // mainWindow.setProgressBar(progressObj.transferred / progressObj.total);
+        mainWindow.setProgressBar(progressObj.percent / 100);
         sendStatusToWindow(log_message);
     });
 
@@ -130,7 +135,7 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
         }, (response) => {
             // If they say yes, restart now
             if (response === 0) {
-                autoUpdater.quitAndInstall();
+                autoUpdater.quitAndInstall(true, true);
             }
         });
     });

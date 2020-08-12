@@ -404,5 +404,5 @@ export function initializeIpc(mainWindow) {
     connectGetEnv();
     connectSaveEnv();*/
 
-    // checkNewUpdates(mainWindow);
+    // checkNewUpdates(mainWindow, false);
 }

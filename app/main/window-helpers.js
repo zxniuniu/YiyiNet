@@ -207,7 +207,7 @@ export function windowEvent() {
         mainWindow.show();
         openDevTools();
 
-        checkNewUpdates(mainWindow);
+        checkNewUpdates(mainWindow, false);
     });
 
     // 如何监控文件下载进度，并显示进度条 https://newsn.net/say/electron-download-progress.html
