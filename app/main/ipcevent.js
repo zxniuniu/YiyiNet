@@ -8,7 +8,6 @@ import _ from 'lodash';
 import settings from '../shared/settings';
 // import {createSession, killSession, getSessionHandler} from './appium-method-handler';
 import request from 'request-promise';
-import {checkNewUpdates} from './auto-updater';
 import {openBrowserWindow, setSavedEnv} from './window-helpers';
 
 const LOG_SEND_INTERVAL_MS = 250;
@@ -405,5 +404,5 @@ export function initializeIpc(mainWindow) {
     connectGetEnv();
     connectSaveEnv();*/
 
-    setTimeout(checkNewUpdates, 30 * 60 * 1000); // 30分钟检测一次更新
+    // checkNewUpdates(mainWindow);
 }

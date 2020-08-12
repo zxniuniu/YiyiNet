@@ -1,6 +1,6 @@
 {
   "name": "YiyiNet",
-  "version": "1.4.6",
+  "version": "1.5.2",
   "productName": "YiyiNet",
   "description": "依网, YiyiNet, 定时任务, 自动签到, 自动任务, 任务管理",
   "about": "依网(YiyiNet)：自动任务执行，如自动签到，自动浏览等",
@@ -14,7 +14,7 @@
     "delete": "rmdir /S /Q node_modules",
     "rebuild": "electron-rebuild",
     "postinstall": "electron-builder install-app-deps",
-    "nodeOption": "cross-env NODE_OPTIONS='--max-old-space-size=819200'",
+    "nodeOption": "cross-env NODE_OPTIONS='--max-old-space-size=819200' && cross-env USE_HARD_LINKS=true",
     "obfuscator": "javascript-obfuscator app/main.js -o app/main.min.js",
     "pack": "npm run nodeOption && electron-builder --dir",
     "pack:mac": "npm run nodeOption && electron-builder --mac",
@@ -53,6 +53,7 @@
     "cheerio": "^1.0.0-rc.3",
     "electron-context-menu": "^2.2.0",
     "electron-settings": "^4.0.2",
+    "electron-updater": "^4.3.1",
     "electron-window-state": "^5.0.3",
     "fix-path": "^3.0.0",
     "got": "^11.5.2",
@@ -82,7 +83,6 @@
   },
   "build": {
     "appId": "zxniuniu.yiyinet",
-    "productName": "YiyiNet",
     "copyright": "Copyright © 2020",
     "afterPack": "./build/afterPack.js",
     "directories": {
@@ -98,11 +98,9 @@
     "extraFiles": [
       "dll/"
     ],
-    "forceCodeSigning": false,
     "asar": true,
     "win": {
       "icon": "./assets/icon/app.ico",
-      "artifactName": null,
       "target": {
         "target": "nsis-web",
         "arch": [
@@ -149,10 +147,7 @@
       "mirror": "http://npm.taobao.org/mirrors/electron/"
     },
     "publish": {
-      "provider": "github",
-      "owner": "zxniuniu",
-      "repo": "YiyiNet",
-      "publishAutoUpdate": true
+      "provider": "github"
     }
   }
 }

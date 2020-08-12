@@ -382,12 +382,3 @@ export function toggleShowHide(mainWindow) {
         }
     }
 }
-
-/**
- * 发送消息
- * @param text
- */
-function sendStatusToWindow(text) {
-    console.log(text);
-    mainWindow.webContents.send('message', text);
-}

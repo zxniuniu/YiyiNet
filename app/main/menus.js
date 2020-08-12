@@ -44,7 +44,7 @@ function menuSep() {
     }, {
       label: i18n.t('Check for updates'),
       click () {
-        checkNewUpdates(true);
+        checkNewUpdates(mainWindow);
       }
     }, {
       type: 'separator'
@@ -230,7 +230,7 @@ function otherMenuFile() {
         fileSubmenu.splice(1, 0, {
             label: i18n.t('&Check for updates'),
             click() {
-                checkNewUpdates(true);
+                checkNewUpdates(mainWindow);
             }
         });
     }
@@ -417,7 +417,7 @@ function otherMenuAbout() {
             label: i18n.t('Check for updates'),
             icon: getIco('update.ico'),
             click() {
-                checkNewUpdates(true);
+                checkNewUpdates(mainWindow);
             }
         }, {
             type: "separator",
