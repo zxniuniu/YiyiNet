@@ -10,6 +10,7 @@ import {dialog} from 'electron';
 import {autoUpdater} from 'electron-updater'; // https://www.electron.build/auto-update#AppUpdater
 import _ from 'lodash';
 import i18n from '../../configs/i18next.config';
+import settings from "../../shared/settings";
 
 const isDev = process.env.NODE_ENV === 'development';
 const runningLocally = isDev || process.env.RUNNING_LOCALLY;
@@ -79,12 +80,14 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
 
     // Handle error case
     autoUpdater.on('error', (message) => {
-        sendStatusToWindow('更新时出错：' + message);
-        dialog.showMessageBox({
-            type: 'error',
-            message: i18n.t('Could not download update'),
-            detail: i18n.t('updateDownloadFailed', {message}),
-        });
+        if (message.toString().indexOf('no such file or directory') === -1) {
+            sendStatusToWindow('更新时出错：' + message);
+            dialog.showMessageBox({
+                type: 'error',
+                message: i18n.t('Could not download update'),
+                detail: i18n.t('updateDownloadFailed', {message}),
+            });
+        }
     });
 
     autoUpdater.on('checking-for-update', () => {
@@ -132,12 +135,15 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
         sendStatusToWindow('新版本[' + version + ']下载成功');
         dialog.showMessageBox({
             type: 'info',
+            defaultId: 1,
+            cancelId: 1,
             buttons: [i18n.t('Restart Now'), i18n.t('Restart Later')],
             message: i18n.t('Update Downloaded'),
             detail: i18n.t('updateIsDownloaded', {version})
         }, (response) => {
             // If they say yes, restart now
             if (response === 0) {
+                settings.setSync("FORCE_QUIT_FLAG", 'install');
                 autoUpdater.quitAndInstall(true, true);
             }
         });
