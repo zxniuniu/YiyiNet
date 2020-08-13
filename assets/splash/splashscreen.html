@@ -23,8 +23,7 @@
     }
 
     function loadFunction() {
-        let fs = require('fs');
-        let path = require('path');
+        let fs = require('fs'), path = require('path');
         let files = fs.readdirSync(path.join(__dirname, '../../', './assets/splash/'));
         let gifNum = files.filter(file => file.startsWith("background") && file.endsWith(".gif")).length;
         gifNum = gifNum <= 0 ? 3 : gifNum; // 如果小于0，则设置为3个

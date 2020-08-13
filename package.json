@@ -48,6 +48,7 @@
   "dependencies": {
     "@trodi/electron-splashscreen": "^1.0.0",
     "async": "^3.2.0",
+    "async-lock": "^1.2.4",
     "axios": "^0.19.2",
     "bluebird": "^3.7.2",
     "cheerio": "^1.0.0-rc.3",
@@ -77,7 +78,6 @@
     "electron-builder": "^22.7.0",
     "electron-rebuild": "^1.11.0",
     "extract-zip": "^2.0.1",
-    "javascript-obfuscator": "^1.9.0",
     "npm-run-all": "^4.1.5",
     "parcel-bundler": "^1.12.4"
   },
@@ -96,7 +96,7 @@
       "package.json"
     ],
     "extraFiles": [
-      "dll/"
+      "dll_backup/"
     ],
     "asar": true,
     "win": {

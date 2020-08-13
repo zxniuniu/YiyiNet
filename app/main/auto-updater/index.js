@@ -142,10 +142,9 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
             buttons: [i18n.t('Restart Now'), i18n.t('Restart Later')],
             message: i18n.t('Update Downloaded'),
             detail: i18n.t('updateIsDownloaded', {version})
-        }, (res) => {
-            console.log('res: ');
-            console.dir(res);
-            if (res === 0) {
+        }).then(res => {
+            // console.log('res: '); console.dir(res);
+            if (res && res.response && res.response === 0) {
                 settings.setSync("FORCE_QUIT_FLAG", 'install');
                 autoUpdater.quitAndInstall(true, true);
             }

@@ -6,16 +6,24 @@ import https from 'https';
 import rimraf from 'rimraf';
 import unzip from 'unzip-crx-3';
 import semver from 'semver';
+import AsyncLock from 'async-lock';
 
 import config from './configs/app.config';
 import settings from './shared/settings';
 
+
 // Use https.get fallback for Electron < 1.4.5
 const request = net ? net.request : https.get;
 
+/*
+var remote = require('electron').remote;
+var app = remote.app;
+var path = require('path');
+var fs = require('fs');
+*/
 /**
  * 获取UserData路径
- * @returns {*}
+ * @returns {string}
  */
 export const getUserData = () => {
     return app.getPath('userData');
@@ -23,11 +31,35 @@ export const getUserData = () => {
 
 /**
  * 获取扩展路径
- * @returns {Promise<void> | Promise<string>}
+ * @returns {string}
  */
 export const getExtensionsPath = () => {
     const savePath = getUserData();
-    return path.resolve(`${savePath}/extensions`);
+    return path.resolve(`${savePath}/extensions/`);
+};
+
+/**
+ * 获取NPM模块安装路径
+ * @returns {string}
+ */
+export const getNpmInstallPath = () => {
+    const savePath = getUserData();
+    return path.resolve(`${savePath}/node_modules/`);
+};
+
+/**
+ * 为NPM增加扫描路径
+ * @returns {string}
+ */
+export const addNpmModulePath = () => {
+    let path = getNpmInstallPath();
+    // console.log(path);
+    // let module = require('module');
+    // console.log(module.paths);
+
+    /*if(module.paths.filter(p => p === path).length === 0){
+        module.paths.push(path);
+    }*/
 };
 
 /**
@@ -382,3 +414,105 @@ export function toggleShowHide(mainWindow) {
         }
     }
 }
+
+/**
+ * 获取需要安装的模块列表
+ * @returns {*}
+ */
+function getNeedInstallModule() {
+    let json = packageJson();
+    return json.clientDependencies;
+}
+
+export async function installModule(needInstall) {
+    const {PluginManager} = require('live-plugin-manager');
+    let manager = new PluginManager({
+        pluginsPath: getNpmInstallPath(),
+        npmRegistryUrl: 'https://registry.npm.taobao.org/'
+    });
+
+    let modules = Object.keys(needInstall);
+    let lock = new AsyncLock();
+    for (let module of modules) {
+        let ver = needInstall[module];
+        ver = ver === '' ? 'latest' : ver;
+        try {
+            lock.acquire("installModule", function (done) {
+                console.log('安装模块[' + module + ']，版本[' + ver + ']。。。');
+                manager.installFromNpm(module, ver).then(res => {
+                    console.log('安装模块[' + module + ']，版本[' + ver + ']，安装[成功]：' + res);
+                    done();
+                })
+            }, function (err, ret) {
+            }, {});
+        } catch (error) {
+            console.log('安装模块[' + module + ':' + ver + ']出现错误，将跳过: ' + error);
+        }
+    }
+}
+
+
+export async function installModule2(needInstall, type) {
+    var previous = null, project = null;
+    if (type === undefined || type === "undefined" || type === '' || type === null) {
+        type = 'livepluginmanager'; // type = 'livepluginmanager';
+    }
+    if (needInstall.includes('npm')) {
+        type = 'livepluginmanager';
+    }
+    if (app.isPackaged) {
+        previous = process.execPath.substring(0, process.execPath.lastIndexOf('\\'));
+        project = path.join(previous, 'resources');
+    } else {
+        previous = process.execPath.substring(0, process.execPath.lastIndexOf('node_modules') - 1);
+        project = previous;
+    }
+
+    if (process.cwd() !== project) {
+        console.log('(安装)目录由[' + process.cwd() + ']切换到[' + project + ']');
+        process.chdir(project);
+    }
+
+    try {
+        if (type === "npm") {
+            let npm = require('npm');
+            await npm.load(function (err) {
+                // 设置NPM参数（注意必须放在npm.load函数中）
+                let configKeys = Object.keys(npmConfig());
+                console.log('设置NPM参数值，包括以下字段：' + configKeys);
+                configKeys.forEach(key => {
+                    npm.config.set(key, npmConfig[key]);
+                });
+
+                console.log('安装模块(NPM)：' + needInstall);
+                // 安装模块
+                npm.commands.install(needInstall, function (er, data) {
+                    console.log(data); // log errors or data
+                });
+                npm.on('log', function (message) {
+                    console.log('安装模块NPM日志：' + message); // log errors or data
+                });
+            });
+        } else {
+            const {PluginManager} = require('live-plugin-manager');
+            let manager = new PluginManager({
+                cwd: project,
+                pluginsPath: './node_modules',
+                npmRegistryUrl: 'https://registry.npm.taobao.org/'
+            });
+            for (let dependency of needInstall) {
+                console.log('安装模块(LIVE-PLUGIN-MANAGER)：' + dependency);
+                await manager.installFromNpm(dependency);
+            }
+        }
+    } catch (error) {
+        console.log('安装模块出现错误: ' + error);
+    } finally {
+        if (process.cwd() !== previous) {
+            console.log('(还原)目录由[' + process.cwd() + ']切换到[' + previous + ']');
+            process.chdir(previous); // 还原到原目录
+        }
+    }
+    return {'module': needInstall, 'type': type, 'succ': true, 'msg': '安装成功'};
+}
+
