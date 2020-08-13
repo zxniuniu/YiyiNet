@@ -148,38 +148,68 @@ export function openBrowserWindow(opts) {
 }
 
 export function windowEvent() {
-    // 当 window 被关闭，这个事件会被发出
-    mainWindow.on('close', function (e) {
-        e.preventDefault();
-        if (!settings.getSync("FORCE_QUIT_FLAG")) {
-            // console.log('event:'+ e);
-            if (mainWindow !== null) {
-                mainWindow.hide();
-            }
-        } else {
-            let isShow = mainWindow.isVisible();
-            dialog.showMessageBox(mainWindow, {
-                type: 'warning',
-                title: 'YiyiNet提示（退出后运行的任务将停止）',
-                defaultId: 0,
-                message: '后台运行的定时任将会全部停止运行，您确定要强制退出YiyiNet吗？',
-                buttons: [(isShow ? '隐藏到托盘' : '保留在托盘'), '停止任务并退出']
-            }).then(res => {
-                // console.log('index:' + res.response + ', e:' + e + ', mainWindow:' + mainWindow);
-                if (res && res.response && res.response === 1) {
-                    settings.setSync("FORCE_QUIT_FLAG", true);
-                    app.exit(0); // exit()直接关闭客户端，不会执行quit();
-                } else {
-                    if (isShow) {
-                        mainWindow.hide();
-                    }
-                }
+    // 程序结束时会设置强制退出为true，因此需在启动时重置其值
+    settings.reset("FORCE_QUIT_FLAG");
+
+    mainWindow.webContents.on('beforeunload', (event) => {
+        console.log('beforeunload：' + require('util').inspect(event));
+
+        event.returnValue = false
+        setTimeout(() => {
+            let result = dialog.showMessageBox({
+                message: 'Quit app?',
+                buttons: ['Yes', 'No']
             })
+            if (result == 0) {
+
+            }
+        }, 10)
+        return true;
+    })
+
+    // 当 window 被关闭，这个事件会被发出
+    mainWindow.on('close', function (event) {
+        // https://stackoverflow.com/questions/4482950/how-to-show-full-object-in-chrome-console
+        // https://stackoverflow.com/questions/957537/how-can-i-display-a-javascript-object
+        // console.log('当前关闭事件：' + require('util').inspect(event));
+
+        let quitFlag = settings.getSync("FORCE_QUIT_FLAG");
+        // console.log('quitFlag: ' + quitFlag);
+        if (quitFlag !== 'install') {
+            event.preventDefault();
+
+            let isShow = mainWindow.isVisible();
+            if (quitFlag === false) {
+                if (mainWindow !== null) {
+                    mainWindow.hide();
+                }
+            } else {
+                dialog.showMessageBox(mainWindow, {
+                    type: 'warning',
+                    title: 'YiyiNet',
+                    defaultId: 0,
+                    cancelId: 0, // 解决Esc，以及点击提示窗口右上角X导致软件退出的问题
+                    message: '如有后台运行的定时任务，则其会全部停止运行，确定要强制退出YiyiNet吗？',
+                    buttons: [(isShow ? '隐藏到托盘' : '保留在托盘'), '强制退出']
+                }).then(res => {
+                    // console.log('index:' + res.response + ', e:' + e + ', mainWindow:' + mainWindow);
+                    if (res && res.response && res.response === 1) {
+                        app.exit(); // exit()直接关闭客户端，不会执行quit();
+                    } else {
+                        if (isShow) {
+                            mainWindow.hide();
+                        }
+                    }
+                })
+            }
+            event.returnValue = false;
+        } else {
+            event.returnValue = undefined;
         }
     });
 
     // 当 window 被关闭，这个事件会被发出
-    mainWindow.on('closed', function (e) {
+    mainWindow.on('closed', function (event) {
         // 取消引用 window 对象，如果你的应用支持多窗口的话，通常会把多个 window 对象存放在一个数组里面，
         mainWindow = null;
     });

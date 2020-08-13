@@ -392,8 +392,7 @@ function otherMenuView() {
         icon: getIco('unlockicon.ico'),
         click: function () {
             // https://discuss.atom.io/t/how-to-catch-the-event-of-clicking-the-app-windows-close-button-in-electron-app/21425
-            settings.setSync("FORCE_QUIT_FLAG", true);
-            // mainWindow = null;
+            settings.setSync("FORCE_QUIT_FLAG", 'force');
             app.quit();
         }
     });
