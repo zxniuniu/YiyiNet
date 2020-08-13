@@ -80,6 +80,7 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
 
     // Handle error case
     autoUpdater.on('error', (message) => {
+        mainWindow.setProgressBar(-1); // 出错时不显示进度条
         if (message.toString().indexOf('no such file or directory') === -1) {
             sendStatusToWindow('更新时出错：' + message);
             dialog.showMessageBox({
@@ -121,9 +122,10 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
     });
 
     autoUpdater.on('download-progress', (progressObj) => {// progress, bytesPerSecond, percent, total, transferred
-        let log_message = "下载速度[" + (progressObj.bytesPerSecond / 1024).toFixed(2) + 'KB/S], 已下载[' + progressObj.percent.toFixed(2) + '%]'
-            + ' (' + (progressObj.transferred / 1024 / 1024).toFixed(2) + "/" + (progressObj.total / 1024 / 1024).toFixed(2) + 'M)';
-        console.log(log_message);
+        let log_message = '已下载[' + progressObj.percent.toFixed(2) + '%](' + (progressObj.transferred / 1024 / 1024).toFixed(2)
+            + "/" + (progressObj.total / 1024 / 1024).toFixed(2) + 'M)，速度[' + (progressObj.bytesPerSecond / 1024).toFixed(2)
+            + 'KB/S]，预计大约需要[' + ((progressObj.total - progressObj.transferred) / progressObj.bytesPerSecond / 60).toFixed(2) + '分钟]';
+        // console.log(log_message);
         mainWindow.setProgressBar(progressObj.percent / 100);
         sendStatusToWindow(log_message);
     });
@@ -140,15 +142,15 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
             buttons: [i18n.t('Restart Now'), i18n.t('Restart Later')],
             message: i18n.t('Update Downloaded'),
             detail: i18n.t('updateIsDownloaded', {version})
-        }, (response) => {
-            // If they say yes, restart now
-            if (response === 0) {
+        }, (res) => {
+            console.log('res: ');
+            console.dir(res);
+            if (res === 0) {
                 settings.setSync("FORCE_QUIT_FLAG", 'install');
                 autoUpdater.quitAndInstall(true, true);
             }
         });
     });
-
 }
 
 /**

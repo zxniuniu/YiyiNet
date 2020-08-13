@@ -3,30 +3,34 @@
 <html>
 <head></head>
 <body id="body" onload="loadFunction()" style="overflow: hidden">
-<!--<center>
-    <img src="./../svg/v2x.svg" width="250" height="250"></img>
-</center>-->
-<!--<center style="background-color: white;">-->
-<center style="margin-top: 270px;">
+<div>
+    <img src="./../icon/app-gray.ico" width="30" height="30"/>
+</div>
+<div style="margin-top: 230px;">
     <!--正在加载中，请稍候...-->
-    <span id="status" style="color: white; font-weight: bold; font-size: 18px;">依网(YiyiNet)：正在启动，请稍候。。。</span>
-    <span id="status2"></span>
-</center>
+    <span id="status" style="color: white; font-weight: bold; font-size: 15px;"></span>
+</div>
 <script>
     // Listen for data from browser process and update splashscreen
-    const {ipcRenderer} = require("electron");
+    const {ipcRenderer, remote} = require("electron");
     ipcRenderer.on("splashScreenUpdate", function (event, status) {
-        document.getElementById("status").innerText = '依网(YiyiNet)：' + status;
+        setStatusDefaultText(status);
     })
 
+    function setStatusDefaultText(status) {
+        let prefixStr = '依网(YiyiNet) ';
+        document.getElementById("status").innerText = prefixStr + '[' + remote.app.getVersion() + ']：' + status;
+    }
+
     function loadFunction() {
-        let gifNum = 3;
-        /*require('fs').readdirSync('./').forEach(file => {
-            if (file.startsWith("background") || file.endsWith(".gif")){
-                gifNum++;
-            }
-        });*/
+        let fs = require('fs');
+        let path = require('path');
+        let files = fs.readdirSync(path.join(__dirname, '../../', './assets/splash/'));
+        let gifNum = files.filter(file => file.startsWith("background") && file.endsWith(".gif")).length;
+        gifNum = gifNum <= 0 ? 3 : gifNum; // 如果小于0，则设置为3个
+
         document.getElementById("body").style.backgroundImage = 'url(./background' + Math.floor((Math.random() * gifNum) + 1) + '.gif)';
+        setStatusDefaultText('正在启动，请稍候。。。');
     }
 </script>
 </body>
