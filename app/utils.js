@@ -53,9 +53,9 @@ export const getNpmInstallPath = () => {
  */
 export const addNpmModulePath = () => {
     let path = getNpmInstallPath();
-    // console.log(path);
+    console.log(path);
     // let module = require('module');
-    // console.log(module.paths);
+    console.log(module.paths);
 
     /*if(module.paths.filter(p => p === path).length === 0){
         module.paths.push(path);

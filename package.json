@@ -1,6 +1,6 @@
 {
   "name": "YiyiNet",
-  "version": "1.5.6",
+  "version": "1.5.7",
   "productName": "YiyiNet",
   "description": "依网, YiyiNet, 定时任务, 自动签到, 自动任务, 任务管理",
   "about": "依网(YiyiNet)：自动任务执行，如自动签到，自动浏览等",
@@ -47,6 +47,7 @@
   },
   "dependencies": {
     "@trodi/electron-splashscreen": "^1.0.0",
+    "app-module-path": "^2.2.0",
     "async": "^3.2.0",
     "async-lock": "^1.2.4",
     "axios": "^0.19.2",
