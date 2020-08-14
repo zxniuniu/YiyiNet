@@ -4,7 +4,6 @@ import shellEnv from 'shell-env';
 import fixPath from 'fix-path';
 import config from './configs/app.config';
 // import {addPepFlashCommandLine} from './main/pepflash';
-import {handleArgv, handleUrl} from './utils';
 import {destroyTray, setTray} from './main/tray';
 import {setShortcut, unSetShortcut} from './main/shortcut';
 import {openBrowserWindow, setSavedEnv, windowEvent} from './main/window-helpers';
@@ -13,6 +12,7 @@ import {setAutoLaunch} from './main/auto-launch';
 import {setProtocol} from './main/protocal';
 import {addCommandLine} from './main/add-command-line';
 import {initializeIpc} from './main/ipcevent';
+import settings from "./shared/settings";
 
 addCommandLine();
 
@@ -90,6 +90,51 @@ function createWindow() {
     setShortcut(mainWindow);
 
     initializeIpc(mainWindow);
+}
+
+/**
+ * 参数处理（伪协议)
+ * @param argv
+ */
+function handleArgv(argv) {
+    // 开发阶段，跳过前两个参数（`electron.exe .`），打包后，跳过第一个参数（`myapp.exe`）
+    const offset = app.isPackaged ? 2 : 3;
+    const urlStr = argv.find((arg, i) => i >= offset && arg.startsWith(config.protocol + ':'));
+    // let urlStr = process.argv.splice(app.isPackaged ? 2 : 3).join("")
+    // let urlStr2 = process.argv[process.argv.length - 1]
+    if (urlStr) handleUrl(urlStr);
+}
+
+/**
+ * 处理伪协议传输的地址
+ * @param urlStr
+ */
+function handleUrl(urlStr) {
+    /*const urlObj = new URL(urlStr);       // yiyinet://demo-wtf-param/?abc=124&refresh=true
+    const { searchParams } = urlObj;      // 参数解析
+
+    console.log(urlObj.protocol);         // yiyinet:
+    console.log(urlObj.pathname);         // / ？是不是有问题？不应该是//demo-wtf-param/么
+    console.log(urlObj.search);           // ?abc=124&refresh=true
+    console.log(searchParams.get('abc')); // 123
+    console.log(urlObj.pathname + urlObj.search);*/
+
+    // 渲染进程获取方式：require('electron').remote.getGlobal('sharedObject').openUrl;
+    let openUrl = urlStr.startsWith(config.protocol + "://") ? urlStr.substring(config.protocol.length + 3) : urlStr;
+
+    console.log('伪协议[' + config.protocol + ']地址：' + openUrl);
+    // 主进程通讯监听渲染进程派发的OPENVIEW事件
+    if (mainWindow === null) {
+        settings.set('openUrl', openUrl);
+    } else {
+        mainWindow.webContents.send('protocol-open', openUrl);
+        settings.set('openUrl', '');
+    }
+
+    /*ipcMain.on(PROTOCOLVIEW, (event)=> {
+        // 并发送当前唤起应用的数据
+        event.sender.send(PROTOCOLVIEW, reUrl)
+    })*/
 }
 
 ipcMain.on('installModule', (event, needData) => {
