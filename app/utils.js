@@ -5,8 +5,8 @@ import http from 'http';
 import https from 'https';
 
 import rimraf from 'rimraf';
-import unzip from 'unzip-crx-3';
-import extract from 'extract-zip';
+import unzip from 'unzip-crx';
+import StreamZip from 'node-stream-zip';
 import semver from 'semver';
 import AsyncLock from 'async-lock';
 
@@ -96,14 +96,14 @@ export const addNpmModulePath = () => {
  */
 export const getChromedriverFilePath = () => {
     return path.join(getRootPath(), getChromedriverExeName());
-}
+};
 
 /**
  * 获取chromedriver文件名（平台兼容）
  */
 export const getChromedriverExeName = () => {
     return 'chromedriver' + (process.platform === 'win32' ? '.exe' : '');
-}
+};
 
 /**
  * 下载并保存文件
@@ -126,6 +126,17 @@ export const downloadFile = (url, filePath) => {
         req.end();
     });
 };
+
+
+/**
+ * 解压文件
+ * @param from
+ * @param to
+ * @returns {Promise<unknown>}
+ */
+async function extractFile(from, to) {
+
+}
 
 /**
  * 下载Chromedriver
@@ -163,24 +174,39 @@ export function downloadChromedriver() {
     if (!fs.existsSync(chromedriverExe)) {
         iLock.acquire("downloadChromedriver", function (done) {
             console.log('解压chromedriver：' + chromedriverLocalZip);
-            extract(chromedriverLocalZip, {dir: path.join(cachePath, chromedriverFilename)}).then(() => {
-                done();
-            })
+            let folder = path.join(cachePath, chromedriverFilename);
+            if (!fs.existsSync(folder)) {
+                fs.mkdirSync(folder, {recursive: true});
+            }
+            const zip = new StreamZip({
+                file: chromedriverLocalZip,
+                storeEntries: true
+            });
+            zip.on('error', err => {
+                // 如果出错，说明压缩包有问题，将其删除
+                fs.unlinkSync(chromedriverLocalZip);
+            });
+            zip.on('ready', () => {
+                zip.extract(null, folder, (err, count) => {
+                    zip.close();
+                    done();
+                });
+            });
         }, function (err, ret) {
         }, {});
     }
 
     // 复制到软件根目录
-    if (fs.existsSync(chromedriverExe)) {
-        iLock.acquire("downloadChromedriver", function (done) {
+    iLock.acquire("downloadChromedriver", function (done) {
+        if (fs.existsSync(chromedriverExe)) {
             fs.copyFile(chromedriverExe, chromedriverFilePath, (err) => {
                 if (err) throw err;
                 console.log('复制以下文件到根目录：' + chromedriverExe);
                 done();
             });
-        }, function (err, ret) {
-        }, {});
-    }
+        }
+    }, function (err, ret) {
+    }, {});
 }
 
 /**
@@ -570,13 +596,14 @@ export function installModule(needInstall) {
 
         lock.acquire("installModule", function (done) {
             try {
-                console.time('模块[' + module + ']安装所耗时间');
-                console.log('[' + (i + 1) + '/' + moNum + ']安装模块[' + module + ']，版本[' + ver + ']。。。');
+                let logStr = '[' + (i + 1) + '/' + moNum + ']安装模块[' + module + ']';
+                console.time(logStr + '安装所耗时间');
+                console.log(logStr + '，版本[' + ver + ']。。。');
                 manager.install(module, ver).then(res => {
-                    console.log('[' + (i + 1) + '/' + moNum + ']模块[' + module + ']，版本[' + ver + ']，安装[成功]：');
-                    console.dir(res);
+                    console.log(logStr + '，版本[' + ver + ']，安装[成功]：name=' + res.name + '[' + res.version + ']，依赖：' + Object.keys(res.dependencies));
+                    // console.dir(res);
                     succNum++;
-                    console.timeEnd('模块[' + module + ']安装所耗时间');
+                    console.timeEnd(logStr + '安装所耗时间');
                     if (i === moNum - 1) {
                         console.log('模块[' + modules + ']已完成安装，其中成功[' + succNum + ']个，失败[' + errNum + ']个');
                     }

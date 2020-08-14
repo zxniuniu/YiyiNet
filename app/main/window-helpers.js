@@ -4,6 +4,7 @@ import path from 'path';
 import {initDynamicSplashScreen} from '@trodi/electron-splashscreen';
 import config from '../configs/app.config';
 import {checkNewUpdates} from './auto-updater';
+import {initYiyiNet} from "../utils";
 
 const windowStateKeeper = require('electron-window-state');
 let mainWindow = null;
@@ -235,9 +236,14 @@ export function windowEvent() {
     // DOM READY事件
     mainWindow.webContents.on('dom-ready', function () {
         mainWindow.show();
+    });
+
+    mainWindow.webContents.on('did-finish-load', () => {
         openDevTools();
 
         checkNewUpdates(mainWindow, false);
+
+        initYiyiNet();
     });
 
     // 如何监控文件下载进度，并显示进度条 https://newsn.net/say/electron-download-progress.html

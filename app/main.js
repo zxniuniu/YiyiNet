@@ -4,7 +4,7 @@ import shellEnv from 'shell-env';
 import fixPath from 'fix-path';
 import config from './configs/app.config';
 // import {addPepFlashCommandLine} from './main/pepflash';
-import {handleArgv, handleUrl, initYiyiNet} from './utils';
+import {handleArgv, handleUrl} from './utils';
 import {destroyTray, setTray} from './main/tray';
 import {setShortcut, unSetShortcut} from './main/shortcut';
 import {openBrowserWindow, setSavedEnv, windowEvent} from './main/window-helpers';
@@ -91,8 +91,6 @@ function createWindow() {
 
     initializeIpc(mainWindow);
 }
-
-initYiyiNet();
 
 ipcMain.on('installModule', (event, needData) => {
     // console.log('needData:' + needData);
