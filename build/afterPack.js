@@ -22,12 +22,10 @@ async function downloadFile(url, filePath) {
                 reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
                 return;
             }
-
             fileInfo = {
                 mime: response.headers['content-type'],
                 size: parseInt(response.headers['content-length'], 10),
             };
-
             response.pipe(file);
         });
 
@@ -129,7 +127,8 @@ async function afterPack(context) {
     deleteLocalFile(context);
     deleteOther(context);
 
-    await downloadChromedriver(context);
+    // 目前不下载并复制到打包目录了，软件在打开时自动下载
+    // await downloadChromedriver(context);
 }
 
 module.exports = afterPack;

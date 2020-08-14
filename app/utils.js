@@ -1,18 +1,17 @@
-import {app, BrowserWindow, nativeImage, net, session} from 'electron';
+import {app, BrowserWindow, nativeImage, session} from 'electron';
 import fs from 'fs';
 import path from 'path';
+import http from 'http';
 import https from 'https';
 
 import rimraf from 'rimraf';
 import unzip from 'unzip-crx-3';
+import extract from 'extract-zip';
 import semver from 'semver';
 import AsyncLock from 'async-lock';
 
 import config from './configs/app.config';
 import settings from './shared/settings';
-
-// Use https.get fallback for Electron < 1.4.5
-const request = net ? net.request : https.get;
 
 /*
 var remote = require('electron').remote;
@@ -20,12 +19,38 @@ var app = remote.app;
 var path = require('path');
 var fs = require('fs');
 */
+
+/**
+ * 根据访问地址获取Http或https
+ * @param url
+ * @returns {any}
+ */
+function getRequest(url) {
+    return !url.charAt(4).localeCompare('s') ? https : http;
+}
+
 /**
  * 获取UserData路径
  * @returns {string}
  */
 export const getUserData = () => {
     return app.getPath('userData');
+};
+
+/**
+ * 获取appData路径
+ * @returns {string}
+ */
+export const getAppData = () => {
+    return app.getPath('appData');
+};
+
+/**
+ * 获取Electron Cache路径
+ * @returns {string}
+ */
+export const getElectronCachePath = () => {
+    return path.join(process.env.LOCALAPPDATA, 'electron', 'Cache');
 };
 
 /**
@@ -38,12 +63,20 @@ export const getExtensionsPath = () => {
 };
 
 /**
+ * 获取YiyiNet根目录
+ * @returns {string}
+ */
+export const getRootPath = () => {
+    return path.dirname(process.execPath);
+};
+
+/**
  * 获取NPM模块安装路径
  * @returns {string}
  */
 export const getNpmInstallPath = () => {
     // 保存在getUserData() + 'node_modules'中未解决加载时的路径问题
-    const savePath = path.join(path.dirname(process.execPath), 'resources'); // process.resourcesPath
+    const savePath = path.join(getRootPath(), 'resources'); // process.resourcesPath
     return path.resolve(`${savePath}/node_modules/`);
 };
 
@@ -61,31 +94,94 @@ export const addNpmModulePath = () => {
 /**
  * 获取chromedriver路径
  */
-export const getChromedriverPath = () => {
-    return path.join(path.dirname(process.execPath), 'chromedriver.exe');
+export const getChromedriverFilePath = () => {
+    return path.join(getRootPath(), getChromedriverExeName());
+}
+
+/**
+ * 获取chromedriver文件名（平台兼容）
+ */
+export const getChromedriverExeName = () => {
+    return 'chromedriver' + (process.platform === 'win32' ? '.exe' : '');
 }
 
 /**
  * 下载并保存文件
- * @param from
- * @param to
+ * @param url
+ * @param filePath
  * @returns {Promise<unknown>}
  */
-export const downloadFile = (from, to) => {
+export const downloadFile = (url, filePath) => {
     return new Promise((resolve, reject) => {
-        const req = request(from);
+        const req = getRequest(url).get(url);
         req.on('response', (res) => {
             // Shouldn't handle redirect with `electron.net`, this is for https.get fallback
             if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-                return downloadFile(res.headers.location, to).then(resolve).catch(reject);
+                return downloadFile(res.headers.location, filePath).then(resolve).catch(reject);
             }
-            res.pipe(fs.createWriteStream(to)).on('close', resolve);
+            res.pipe(fs.createWriteStream(filePath)).on('close', resolve);
             res.on('error', reject);
         });
         req.on('error', reject);
         req.end();
     });
 };
+
+/**
+ * 下载Chromedriver
+ */
+export function downloadChromedriver() {
+    let chromedriverFilePath = getChromedriverFilePath(); //
+    if (fs.existsSync(chromedriverFilePath)) {
+        return;
+    }
+
+    let chromedriverName = getChromedriverExeName();
+    let ver = process.versions.electron, platform = process.platform, arch = process.arch;
+    let cachePath = getElectronCachePath();
+
+    // 下载并将chromedriver放到根目录
+    let chromedriverFilename = 'chromedriver-v' + ver + '-' + platform + '-' + arch;
+    let chromedriverLocalZip = path.join(cachePath, chromedriverFilename + '.zip');
+    let chromedriverExe = path.join(cachePath, chromedriverFilename, chromedriverName);
+
+    // 检测是否下载，未下载，则下载
+    // let chromedriverUrl = 'https://npm.taobao.org/mirrors/electron/9.1.2/chromedriver-v9.1.2-win32-x64.zip';
+    let chromedriverUrl = 'https://cdn.npm.taobao.org/dist/electron/' + ver + '/' + chromedriverFilename + '.zip';
+    let iLock = new AsyncLock({timeout: 60000});
+    if (!fs.existsSync(chromedriverLocalZip)) {
+        iLock.acquire("downloadChromedriver", function (done) {
+            console.log('下载chromedriver：' + chromedriverUrl);
+            downloadFile(chromedriverUrl, chromedriverLocalZip).then(() => {
+                done();
+            })
+        }, function (err, ret) {
+        }, {});
+    }
+
+    // 下载完成后解压
+    if (!fs.existsSync(chromedriverExe)) {
+        iLock.acquire("downloadChromedriver", function (done) {
+            console.log('解压chromedriver：' + chromedriverLocalZip);
+            extract(chromedriverLocalZip, {dir: path.join(cachePath, chromedriverFilename)}).then(() => {
+                done();
+            })
+        }, function (err, ret) {
+        }, {});
+    }
+
+    // 复制到软件根目录
+    if (fs.existsSync(chromedriverExe)) {
+        iLock.acquire("downloadChromedriver", function (done) {
+            fs.copyFile(chromedriverExe, chromedriverFilePath, (err) => {
+                if (err) throw err;
+                console.log('复制以下文件到根目录：' + chromedriverExe);
+                done();
+            });
+        }, function (err, ret) {
+        }, {});
+    }
+}
 
 /**
  * 修改目录权限
@@ -424,6 +520,10 @@ export function toggleShowHide(mainWindow) {
 export function initYiyiNet() {
     // 安装模块
     installClientModule();
+
+    // 下载Chromedriver
+    downloadChromedriver();
+
 
 }
 
