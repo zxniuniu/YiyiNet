@@ -8,14 +8,14 @@
 // import {app, autoUpdater, dialog} from 'electron';
 import {dialog} from 'electron';
 import {autoUpdater} from 'electron-updater'; // https://www.electron.build/auto-update#AppUpdater
-import _ from 'lodash';
+// import _ from 'lodash';
 import i18n from '../../configs/i18next.config';
 import settings from "../../shared/settings";
 
 const isDev = process.env.NODE_ENV === 'development';
 const runningLocally = isDev || process.env.RUNNING_LOCALLY;
 
-let checkNewUpdates = _.noop;
+let checkNewUpdates = null; // _.noop;
 let mainWindow = null;
 let menuClick = true; // 如果是菜单点击，则无更新时也提示
 

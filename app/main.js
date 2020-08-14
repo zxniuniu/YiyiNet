@@ -1,13 +1,10 @@
 // https://github.com/sindresorhus/awesome-electron
-// The following line should be added to the very beginning of your main script!
-import {addPath} from 'app-module-path';
-// Modules to control application life and create native browser window
 import {app, ipcMain} from 'electron';
 import shellEnv from 'shell-env';
 import fixPath from 'fix-path';
 import config from './configs/app.config';
 // import {addPepFlashCommandLine} from './main/pepflash';
-import {addNpmModulePath, handleArgv, handleUrl} from './utils';
+import {handleArgv, handleUrl, initYiyiNet} from './utils';
 import {destroyTray, setTray} from './main/tray';
 import {setShortcut, unSetShortcut} from './main/shortcut';
 import {openBrowserWindow, setSavedEnv, windowEvent} from './main/window-helpers';
@@ -16,12 +13,6 @@ import {setAutoLaunch} from './main/auto-launch';
 import {setProtocol} from './main/protocal';
 import {addCommandLine} from './main/add-command-line';
 import {initializeIpc} from './main/ipcevent';
-
-addPath('C:\\node_modules');
-// require('app-module-path').addPath('C:\\node_modules'/*process.env.APPDATA + "\\" + process.env.npm_package_productName + "\\node_modules"*/);
-console.dir(global);
-
-/* const {autoUpdater} = require("electron-updater"); */
 
 addCommandLine();
 
@@ -101,9 +92,7 @@ function createWindow() {
     initializeIpc(mainWindow);
 }
 
-// 添加安装路径
-addNpmModulePath();
-
+initYiyiNet();
 
 ipcMain.on('installModule', (event, needData) => {
     // console.log('needData:' + needData);

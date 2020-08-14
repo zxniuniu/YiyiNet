@@ -11,7 +11,6 @@ import AsyncLock from 'async-lock';
 import config from './configs/app.config';
 import settings from './shared/settings';
 
-
 // Use https.get fallback for Electron < 1.4.5
 const request = net ? net.request : https.get;
 
@@ -43,7 +42,8 @@ export const getExtensionsPath = () => {
  * @returns {string}
  */
 export const getNpmInstallPath = () => {
-    const savePath = getUserData();
+    // 保存在getUserData() + 'node_modules'中未解决加载时的路径问题
+    const savePath = path.join(path.dirname(process.execPath), 'resources'); // process.resourcesPath
     return path.resolve(`${savePath}/node_modules/`);
 };
 
@@ -52,15 +52,18 @@ export const getNpmInstallPath = () => {
  * @returns {string}
  */
 export const addNpmModulePath = () => {
-    let path = getNpmInstallPath();
-    console.log(path);
-    // let module = require('module');
-    console.log(module.paths);
-
-    /*if(module.paths.filter(p => p === path).length === 0){
-        module.paths.push(path);
-    }*/
+    // let modulePath = process.env.APPDATA + '\\' + process.env.npm_package_productName + '\\node_modules';
+    // require('module').globalPaths.push(modulePath);
+    // require('module').globalPaths.push(getNpmInstallPath());
+    // module.paths.push(getNpmInstallPath());
 };
+
+/**
+ * 获取chromedriver路径
+ */
+export const getChromedriverPath = () => {
+    return path.join(path.dirname(process.execPath), 'chromedriver.exe');
+}
 
 /**
  * 下载并保存文件
@@ -142,7 +145,7 @@ export const downloadChromeExtension = (chromeStoreID, forceDownload, attempts =
                         downloadChromeExtension(chromeStoreID, forceDownload, attempts - 1)
                             .then(resolve)
                             .catch(reject);
-                    }, 200);
+                    }, 500);
                 });
         } else {
             resolve(extensionFolder);
@@ -416,6 +419,23 @@ export function toggleShowHide(mainWindow) {
 }
 
 /**
+ * 初始化YiyiNet，安装模块等
+ */
+export function initYiyiNet() {
+    // 安装模块
+    installClientModule();
+
+}
+
+/**
+ * 安装需在客户端上使用的模块
+ */
+export function installClientModule() {
+    let needInstall = getNeedInstallModule();
+    installModule(needInstall);
+}
+
+/**
  * 获取需要安装的模块列表
  * @returns {*}
  */
@@ -424,7 +444,15 @@ function getNeedInstallModule() {
     return json.clientDependencies;
 }
 
-export async function installModule(needInstall) {
+/**
+ * 安装模块
+ * @param needInstall ｛‘module1': 'version1', ‘module2': 'version2'...｝
+ * @returns {Promise<void>}
+ */
+export function installModule(needInstall) {
+    // module.paths.push(getNpmInstallPath());
+    // console.log(module.paths);
+
     const {PluginManager} = require('live-plugin-manager');
     let manager = new PluginManager({
         pluginsPath: getNpmInstallPath(),
@@ -432,27 +460,38 @@ export async function installModule(needInstall) {
     });
 
     let modules = Object.keys(needInstall);
-    let lock = new AsyncLock();
-    for (let module of modules) {
+    let lock = new AsyncLock({timeout: 300000});
+    let succNum = 0, errNum = 0;
+    let moNum = modules.length;
+    for (let i = 0; i < moNum; i++) {
+        let module = modules[i];
         let ver = needInstall[module];
         ver = ver === '' ? 'latest' : ver;
-        try {
-            lock.acquire("installModule", function (done) {
-                console.log('安装模块[' + module + ']，版本[' + ver + ']。。。');
-                manager.installFromNpm(module, ver).then(res => {
-                    console.log('安装模块[' + module + ']，版本[' + ver + ']，安装[成功]：' + res);
+
+        lock.acquire("installModule", function (done) {
+            try {
+                console.time('模块[' + module + ']安装所耗时间');
+                console.log('[' + (i + 1) + '/' + moNum + ']安装模块[' + module + ']，版本[' + ver + ']。。。');
+                manager.install(module, ver).then(res => {
+                    console.log('[' + (i + 1) + '/' + moNum + ']模块[' + module + ']，版本[' + ver + ']，安装[成功]：');
+                    console.dir(res);
+                    succNum++;
+                    console.timeEnd('模块[' + module + ']安装所耗时间');
+                    if (i === moNum - 1) {
+                        console.log('模块[' + modules + ']已完成安装，其中成功[' + succNum + ']个，失败[' + errNum + ']个');
+                    }
                     done();
                 })
-            }, function (err, ret) {
-            }, {});
-        } catch (error) {
-            console.log('安装模块[' + module + ':' + ver + ']出现错误，将跳过: ' + error);
-        }
+            } catch (error) {
+                errNum++;
+                console.log('[' + (i + 1) + '/' + moNum + ']安装模块[' + module + ':' + ver + ']出现错误，将跳过: ' + error);
+            }
+        }, function (err, ret) {
+        }, {});
     }
 }
 
-
-export async function installModule2(needInstall, type) {
+async function installModule2(needInstall, type) {
     var previous = null, project = null;
     if (type === undefined || type === "undefined" || type === '' || type === null) {
         type = 'livepluginmanager'; // type = 'livepluginmanager';

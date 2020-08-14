@@ -4,15 +4,11 @@ import {app, ipcMain} from 'electron';
 import path from 'path';
 // import wd from 'wd';
 // import { fs, tempDir } from 'appium-support';
-import _ from 'lodash';
 import settings from '../shared/settings';
 // import {createSession, killSession, getSessionHandler} from './appium-method-handler';
-import request from 'request-promise';
-import {openBrowserWindow, setSavedEnv} from './window-helpers';
+import {openBrowserWindow} from './window-helpers';
 
 const LOG_SEND_INTERVAL_MS = 250;
-
-const defaultEnvironmentVariables = _.clone(process.env);
 
 let server = null;
 let logWatcher = null;
@@ -332,20 +328,6 @@ function connectClientMethodListener() {
     });
 }
 
-const getCurrentSessions = _.debounce(async (evt, data) => {
-    const {host, port, path: appiumPath = '/wd/hub', ssl} = data;
-    try {
-        const res = await request(`http${ssl ? 's' : ''}://${host}:${port}${appiumPath}/sessions`);
-        evt.sender.send('appium-client-get-sessions-response', {res});
-    } catch (e) {
-        evt.sender.send('appium-client-get-sessions-fail');
-    }
-}, 2000);
-
-function connectGetSessionsListener() {
-    ipcMain.on('appium-client-get-sessions', getCurrentSessions);
-}
-
 function connectMoveToApplicationsFolder() {
     ipcMain.on('appium-move-to-applications-folder', (evt) => {
         app.moveToApplicationsFolder();
@@ -356,26 +338,6 @@ function connectMoveToApplicationsFolder() {
 function connectOpenConfig(mainWindow) {
     ipcMain.on('appium-open-config', () => {
         createNewConfigWindow(mainWindow);
-    });
-}
-
-function connectGetEnv() {
-    ipcMain.on('appium-get-env', async (event) => {
-        event.sender.send('appium-env', {
-            defaultEnvironmentVariables,
-            savedEnvironmentVariables: await settings.get('ENV', {}),
-        });
-    });
-}
-
-function connectSaveEnv() {
-    ipcMain.on('appium-save-env', async (event, environmentVariables) => {
-        // Pluck unset values
-        const env = _.pickBy(environmentVariables, _.identity);
-
-        await settings.set('ENV', env);
-        await setSavedEnv();
-        event.sender.send('appium-save-env-done');
     });
 }
 
