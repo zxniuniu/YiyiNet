@@ -24,6 +24,8 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
 
     // https://www.electron.build/auto-update#api
     autoUpdater.fullChangelog = true;
+    autoUpdater.logger = require("electron-log");
+    autoUpdater.logger.transports.file.level = "debug"; // error, warn, info, verbose, debug, silly
 
     /**
      * Check for new updates

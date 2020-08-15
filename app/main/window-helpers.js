@@ -5,6 +5,7 @@ import {initDynamicSplashScreen} from '@trodi/electron-splashscreen';
 import config from '../configs/app.config';
 import {checkNewUpdates} from './auto-updater';
 import {initYiyiNet} from "../utils";
+import {blockAds} from 'electron-ad-block'; // https://www.npmjs.com/package/electron-ad-block
 
 const windowStateKeeper = require('electron-window-state');
 let mainWindow = null;
@@ -61,6 +62,7 @@ export function openBrowserWindow(opts) {
             center: true,
             // backgroundColor: "white",
             transparent: true,
+            resizable: false,
             webPreferences: {
                 nodeIntegration: true,
             }
@@ -144,6 +146,12 @@ export function openBrowserWindow(opts) {
             }
         }]).popup(win);
     });*/
+
+    // https://www.npmjs.com/package/electron-ad-block
+    // 广告过滤 https://github.com/quanglam2807/electron-ad-block/blob/master/src/index.js
+    blockAds(mainWindow.webContents.session, {
+        filterTypes: ['ads', 'privacy', 'annoyance', 'social'],
+    });
 
     return mainWindow;
 }

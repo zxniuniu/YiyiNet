@@ -1,6 +1,6 @@
 {
   "name": "YiyiNet",
-  "version": "1.5.9",
+  "version": "1.6.0",
   "productName": "YiyiNet",
   "description": "依网, YiyiNet, 定时任务, 自动签到, 自动任务, 任务管理",
   "about": "依网(YiyiNet)：自动任务执行，如自动签到，自动浏览等",
@@ -59,6 +59,7 @@
     "async": "^3.2.0",
     "async-lock": "^1.2.4",
     "electron-context-menu": "^2.2.0",
+    "electron-log": "^4.2.4",
     "electron-settings": "^4.0.2",
     "electron-updater": "^4.3.1",
     "electron-window-state": "^5.0.3",
