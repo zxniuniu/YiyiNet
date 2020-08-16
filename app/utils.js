@@ -3,6 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import http from 'http';
 import https from 'https';
+import pipeline from 'stream';
+import zlib from 'zlib';
 
 import rimraf from 'rimraf';
 import unzip from 'unzip-crx';
@@ -10,21 +12,15 @@ import StreamZip from 'node-stream-zip';
 import semver from 'semver';
 import AsyncLock from 'async-lock';
 
+import {adblockerInstallFinishEvent} from './main/adblocker';
+// import {DownloaderHelper} from 'node-downloader-helper';
+
 /*
 var remote = require('electron').remote;
 var app = remote.app;
 var path = require('path');
 var fs = require('fs');
 */
-
-/**
- * 根据访问地址获取Http或https
- * @param url
- * @returns {any}
- */
-function getRequest(url) {
-    return !url.charAt(4).localeCompare('s') ? https : http;
-}
 
 /**
  * 获取UserData路径
@@ -47,7 +43,15 @@ export const getAppData = () => {
  * @returns {string}
  */
 export const getElectronCachePath = () => {
-    return path.join(process.env.LOCALAPPDATA, 'electron', 'Cache');
+    return checkPath(path.join(process.env.LOCALAPPDATA, 'electron', 'Cache'));
+};
+
+/**
+ * 获取Adblock路径
+ * @returns {string}
+ */
+export const getAdblockPath = () => {
+    return checkPath(path.join(getUserData(), 'Adblocker'));
 };
 
 /**
@@ -56,7 +60,7 @@ export const getElectronCachePath = () => {
  */
 export const getExtensionsPath = () => {
     const savePath = getUserData();
-    return path.resolve(`${savePath}/extensions/`);
+    return checkPath(path.resolve(`${savePath}/extensions/`));
 };
 
 /**
@@ -74,9 +78,15 @@ export const getRootPath = () => {
 export const getNpmInstallPath = () => {
     // 保存在getUserData() + 'node_modules'中未解决加载时的路径问题
     const savePath = path.join(getRootPath(), 'resources'); // process.resourcesPath
-    return path.resolve(`${savePath}/node_modules/`);
+    return checkPath(path.resolve(`${savePath}/node_modules/`));
 };
 
+function checkPath(filePath) {
+    if (!fs.existsSync(filePath)) {
+        fs.mkdirSync(filePath, {recursive: true});
+    }
+    return filePath;
+}
 /**
  * 为NPM增加扫描路径
  * @returns {string}
@@ -109,21 +119,55 @@ export const getChromedriverExeName = () => {
  * @returns {Promise<unknown>}
  */
 export const downloadFile = (url, filePath) => {
+    const proto = !url.charAt(4).localeCompare('s') ? https : http;
     return new Promise((resolve, reject) => {
-        const req = getRequest(url).get(url);
-        req.on('response', (res) => {
-            // Shouldn't handle redirect with `electron.net`, this is for https.get fallback
-            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-                return downloadFile(res.headers.location, filePath).then(resolve).catch(reject);
+        let file = fs.createWriteStream(filePath);
+        let request = proto.get(url, response => {
+            console.log('response.headers: ');
+            console.dir(response.headers);
+            if (response.statusCode !== 200) {
+                if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+                    return downloadFile(response.headers.location, filePath).then(resolve).catch(reject);
+                } else {
+                    reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
+                    return;
+                }
             }
-            res.pipe(fs.createWriteStream(filePath)).on('close', resolve);
-            res.on('error', reject);
+            const onError = (err) => {
+                if (err) {
+                    console.error('下载文件[' + url + ']发生错误：', err);
+                }
+            };
+
+            // response.pipe(file);
+            switch (response.headers['content-encoding']) {
+                case 'br':
+                    pipeline(response, zlib.createBrotliDecompress(), file, onError);
+                    break;
+                case 'gzip': // 或者, 只是使用 zlib.createUnzip() 方法去处理这两种情况：
+                    pipeline(response, zlib.createGunzip(), file, onError);
+                    break;
+                case 'deflate':
+                    pipeline(response, zlib.createInflate(), file, onError);
+                    break;
+                default:
+                    pipeline(response, file, onError);
+                    break;
+            }
         });
-        req.on('error', reject);
-        req.end();
+        // The destination stream is ended by the time it's called
+        file.on('finish', () => resolve());
+        request.on('error', err => {
+            file.close();
+            fs.unlink(filePath, () => reject(err));
+        });
+        file.on('error', err => {
+            file.close();
+            fs.unlink(filePath, () => reject(err));
+        });
+        request.end();
     });
 };
-
 
 /**
  * 解压文件
@@ -542,19 +586,21 @@ export function installModule(needInstall) {
     let succNum = 0, errNum = 0;
     let moNum = modules.length;
     for (let i = 0; i < moNum; i++) {
-        let module = modules[i];
-        let ver = needInstall[module];
+        let moduleStr = modules[i];
+        let ver = needInstall[moduleStr];
         ver = ver === '' ? 'latest' : ver;
 
         lock.acquire("installModule", function (done) {
             try {
-                let logStr = '[' + (i + 1) + '/' + moNum + ']安装模块[' + module + ']';
+                let logStr = '[' + (i + 1) + '/' + moNum + ']安装模块[' + moduleStr + ']';
                 console.time(logStr + '安装所耗时间');
                 console.log(logStr + '，版本[' + ver + ']。。。');
-                manager.install(module, ver).then(res => {
+                manager.install(moduleStr, ver).then(res => {
                     console.log(logStr + '，版本[' + ver + ']，安装[成功]：name=' + res.name + '[' + res.version + ']，依赖：' + Object.keys(res.dependencies));
                     // console.dir(res);
                     succNum++;
+                    moduleInstallDoneEvent(moduleStr, res.version.replace("^", ""));
+
                     console.timeEnd(logStr + '安装所耗时间');
                     if (i === moNum - 1) {
                         console.log('模块[' + modules + ']已完成安装，其中成功[' + succNum + ']个，失败[' + errNum + ']个');
@@ -563,11 +609,16 @@ export function installModule(needInstall) {
                 })
             } catch (error) {
                 errNum++;
-                console.log('[' + (i + 1) + '/' + moNum + ']安装模块[' + module + ':' + ver + ']出现错误，将跳过: ' + error);
+                console.log('[' + (i + 1) + '/' + moNum + ']安装模块[' + moduleStr + ':' + ver + ']出现错误，将跳过: ' + error);
             }
         }, function (err, ret) {
         }, {});
     }
+}
+
+function moduleInstallDoneEvent(moduleStr, version) {
+    adblockerInstallFinishEvent(moduleStr, version);
+
 }
 
 async function installModule2(needInstall, type) {

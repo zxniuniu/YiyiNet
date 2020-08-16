@@ -6,7 +6,7 @@ import config from './configs/app.config';
 // import {addPepFlashCommandLine} from './main/pepflash';
 import {destroyTray, setTray} from './main/tray';
 import {setShortcut, unSetShortcut} from './main/shortcut';
-import {openBrowserWindow, setSavedEnv, windowEvent} from './main/window-helpers';
+import {openBrowserWindow, setSavedEnv} from './main/window-helpers';
 import {killAllServiceByYiyiNet} from './main/service';
 import {setAutoLaunch} from './main/auto-launch';
 import {setProtocol} from './main/protocal';
@@ -89,7 +89,6 @@ function createWindow() {
     // 创建Splash窗口及主窗口
     mainWindow = openBrowserWindow({});
 
-    windowEvent();
     setTray(mainWindow);
     setShortcut(mainWindow);
 

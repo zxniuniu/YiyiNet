@@ -5,7 +5,6 @@ import {initDynamicSplashScreen} from '@trodi/electron-splashscreen';
 import config from '../configs/app.config';
 import {checkNewUpdates} from './auto-updater';
 import {initYiyiNet} from "../utils";
-import {blockAds} from 'electron-ad-block'; // https://www.npmjs.com/package/electron-ad-block
 
 const windowStateKeeper = require('electron-window-state');
 let mainWindow = null;
@@ -147,20 +146,9 @@ export function openBrowserWindow(opts) {
         }]).popup(win);
     });*/
 
-    // https://www.npmjs.com/package/electron-ad-block
-    // 广告过滤 https://github.com/quanglam2807/electron-ad-block/blob/master/src/index.js
-    blockAds(mainWindow.webContents.session, {
-        filterTypes: ['ads', 'privacy', 'annoyance', 'social'],
-    });
-
-    return mainWindow;
-}
-
-export function windowEvent() {
     // 程序结束时会设置强制退出为true，因此需在启动时重置其值
     settings.reset("FORCE_QUIT_FLAG");
-
-    mainWindow.webContents.on('beforeunload', (event) => {
+    /*mainWindow.webContents.on('beforeunload', (event) => {
         console.log('beforeunload：' + require('util').inspect(event));
 
         event.returnValue = false
@@ -174,7 +162,7 @@ export function windowEvent() {
             }
         }, 10)
         return true;
-    })
+    })*/
 
     // 当 window 被关闭，这个事件会被发出
     mainWindow.on('close', function (event) {
@@ -244,14 +232,16 @@ export function windowEvent() {
     // DOM READY事件
     mainWindow.webContents.on('dom-ready', function () {
         mainWindow.show();
+
+        dynamicSplashScreen.splashScreen.destroy();
     });
 
     mainWindow.webContents.on('did-finish-load', () => {
         openDevTools();
 
-        checkNewUpdates(mainWindow, false);
-
         initYiyiNet();
+
+        checkNewUpdates(mainWindow, false);
     });
 
     // 如何监控文件下载进度，并显示进度条 https://newsn.net/say/electron-download-progress.html
@@ -311,6 +301,7 @@ export function windowEvent() {
     // 也可以静默下载指定的文件
     // mainWindow.webContents.downloadURL("http://searchbox.bj.bcebos.com/miniapp/demo-1.0.1.zip");
 
+    return mainWindow;
 }
 
 // Sets the environment variables to a combination of process.env and whatever the user saved
