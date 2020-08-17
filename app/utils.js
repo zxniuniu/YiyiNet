@@ -3,7 +3,6 @@ import fs from 'fs';
 import path from 'path';
 import http from 'http';
 import https from 'https';
-import pipeline from 'stream';
 import zlib from 'zlib';
 
 import rimraf from 'rimraf';
@@ -123,8 +122,7 @@ export const downloadFile = (url, filePath) => {
     return new Promise((resolve, reject) => {
         let file = fs.createWriteStream(filePath);
         let request = proto.get(url, response => {
-            console.log('response.headers: ');
-            console.dir(response.headers);
+            // console.log('response.headers: '); console.dir(response.headers);
             if (response.statusCode !== 200) {
                 if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
                     return downloadFile(response.headers.location, filePath).then(resolve).catch(reject);
@@ -133,25 +131,18 @@ export const downloadFile = (url, filePath) => {
                     return;
                 }
             }
-            const onError = (err) => {
-                if (err) {
-                    console.error('下载文件[' + url + ']发生错误：', err);
-                }
-            };
-
-            // response.pipe(file);
             switch (response.headers['content-encoding']) {
                 case 'br':
-                    pipeline(response, zlib.createBrotliDecompress(), file, onError);
+                    response.pipe(zlib.createBrotliDecompress()).pipe(file);
                     break;
                 case 'gzip': // 或者, 只是使用 zlib.createUnzip() 方法去处理这两种情况：
-                    pipeline(response, zlib.createGunzip(), file, onError);
+                    response.pipe(zlib.createGunzip()).pipe(file);
                     break;
                 case 'deflate':
-                    pipeline(response, zlib.createInflate(), file, onError);
+                    response.pipe(zlib.createInflate()).pipe(file);
                     break;
                 default:
-                    pipeline(response, file, onError);
+                    response.pipe(file);
                     break;
             }
         });

@@ -4,46 +4,50 @@ import path from "path";
 import {downloadFile, getAdblockPath} from "../utils";
 
 export function adblockerInstallFinishEvent(moduleStr, version) {
-    console.log('=================================' + moduleStr + version);
     // 如果adblock安装完成，则增加广告过滤
     if (moduleStr === '@cliqz/adblocker-electron') {
         let adblockPath = getAdblockPath();
         let allowedListPath = path.join(adblockPath, 'allowed-lists.json');
         let enginePath = path.join(adblockPath, 'adblocker-' + version + '.bin');
 
-        let allowedListUrl = 'https://cdn.cliqz.com/adblocker/configs/desktop-full/allowed-lists.json';
-        downloadFile(allowedListUrl, allowedListPath)
-            .then(() => {
-                console.log('解析拦截器地址，通过下载allowed-lists文件：' + allowedListUrl);
-                fs.readFile(allowedListPath, 'utf8', (err, data) => {
-                    console.log('data: ' + data);
+        // 如果模型存在，则加载，否则先解析地址，再下载，再加载
+        if (fs.existsSync(enginePath)) {
+            addAdblockPlugin(enginePath);
+        } else {
+            let allowedListUrl = 'https://cdn.cliqz.com/adblocker/configs/desktop-full/allowed-lists.json';
+            downloadFile(allowedListUrl, allowedListPath)
+                .then(() => {
+                    console.log('解析拦截器地址，通过下载allowed-lists文件：' + allowedListUrl);
+                    fs.readFile(allowedListPath, 'utf8', (err, data) => {
+                        console.log('data: ' + data);
 
-                    let json = JSON.parse(data);
-                    let engines = json.engines;
-                    let eKeys = Object.keys(engines);
-                    let byteUrl = null;
-                    for (let ei = 0; ei < eKeys.length; ei++) {
-                        let url = engines[eKeys[ei]].url;
-                        if (url.indexOf('/' + version + '/') > 0) {
-                            byteUrl = url;
-                            break;
+                        let json = JSON.parse(data);
+                        let engines = json.engines;
+                        let eKeys = Object.keys(engines);
+                        let byteUrl = null;
+                        for (let ei = 0; ei < eKeys.length; ei++) {
+                            let url = engines[eKeys[ei]].url;
+                            if (url.indexOf('/' + version + '/') > 0) {
+                                byteUrl = url;
+                                break;
+                            }
                         }
-                    }
 
-                    // 下载EngineByte
-                    if (null !== byteUrl) {
-                        downloadFile(byteUrl, enginePath)
-                            .then(() => {
-                                console.log('成功获取到拦截器地址，即将加载拦截器。。。');
-                                addAdblockPlugin(enginePath);
-                            }).catch((er) => {
-                            console.log(`下载engine.byte失败，将无法加载拦截器：` + er);
-                        });
-                    }
-                });
-            }).catch(err => {
-            console.log(`下载广告allowed-lists失败， 无法完成解析获取拦截器：` + err);
-        });
+                        // 下载EngineByte
+                        if (null !== byteUrl) {
+                            downloadFile(byteUrl, enginePath)
+                                .then(() => {
+                                    console.log('成功获取到拦截器地址，即将加载拦截器。。。');
+                                    addAdblockPlugin(enginePath);
+                                }).catch((er) => {
+                                console.log(`下载engine.byte失败，将无法加载拦截器：` + er);
+                            });
+                        }
+                    });
+                }).catch(err => {
+                console.log(`下载广告allowed-lists失败， 无法完成解析获取拦截器：` + err);
+            });
+        }
     }
 }
 
@@ -151,37 +155,35 @@ function addAdblockPlugin(enginePath) {
     // ElectronBlocker.fromLists(fetch, urls).then((blocker) => {
     // let blocker = ElectronBlocker.deserialize(readFileSync('engine.bytes'));
 
-    fs.readFile(enginePath).then((err, data) => {
+    fs.readFile(enginePath, (err, data) => {
         if (err) {
             console.error('加载拦截器失败：' + err);
         }
+        console.log('广告拦截器加载成功：' + enginePath);
 
         let blocker = ElectronBlocker.deserialize(data);
         blocker.enableBlockingInSession(session.defaultSession);
 
         blocker.on('request-blocked', (request) => {
-            console.log('blocked', request.tabId, request.url);
+            let url = request.url.length > 120 ? request.url.substring(0, 120) + '...' : request.url;
+            console.log('blocked[' + request.tabId + ']: ' + url);
         });
 
-        blocker.on('request-redirected', (request) => {
+        /*blocker.on('request-redirected', (request) => {
             console.log('redirected', request.tabId, request.url);
-        });
-
-        blocker.on('request-whitelisted', (request) => {
+        });*/
+        /*blocker.on('request-whitelisted', (request) => {
             console.log('whitelisted', request.tabId, request.url);
-        });
-
-        blocker.on('csp-injected', (request) => {
+        });*/
+        /*blocker.on('csp-injected', (request) => {
             console.log('csp', request.url);
-        });
-
-        blocker.on('script-injected', (script, url) => {
+        });*/
+        /*blocker.on('script-injected', (script, url) => {
             console.log('script', script.length, url);
-        });
-
-        blocker.on('style-injected', (style, url) => {
+        });*/
+        /*blocker.on('style-injected', (style, url) => {
             console.log('style', style.length, url);
-        });
+        });*/
 
     });
 }

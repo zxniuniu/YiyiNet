@@ -11,7 +11,7 @@
   "main": "dist/main.js",
   "scripts": {
     "start": "chcp 65001 && npm run build-main-dev && electron . --debug --inspect=8888",
-    "dev": "chcp 65001 && npm run build-main-dev && xcopy .\\release\\win-unpacked D:\\YiyiNet /E /Y && D:\\YiyiNet\\YiyiNet.exe",
+    "dev": "chcp 65001 && npm run build-main-dev && xcopy .\\dist D:\\YiyiNet\\resources\\app.asar\\dist /E /Y && D:\\YiyiNet\\YiyiNet.exe",
     "delete": "rmdir /S /Q node_modules",
     "rebuild": "electron-rebuild",
     "postinstall": "electron-builder install-app-deps",
