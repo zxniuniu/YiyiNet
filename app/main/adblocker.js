@@ -60,6 +60,20 @@ function addAdblockPlugin(enginePath) {
 
     let {ElectronBlocker} = require('@cliqz/adblocker-electron');
 
+    /*`${PREFIX}/easylist/easylist.txt`,
+    `${PREFIX}/easylist/easylistgermany.txt`,
+    `${PREFIX}/peter-lowe/serverlist.txt`,
+    `${PREFIX}/ublock-origin/annoyances.txt`,
+    `${PREFIX}/ublock-origin/badware.txt`,
+    `${PREFIX}/ublock-origin/filters.txt`,
+    `${PREFIX}/ublock-origin/filters-2020.txt`,
+    `${PREFIX}/ublock-origin/resource-abuse.txt`,
+    `${PREFIX}/ublock-origin/unbreak.txt`,
+    `${PREFIX}/easylist/easyprivacy.txt`,
+    `${PREFIX}/ublock-origin/privacy.txt`,
+    `${PREFIX}/easylist/easylist-cookie.txt`,
+    */
+
     let config = {
         debug: true,
         enableCompression: true
@@ -80,19 +94,16 @@ function addAdblockPlugin(enginePath) {
     };
 
     let urls = ['https://easylist.to/easylist/easylist.txt',
+        'https://easylist.to/easylist/easyprivacy.txt',
+        'https://easylist-downloads.adblockplus.org/easylist-cookie.txt',
+        'https://easylist.to/easylist/fanboy-social.txt',
+        'https://easylist.to/easylist/fanboy-annoyance.txt',
+
         'https://easylist-downloads.adblockplus.org/easylistchina.txt',
-        /*`${PREFIX}/easylist/easylist.txt`,
-        `${PREFIX}/easylist/easylistgermany.txt`,
-        `${PREFIX}/peter-lowe/serverlist.txt`,
-        `${PREFIX}/ublock-origin/annoyances.txt`,
-        `${PREFIX}/ublock-origin/badware.txt`,
-        `${PREFIX}/ublock-origin/filters.txt`,
-        `${PREFIX}/ublock-origin/filters-2020.txt`,
-        `${PREFIX}/ublock-origin/resource-abuse.txt`,
-        `${PREFIX}/ublock-origin/unbreak.txt`,
-        `${PREFIX}/easylist/easyprivacy.txt`,
-        `${PREFIX}/ublock-origin/privacy.txt`,
-        `${PREFIX}/easylist/easylist-cookie.txt`,*/
+        'https://easylist-downloads.adblockplus.org/antiadblockfilters.txt',
+
+        // 订阅地址 https://adblockplus.org/en/subscriptions
+        'https://easylist-downloads.adblockplus.org/easylistchina+easylist.txt',
 
         'https://cdn.cliqz.com/adblocker/resources/easylist/05e16b457de92c8b6855dbda2823af24d0ace2f32fcae0b4ce5125e009659d0b/list.txt',
         'https://cdn.cliqz.com/adblocker/resources/german-filters/174ffdf2925183e5b0898d8a6bc37ddf6c74839995953a7674e2aadde177a915/list.txt',
@@ -127,6 +138,8 @@ function addAdblockPlugin(enginePath) {
     // ElectronBlocker.fromPrebuiltAdsOnly(fetch).then((blocker) => {
     // ElectronBlocker.fromLists(fetch, urls).then((blocker) => {
     // let blocker = ElectronBlocker.deserialize(readFileSync('engine.bytes'));
+
+    // 解决 raw.githubusercontent.com 无法访问的问题 https://learnku.com/articles/43426
 
     let usingWebByteEngine = true; // 使用网页上的默认拦截器
     if (!usingWebByteEngine) {

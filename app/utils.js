@@ -413,27 +413,56 @@ export const installExtension = (extensionReference, forceDownload = false) => {
 };
 
 /**
- * 返回NPM镜像路径
+ * 返回NPM镜像路径 参见：https://github.com/gucong3000/mirror-config-china
  * @returns {{registry: string, phantomjs_cdnurl: string, node_sqlite3_binary_host_mirror: string, electron_mirror: string, puppeteer_download_host: string, selenium_cdnurl: string, disturl: string, operadriver_cdnurl: string, npm_config_disturl: string, profiler_binary_host_mirror: string, node_inspector_cdnurl: string, python_mirror: string, chromedriver_cdnurl: string, electron_builder_binaries_mirror: string, sass_binary_site: string, npm_config_profiler_binary_host_mirror: string}}
  */
 export const npmConfig = () => {
     return {
-        'registry': 'https://registry.npm.taobao.org/',
-        'disturl': 'https://npm.taobao.org/dist',
-        'electron_mirror': 'https://npm.taobao.org/mirrors/electron/',
+        'chromedriver-cdnurl': 'https://npm.taobao.org/mirrors/chromedriver',
         'chromedriver_cdnurl': 'https://npm.taobao.org/mirrors/chromedriver',
-        'phantomjs_cdnurl': 'http://npm.taobao.org/mirrors/phantomjs',
-        'operadriver_cdnurl': 'http://npm.taobao.org/mirrors/operadriver',
-        'selenium_cdnurl': 'https://npm.taobao.org/mirrors/selenium',
-        'sass_binary_site': 'https://npm.taobao.org/mirrors/node-sass/',
-        'node_sqlite3_binary_host_mirror': 'http://npm.taobao.org/mirrors',
-        'python_mirror': 'http://npm.taobao.org/mirrors/python',
+        'couchbase-binary-host-mirror': 'https://npm.taobao.org/mirrors/couchbase/v{version}',
+        'debug-binary-host-mirror': 'https://npm.taobao.org/mirrors/node-inspector',
+        'disturl': 'https://npm.taobao.org/dist',
+        'electron-mirror': 'https://npm.taobao.org/mirrors/electron/',
         'electron_builder_binaries_mirror': 'http://npm.taobao.org/mirrors/electron-builder-binaries/',
-        'profiler_binary_host_mirror': 'http://npm.taobao.org/mirrors/node-inspector/',
-        'npm_config_profiler_binary_host_mirror': 'http://npm.taobao.org/mirrors/node-inspector/',
+        'electron_mirror': 'https://npm.taobao.org/mirrors/electron/',
+        'flow-bin-binary-host-mirror': 'https://npm.taobao.org/mirrors/flow/v',
+        'fse-binary-host-mirror': 'https://npm.taobao.org/mirrors/fsevents',
+        'fuse-bindings-binary-host-mirror': 'https://npm.taobao.org/mirrors/fuse-bindings/v{version}',
+        'git4win-mirror': 'https://npm.taobao.org/mirrors/git-for-windows',
+        'gl-binary-host-mirror': 'https://npm.taobao.org/mirrors/gl/v{version}',
+        'grpc-node-binary-host-mirror': 'https://npm.taobao.org/mirrors',
+        'hackrf-binary-host-mirror': 'https://npm.taobao.org/mirrors/hackrf/v{version}',
+        'leveldown-binary-host-mirror': 'https://npm.taobao.org/mirrors/leveldown/v{version}',
+        'leveldown-hyper-binary-host-mirror': 'https://npm.taobao.org/mirrors/leveldown-hyper/v{version}',
+        'mknod-binary-host-mirror': 'https://npm.taobao.org/mirrors/mknod/v{version}',
+        'node-sqlite3-binary-host-mirror': 'https://npm.taobao.org/mirrors',
+        'node-tk5-binary-host-mirror': 'https://npm.taobao.org/mirrors/node-tk5/v{version}',
         'node_inspector_cdnurl': 'http://npm.taobao.org/mirrors/node-inspector/',
+        'node_sqlite3_binary_host_mirror': 'http://npm.taobao.org/mirrors',
+        'nodegit-binary-host-mirror': 'https://npm.taobao.org/mirrors/nodegit/v{version}/',
+        'npm_config_disturl': 'https://npm.taobao.org/mirrors/atom-shell',
+        'npm_config_profiler_binary_host_mirror': 'http://npm.taobao.org/mirrors/node-inspector/',
+        'operadriver-cdnurl': 'https://npm.taobao.org/mirrors/operadriver',
+        'operadriver_cdnurl': 'http://npm.taobao.org/mirrors/operadriver',
+        'phantomjs-cdnurl': 'https://npm.taobao.org/mirrors/phantomjs',
+        'phantomjs_cdnurl': 'http://npm.taobao.org/mirrors/phantomjs',
+        'profiler-binary-host-mirror': 'https://npm.taobao.org/mirrors/node-inspector/',
+        'profiler_binary_host_mirror': 'http://npm.taobao.org/mirrors/node-inspector/',
+        'puppeteer-download-host': 'https://npm.taobao.org/mirrors',
         'puppeteer_download_host': 'https://npm.taobao.org/mirrors',
-        'npm_config_disturl': 'https://npm.taobao.org/mirrors/atom-shell'
+        'python-mirror': 'https://npm.taobao.org/mirrors/python',
+        'python_mirror': 'http://npm.taobao.org/mirrors/python',
+        'rabin-binary-host-mirror': 'https://npm.taobao.org/mirrors/rabin/v{version}',
+        'registry': 'https://registry.npm.taobao.org/',
+        'sass-binary-site': 'https://npm.taobao.org/mirrors/node-sass',
+        'sass_binary_site': 'https://npm.taobao.org/mirrors/node-sass/',
+        'selenium_cdnurl': 'https://npm.taobao.org/mirrors/selenium',
+        'sodium-prebuilt-binary-host-mirror': 'https://npm.taobao.org/mirrors/sodium-prebuilt/v{version}',
+        'sqlite3-binary-site': 'https://npm.taobao.org/mirrors/sqlite3',
+        'utf-8-validate-binary-host-mirror': 'https://npm.taobao.org/mirrors/utf-8-validate/v{version}',
+        'utp-native-binary-host-mirror': 'https://npm.taobao.org/mirrors/utp-native/v{version}',
+        'zmq-prebuilt-binary-host-mirror': 'https://npm.taobao.org/mirrors/zmq-prebuilt/v{version}'
     }
 };
 

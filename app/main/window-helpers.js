@@ -317,6 +317,6 @@ function openDevTools() {
     // 打开开发工具 https://newsn.net/say/electron-param-debug.html
     // 隐藏窗体顶部菜单 https://newsn.net/say/electron-no-application-menu.html
     if (config.isDev || (app.isPackaged && config.mainUrl.indexOf('localhost') >= 0)) {
-        mainWindow.openDevTools({mode: config.devToolsPostion});
+        mainWindow.webContents.openDevTools({mode: config.devToolsPostion});
     }
 }
