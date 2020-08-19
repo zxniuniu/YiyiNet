@@ -1,6 +1,6 @@
 {
   "name": "YiyiNet",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "productName": "YiyiNet",
   "description": "依网, YiyiNet, 定时任务, 自动签到, 自动任务, 任务管理",
   "about": "依网(YiyiNet)：自动任务执行，如自动签到，自动浏览等",
@@ -8,7 +8,7 @@
   "repository": {
     "url": "https://github.com/zxniuniu/YiyiNet"
   },
-  "main": "dist/main.js",
+  "main": "./dist/main.js",
   "scripts": {
     "start": "chcp 65001 && npm run build-main-dev && electron . --debug --inspect=8888",
     "dev": "chcp 65001 && npm run build-main-dev && xcopy .\\dist D:\\YiyiNet\\resources\\app.asar\\dist /E /Y && D:\\YiyiNet\\YiyiNet.exe",
@@ -135,13 +135,18 @@
     "files": [
       "dist/",
       "assets/",
-      "node_modules/",
       "package.json"
     ],
     "extraFiles": [
       "dll_backup/"
     ],
-    "asar": true,
+    "extraResources": [
+      "res_backup"
+    ],
+    "asar": false,
+    "asarUnpack": [
+      "./node_modules/**/*"
+    ],
     "win": {
       "icon": "./assets/icon/app.ico",
       "target": {
