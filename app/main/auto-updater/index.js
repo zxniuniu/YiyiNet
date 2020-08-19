@@ -83,7 +83,9 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
     // Handle error case
     autoUpdater.on('error', (message) => {
         mainWindow.setProgressBar(-1); // 出错时不显示进度条
-        if (message.toString().indexOf('no such file or directory') === -1) {
+        let isSkipMsg = message.toString().indexOf('no such file or directory') >= 0
+            || message.toString().indexOf('ERR_CONNECTION_TIMED_OUT') >= 0;
+        if (!isSkipMsg) {
             sendStatusToWindow('更新时出错：' + message);
             dialog.showMessageBox({
                 type: 'error',

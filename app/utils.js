@@ -5,13 +5,15 @@ import http from 'http';
 import https from 'https';
 import zlib from 'zlib';
 
-import rimraf from 'rimraf';
 import unzip from 'unzip-crx';
 import StreamZip from 'node-stream-zip';
+// import {loadAsync} from "jszip";
 import semver from 'semver';
 import AsyncLock from 'async-lock';
 
 import {adblockerInstallFinishEvent} from './main/adblocker';
+import config from "./configs/app.config";
+
 // import {DownloaderHelper} from 'node-downloader-helper';
 
 /*
@@ -19,6 +21,8 @@ var remote = require('electron').remote;
 var app = remote.app;
 var path = require('path');
 var fs = require('fs');
+var http = require('http');
+var https = require('https');
 */
 
 /**
@@ -112,13 +116,38 @@ export const getChromedriverExeName = () => {
 };
 
 /**
+ * 根据地址获取http或者https
+ * @param url
+ * @returns {any}
+ */
+function getHttpOrHttps(url) {
+    return !url.charAt(4).localeCompare('s') ? https : http;
+}
+
+/**
+ * 检查链接地址是否可用
+ * isUrlValid('https://www.baidu.com', (flag)=>{console.log(flag)});
+ */
+export function isUrlValid(url) {
+    const proto = getHttpOrHttps(url);
+    return new Promise((resolve, reject) => {
+        let req = proto.get(url, response => {
+            return resolve(response.statusCode === 200 || (response.statusCode >= 300 && response.statusCode));
+        }).on('error', (err) => {
+            return resolve(false);
+        });
+        req.end();
+    });
+}
+
+/**
  * 下载并保存文件
  * @param url
  * @param filePath
  * @returns {Promise<unknown>}
  */
 export const downloadFile = (url, filePath) => {
-    const proto = !url.charAt(4).localeCompare('s') ? https : http;
+    const proto = getHttpOrHttps(url);
     return new Promise((resolve, reject) => {
         let file = fs.createWriteStream(filePath);
         let request = proto.get(url, response => {
@@ -210,6 +239,17 @@ export function downloadChromedriver() {
             if (!fs.existsSync(folder)) {
                 fs.mkdirSync(folder, {recursive: true});
             }
+            /*// 采用JSZip反应太慢
+            fs.readFile(chromedriverLocalZip, function(err, data) {
+                if (err) throw err;
+                loadAsync(data).then(zip => {
+                    // console.log(zip.files);
+                    zip.files[chromedriverName].nodeStream().pipe(fs.createWriteStream(path.join(folder, chromedriverName)))
+                        .on('finish', function () {
+                            done();
+                        });
+                });
+            });*/
             const zip = new StreamZip({
                 file: chromedriverLocalZip,
                 storeEntries: true
@@ -258,6 +298,25 @@ export const changePermissions = (dir, mode) => {
 };
 
 /**
+ * 删除文件夹
+ * @param {string} dir_path
+ * @see https://stackoverflow.com/a/42505874/3027390
+ */
+export function delFolder(dir_path) {
+    if (fs.existsSync(dir_path)) {
+        fs.readdirSync(dir_path).forEach(function (entry) {
+            let entry_path = path.join(dir_path, entry);
+            if (fs.lstatSync(entry_path).isDirectory()) {
+                delFolder(entry_path);
+            } else {
+                fs.unlinkSync(entry_path);
+            }
+        });
+        fs.rmdirSync(dir_path);
+    }
+}
+
+/**
  * 根据chromeStoreID下载crx插件
  * @param chromeStoreID
  * @param forceDownload
@@ -273,7 +332,7 @@ export const downloadChromeExtension = (chromeStoreID, forceDownload, attempts =
     return new Promise((resolve, reject) => {
         if (!fs.existsSync(extensionFolder) || forceDownload) {
             if (fs.existsSync(extensionFolder)) {
-                rimraf.sync(extensionFolder);
+                delFolder(extensionFolder);
             }
             const fileURL = `https://clients2.google.com/service/update2/crx?response=redirect&acceptformat=crx2,crx3&x=id%3D${chromeStoreID}%26uc&prodversion=32`; // eslint-disable-line
             const filePath = path.resolve(`${extensionFolder}.crx`);
@@ -488,13 +547,21 @@ export function getIco(name, size) {
  * @param req_module
  * @returns {boolean}
  */
-function hasModule(req_module) {
+export function hasModule(req_module) {
     try {
         require.resolve(req_module);
         return true;
     } catch (e) {
         return false;
     }
+}
+
+/**
+ * 是否是调试的地址（用于菜单和打开开发者工具）
+ */
+export function isDebugUrl() {
+    let url = config.mainUrl;
+    return !app.isPackaged || (app.isPackaged && (url.indexOf('localhost') >= 0 || url.indexOf('cnbeta.com') >= 0));
 }
 
 /**
@@ -619,13 +686,13 @@ export function installModule(needInstall) {
                     console.log(logStr + '，版本[' + ver + ']，安装[成功]：name=' + res.name + '[' + res.version + ']，依赖：' + Object.keys(res.dependencies));
                     // console.dir(res);
                     succNum++;
-                    moduleInstallDoneEvent(moduleStr, res.version.replace("^", ""));
 
                     console.timeEnd(logStr + '安装所耗时间');
                     if (i === moNum - 1) {
                         console.log('模块[' + modules + ']已完成安装，其中成功[' + succNum + ']个，失败[' + errNum + ']个');
                     }
                     done();
+                    moduleInstallDoneEvent(moduleStr, res.version.replace("^", ""));
                 })
             } catch (error) {
                 errNum++;
@@ -637,6 +704,7 @@ export function installModule(needInstall) {
 }
 
 function moduleInstallDoneEvent(moduleStr, version) {
+    // 广告过滤事件
     adblockerInstallFinishEvent(moduleStr, version);
 
 }

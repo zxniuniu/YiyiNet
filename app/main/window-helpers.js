@@ -4,7 +4,7 @@ import path from 'path';
 import {initDynamicSplashScreen} from '@trodi/electron-splashscreen';
 import config from '../configs/app.config';
 import {checkNewUpdates} from './auto-updater';
-import {initYiyiNet} from "../utils";
+import {initYiyiNet, isDebugUrl} from "../utils";
 
 const windowStateKeeper = require('electron-window-state');
 let mainWindow = null;
@@ -229,14 +229,16 @@ export function openBrowserWindow(opts) {
         })
     })*/
 
-    // DOM READY事件
-    mainWindow.webContents.on('dom-ready', function () {
-        mainWindow.show();
-
+    // 显示窗口
+    mainWindow.once('ready-to-show', function () {
         dynamicSplashScreen.splashScreen.destroy();
+        mainWindow.show();
+        // console.log('===================================================ready-to-show');
     });
 
-    mainWindow.webContents.on('did-finish-load', () => {
+    // DOM READY事件，仅执行一次（否则重载页面等均会触发）
+    mainWindow.webContents.once('dom-ready', function () {
+        // console.log('===================================================dom-ready');
         openDevTools();
 
         initYiyiNet();
@@ -316,7 +318,7 @@ export async function setSavedEnv() {
 function openDevTools() {
     // 打开开发工具 https://newsn.net/say/electron-param-debug.html
     // 隐藏窗体顶部菜单 https://newsn.net/say/electron-no-application-menu.html
-    if (config.isDev || (app.isPackaged && config.mainUrl.indexOf('localhost') >= 0)) {
+    if (config.isDev || isDebugUrl()) {
         mainWindow.webContents.openDevTools({mode: config.devToolsPostion});
     }
 }

@@ -3,7 +3,7 @@ import {app, dialog, Menu, shell} from 'electron';
 import {checkNewUpdates} from './auto-updater';
 import config from '../configs/app.config';
 import i18n from '../configs/i18next.config';
-import {getIco, packageJson, toggleShowHide} from './../utils';
+import {getIco, isDebugUrl, packageJson, toggleShowHide} from './../utils';
 import settings from 'electron-settings';
 
 let menuTemplates = {mac: {}, other: {}};
@@ -356,7 +356,7 @@ function otherMenuView() {
         }
     });
 
-    if (config.isDev || (app.isPackaged && config.mainUrl.indexOf('localhost') >= 0)) {
+    if (config.isDev || isDebugUrl()) {
         submenu.push({
             label: i18n.t('Reload'),
             accelerator: 'Ctrl+R',

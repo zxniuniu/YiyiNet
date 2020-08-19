@@ -19,14 +19,14 @@ let logFile;
 // Delete saved server args, don't start until a server has been started
 settings.unsetSync('SERVER_ARGS');
 
-async function deleteLogfile() {
+/*async function deleteLogfile() {
     if (logFile) {
         try {
             await fs.rimraf(logFile);
         } catch (ign) {
         }
     }
-}
+}*/
 
 function connectStartServer(mainWindow) {
     ipcMain.on('start-server', async (event, args) => {
@@ -35,7 +35,7 @@ function connectStartServer(mainWindow) {
             const dir = await tempDir.openDir();
             logFile = path.resolve(dir, 'appium-logs.txt');
             mainWindow.webContents.send('path-to-logs', logFile);
-            mainWindow.on('close', deleteLogfile);
+            // mainWindow.on('close', deleteLogfile);
         } catch (ign) {
         }
 
