@@ -179,10 +179,10 @@ function blockerEvent(blocker, enginePath) {
     blocker.enableBlockingInSession(session.defaultSession);
     console.log('广告拦截器加载成功：' + enginePath);
 
-    blocker.on('request-blocked', (request) => {
+    /*blocker.on('request-blocked', (request) => {
         let url = request.url.length > 120 ? request.url.substring(0, 120) + '...' : request.url;
         console.log('blocked[' + request.tabId + ']: ' + url);
-    });
+    });*/
 
     /*blocker.on('request-redirected', (request) => {
         console.log('redirected', request.tabId, request.url);

@@ -12,6 +12,8 @@ import semver from 'semver';
 import AsyncLock from 'async-lock';
 
 import {adblockerInstallFinishEvent} from './main/adblocker';
+import {hostileInstallFinishEvent} from './main/hosts';
+
 import config from "./configs/app.config";
 
 // import {DownloaderHelper} from 'node-downloader-helper';
@@ -120,7 +122,7 @@ export const getChromedriverExeName = () => {
  * @param url
  * @returns {any}
  */
-function getHttpOrHttps(url) {
+export function getHttpOrHttps(url) {
     return !url.charAt(4).localeCompare('s') ? https : http;
 }
 
@@ -706,6 +708,9 @@ export function installModule(needInstall) {
 function moduleInstallDoneEvent(moduleStr, version) {
     // 广告过滤事件
     adblockerInstallFinishEvent(moduleStr, version);
+
+    // 修改Hosts解决Github无法访问的问题
+    hostileInstallFinishEvent(moduleStr, version);
 
 }
 
