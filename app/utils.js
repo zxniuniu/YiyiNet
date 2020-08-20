@@ -86,7 +86,7 @@ export const getNpmInstallPath = () => {
     return checkPath(path.resolve(`${savePath}/node_modules/`));
 };
 
-function checkPath(filePath) {
+export function checkPath(filePath) {
     if (!fs.existsSync(filePath)) {
         fs.mkdirSync(filePath, {recursive: true});
     }
