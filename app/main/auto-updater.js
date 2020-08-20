@@ -5,13 +5,14 @@
  * See https://electronjs.org/docs/tutorial/updates for documentation
  * See自动更新 https://github.com/electron-userland/electron-builder/wiki/Auto-Update#events
  */
-// import {app, autoUpdater, dialog} from 'electron';
-import {dialog} from 'electron';
+import {dialog, app} from 'electron';
 import {autoUpdater} from 'electron-updater'; // https://www.electron.build/auto-update#AppUpdater
 // import _ from 'lodash';
-import i18n from '../../configs/i18next.config';
-import settings from "../../shared/settings";
-import {getFeedUrl} from './config';
+
+import i18n from '../configs/i18next.config';
+import settings from "../shared/settings";
+import {getHttpOrHttps, packageJson} from "../utils";
+import semver from "semver";
 
 const isDev = process.env.NODE_ENV === 'development';
 const runningLocally = isDev || process.env.RUNNING_LOCALLY;
@@ -20,9 +21,13 @@ let checkNewUpdates = null; // _.noop;
 let mainWindow = null;
 let menuClick = true; // 如果是菜单点击，则无更新时也提示
 
-if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
-    autoUpdater.setFeedURL(getFeedUrl());
+let baseFeedUrl = 'https://hub.fastgit.org';
+// let baseFeedUrl = 'https://github.com.cnpmjs.org';
+// let baseFeedUrl = 'https://github.com';
 
+let releasesUrl = null;
+
+if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
     // https://www.electron.build/auto-update#api
     autoUpdater.fullChangelog = true;
     autoUpdater.logger = require("electron-log");
@@ -36,25 +41,24 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
         menuClick = menuclick;
 
         // autoupdate.checkForUpdates always downloads updates immediately
-        // This method (getUpdate) let's us take a peek to see if there is an update
-        // available before calling .checkForUpdates
+        // This method (getUpdate) let's us take a peek to see if there is an update available before calling .checkForUpdates
         /*if (process.env.RUNNING_IN_SPECTRON) {
             return;
-        }
-        const update = await checkUpdate(app.getVersion());
-        console.log('update:' + update);
-
+        }*/
+        const update = await checkNewVersion(app.getVersion());
         if (update) {
-            let {name, notes, pub_date: pubDate} = update;
+            autoUpdater.setFeedURL(getFeedUrl(update));
+
+            /*let {name, notes, pub_date: pubDate} = update;
             pubDate = moment(pubDate).format(i18n.t('datetimeFormat'));
 
             let detail = i18n.t('updateDetails', {pubDate, notes: notes.replace('*', '\n*')});
             if (env.NO_AUTO_UPDATE) {
                 detail += `\n\nhttps://www.github.com/appium/appium-desktop/releases/latest`;
-            }
+            }*/
 
             // Ask user if they wish to install now or later
-            if (!process.env.RUNNING_IN_SPECTRON) {
+            /*if (!process.env.RUNNING_IN_SPECTRON) {
                 dialog.showMessageBox({
                     type: 'info',
                     buttons: env.NO_AUTO_UPDATE
@@ -70,15 +74,15 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
                         }
                     }
                 });
-            }
+            }*/
+            autoUpdater.checkForUpdates();
         } else {
-            // autoUpdater.emit('update-not-available');
+            autoUpdater.emit('update-not-available');
 
             // If no updates found check for updates every hour
-            await B.delay(60 * 60 * 1000);
-            checkNewUpdates(mainWindow, false);
-        }*/
-        autoUpdater.checkForUpdates();
+            // await B.delay(60 * 60 * 1000);
+            // checkNewUpdates(mainWindow, false);
+        }
     };
 
     // Handle error case
@@ -114,7 +118,7 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
 
     // Handle the unusual case where we checked the updates endpoint, found an update but then after calling 'checkForUpdates', nothing was there
     autoUpdater.on('update-not-available', (info) => { // UpdateInfo: version, files, path, sha512, releaseName, releaseNotes, releaseDate, stagingPercentage
-        let version = info.version;
+        let version = info === undefined ? app.getVersion() : info.version;
         sendStatusToWindow('无可用更新，当前版本已是最新版本：' + version);
         if (menuClick) {
             dialog.showMessageBox({
@@ -164,6 +168,40 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
 function sendStatusToWindow(text) {
     console.log(text);
     mainWindow.webContents.send('message', text);
+}
+
+export function getFeedUrl(newVersion) {
+    // https://github.com/zxniuniu/YiyiNet/
+    // https://hub.fastgit.org/zxniuniu/YiyiNet/
+    // https://github.com.cnpmjs.org/zxniuniu/YiyiNet/
+    // https://hub.fastgit.org/zxniuniu/YiyiNet/releases/download/v1.6.3/latest.yml
+
+    // let version = await checkNewVersion(releasesUrl);
+    return releasesUrl + 'download/v' + newVersion + '/';
+}
+
+export async function checkNewVersion(curVersion) {
+    try {
+        let json = packageJson();
+        let repositoryUrl = json.repository.url.replace(/https?:\/\/[.a-zA-Z]+/, '');
+        releasesUrl = baseFeedUrl + repositoryUrl + '/releases/';
+        let latestUrl = releasesUrl + 'latest';
+
+        let proto = getHttpOrHttps(latestUrl);
+        const res = await proto.get(latestUrl);
+        if (res && res.statusCode === 302) {
+            let locationStr = res.headers['Location'];
+            let queryVer = locationStr.substring(locationStr.lastIndexOf('/') + 2, locationStr.length());
+            if (semver.lt(curVersion, queryVer)) {
+                console.log('获取到新版本[' + queryVer + ']，当前版本[' + curVersion + ']');
+                return queryVer;
+            }else{
+                console.log('当前无新版本，在线版本[' + queryVer + ']，当前版本[' + curVersion + ']');
+            }
+        }
+    } catch (ign) {
+    }
+    return false;
 }
 
 export {checkNewUpdates};
