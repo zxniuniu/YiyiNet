@@ -11,6 +11,7 @@ import {autoUpdater} from 'electron-updater'; // https://www.electron.build/auto
 // import _ from 'lodash';
 import i18n from '../../configs/i18next.config';
 import settings from "../../shared/settings";
+import {getFeedUrl} from './config';
 
 const isDev = process.env.NODE_ENV === 'development';
 const runningLocally = isDev || process.env.RUNNING_LOCALLY;
@@ -20,12 +21,12 @@ let mainWindow = null;
 let menuClick = true; // 如果是菜单点击，则无更新时也提示
 
 if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
-    // autoUpdater.setFeedURL(getFeedUrl(app.getVersion()));
+    autoUpdater.setFeedURL(getFeedUrl());
 
     // https://www.electron.build/auto-update#api
     autoUpdater.fullChangelog = true;
     autoUpdater.logger = require("electron-log");
-    autoUpdater.logger.transports.file.level = "debug"; // error, warn, info, verbose, debug, silly
+    autoUpdater.logger.transports.console.level = "debug"; // error, warn, info, verbose, debug, silly
 
     /**
      * Check for new updates
