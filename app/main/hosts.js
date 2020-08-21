@@ -125,7 +125,7 @@ function downloadGooglehosts(hostile, done) {
 export function hostileInstallFinishEvent(moduleStr, version) {
     // 如果hostile安装完成，则修改hosts文件内容
     if (moduleStr === 'hostile') {
-        console.log(moduleStr + version);
+        // console.log(moduleStr + version);
         let hostile = require('hostile');
 
         // 备份hosts文件

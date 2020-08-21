@@ -44,20 +44,20 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
         /*if (process.env.RUNNING_IN_SPECTRON) {
             return;
         }*/
-        const update = await checkNewVersion(app.getVersion());
+        /*const update = await checkNewVersion(app.getVersion());
         if (update) {
             autoUpdater.setFeedURL(getFeedUrl(update));
 
-            /*let {name, notes, pub_date: pubDate} = update;
+            /!*let {name, notes, pub_date: pubDate} = update;
             pubDate = moment(pubDate).format(i18n.t('datetimeFormat'));
 
             let detail = i18n.t('updateDetails', {pubDate, notes: notes.replace('*', '\n*')});
             if (env.NO_AUTO_UPDATE) {
                 detail += `\n\nhttps://www.github.com/appium/appium-desktop/releases/latest`;
-            }*/
+            }*!/
 
             // Ask user if they wish to install now or later
-            /*if (!process.env.RUNNING_IN_SPECTRON) {
+            /!*if (!process.env.RUNNING_IN_SPECTRON) {
                 dialog.showMessageBox({
                     type: 'info',
                     buttons: env.NO_AUTO_UPDATE
@@ -73,7 +73,7 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
                         }
                     }
                 });
-            }*/
+            }*!/
             autoUpdater.checkForUpdates();
         } else {
             autoUpdater.emit('update-not-available');
@@ -81,7 +81,8 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
             // If no updates found check for updates every hour
             // await B.delay(60 * 60 * 1000);
             // checkNewUpdates(mainWindow, false);
-        }
+        }*/
+        autoUpdater.checkForUpdates();
     };
 
     // Handle error case
@@ -154,7 +155,7 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
             // console.log('res: '); console.dir(res);
             if (res && res.response && res.response === 0) {
                 settings.setSync("FORCE_QUIT_FLAG", 'install');
-                autoUpdater.quitAndInstall(true, true);
+                autoUpdater.quitAndInstall(false);
             }
         });
     });
