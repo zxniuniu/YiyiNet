@@ -146,8 +146,6 @@ export function openBrowserWindow(opts) {
         }]).popup(win);
     });*/
 
-    // 程序结束时会设置强制退出为true，因此需在启动时重置其值
-    settings.reset("FORCE_QUIT_FLAG");
     /*mainWindow.webContents.on('beforeunload', (event) => {
         console.log('beforeunload：' + require('util').inspect(event));
 

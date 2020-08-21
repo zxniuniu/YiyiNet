@@ -15,6 +15,7 @@ import {adblockerInstallFinishEvent} from './main/adblocker';
 import {hostileInstallFinishEvent} from './main/hosts';
 
 import config from "./configs/app.config";
+import {moduleInstallSucc} from './shared/settings';
 
 // import {DownloaderHelper} from 'node-downloader-helper';
 
@@ -692,6 +693,9 @@ export function installModule(needInstall) {
                     console.timeEnd(logStr + '安装所耗时间');
                     if (i === moNum - 1) {
                         console.log('模块[' + modules + ']已完成安装，其中成功[' + succNum + ']个，失败[' + errNum + ']个');
+                        if (errNum === 0) {
+                            moduleInstallSucc();
+                        }
                     }
                     done();
                     moduleInstallDoneEvent(moduleStr, res.version.replace("^", ""));

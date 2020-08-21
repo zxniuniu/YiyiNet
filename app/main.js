@@ -12,13 +12,13 @@ import {setAutoLaunch} from './main/auto-launch';
 import {setProtocol} from './main/protocal';
 import {addCommandLine} from './main/add-command-line';
 import {initializeIpc} from './main/ipcevent';
-import settings from "./shared/settings";
+import {settings, resetObj} from "./shared/settings";
 import log from 'electron-log';
 
 // 设置默认日志
 Object.assign(console, log.functions);
-
 addCommandLine();
+resetObj();
 
 // 下载模块
 // const electronDl = require('electron-dl');
