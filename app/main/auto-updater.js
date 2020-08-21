@@ -5,14 +5,13 @@
  * See https://electronjs.org/docs/tutorial/updates for documentation
  * See自动更新 https://github.com/electron-userland/electron-builder/wiki/Auto-Update#events
  */
-import {dialog, app} from 'electron';
+import {app, dialog} from 'electron';
 import {autoUpdater} from 'electron-updater'; // https://www.electron.build/auto-update#AppUpdater
-// import _ from 'lodash';
-
 import i18n from '../configs/i18next.config';
 import settings from "../shared/settings";
 import {getHttpOrHttps, packageJson} from "../utils";
 import semver from "semver";
+// import _ from 'lodash';
 
 const isDev = process.env.NODE_ENV === 'development';
 const runningLocally = isDev || process.env.RUNNING_LOCALLY;
@@ -188,6 +187,7 @@ export async function checkNewVersion(curVersion) {
         let latestUrl = releasesUrl + 'latest';
 
         let proto = getHttpOrHttps(latestUrl);
+        // Three Ways to Retrieve JSON from the Web using Node.js https://dev.to/isalevine/three-ways-to-retrieve-json-from-the-web-using-node-js-3c88
         const res = await proto.get(latestUrl);
         if (res && res.statusCode === 302) {
             let locationStr = res.headers['Location'];

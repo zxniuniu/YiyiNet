@@ -229,13 +229,15 @@ export function openBrowserWindow(opts) {
 
     // 显示窗口
     mainWindow.once('ready-to-show', function () {
-        dynamicSplashScreen.splashScreen.destroy();
+        closeSplashScreen(dynamicSplashScreen.splashScreen);
         mainWindow.show();
         // console.log('===================================================ready-to-show');
     });
 
     // DOM READY事件，仅执行一次（否则重载页面等均会触发）
     mainWindow.webContents.once('dom-ready', function () {
+        closeSplashScreen(dynamicSplashScreen.splashScreen);
+
         // console.log('===================================================dom-ready');
         openDevTools();
 
@@ -302,6 +304,17 @@ export function openBrowserWindow(opts) {
     // mainWindow.webContents.downloadURL("http://searchbox.bj.bcebos.com/miniapp/demo-1.0.1.zip");
 
     return mainWindow;
+}
+
+/**
+ * 关闭Splash窗口（某些情况下，主窗口显示了，但Splash窗口还未自动关闭）
+ * @param splashScreen
+ */
+function closeSplashScreen(splashScreen) {
+    if (splashScreen) {
+        splashScreen.isDestroyed() || splashScreen.close(); // Avoid `Error: Object has been destroyed` (#19)
+        splashScreen = null;
+    }
 }
 
 // Sets the environment variables to a combination of process.env and whatever the user saved
