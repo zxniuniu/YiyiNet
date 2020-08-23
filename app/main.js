@@ -18,6 +18,7 @@ import {resetDefaultObject} from './utils';
 
 import unhandled from 'electron-unhandled';
 import {debugInfo, openNewGitHubIssue} from 'electron-util';
+import {installExtensions} from './main/extensions';
 
 // 处理未捕获的异常
 unhandled({
@@ -104,6 +105,8 @@ if (!gotTheLock) {
  * 新窗口
  */
 function createWindow() {
+    installExtensions();
+
     // 创建Splash窗口及主窗口
     mainWindow = openBrowserWindow({});
 

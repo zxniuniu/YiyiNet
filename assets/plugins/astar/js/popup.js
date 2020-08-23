@@ -13,9 +13,16 @@ function popupFun() {
         //		return ;
         //	}
         //	var _d = result._sl;
-        var _d = JSON.parse(_sl)
+        var _d = JSON.parse(_sl);
+        if (_i === undefined) {
+            let mi = _d.d[Math.floor((Math.random() * (_d.d.length - 1)) + 0)];
+            console.log('Current Proxy: ' + mi);
+            _i = mi.i;
+            localStorage['_i'] = _i;
+            localStorage['state'] = 1;
+        }
 
-        $(".ip").html("<font style='font-family: verdana, sans-serif;font-size: 30px;font-weight: bold;'>disconnect</font>");
+        $(".ip").html("<font style='font-family: verdana, sans-serif;font-size: 30px;font-weight: bold;'>已断开</font>");
 
         var _img = "";
         var _f = "";
@@ -27,7 +34,7 @@ function popupFun() {
                     _f += '<div class="x-select-title">' + _d.d[i].n + '</div>  ';
                     var _l = '';
                     if (_d.d[i].l == 2) {
-                        _l = '<div class="x-select-badge">Premium</div>';
+                        _l = '<div class="x-select-badge">高级</div>';
                     }
                     _f += _l;
                     _f += '<div class="x-select-arrow"></div>';
@@ -51,7 +58,7 @@ function popupFun() {
                         _f += '<div class="x-select-title">' + _d.d[i].n + '</div>  ';
                         var _l = '';
                         if (_d.d[i].l == 2) {
-                            _l = '<div class="x-select-badge">Premium</div>';
+                            _l = '<div class="x-select-badge">高级</div>';
                         }
                         _f += _l;
                         _f += '<div class="x-select-arrow"></div>';
@@ -65,7 +72,7 @@ function popupFun() {
                         _f += '<div class="x-select-title">' + _d.d[i].n + '</div>  ';
                         var _l = '';
                         if (_d.d[i].l == 2) {
-                            _l = '<div class="x-select-badge">Premium</div>';
+                            _l = '<div class="x-select-badge">高级</div>';
                         }
                         _f += _l;
                         _f += '<div class="x-select-arrow"></div>';
@@ -93,7 +100,7 @@ function popupFun() {
             __s += '<div class="x-select-title">' + _d.d[i].n + '</div>';
             var _l = "";
             if (_d.d[i].l == 2) {
-                _l = '<div class="x-select-badge">Premium</div>';
+                _l = '<div class="x-select-badge">高级</div>';
             }
             __s += _l;
             __s += '</div>';
@@ -114,7 +121,7 @@ function popupFun() {
         if (state == 1) {
             $("body").addClass("on");
             $('#vpn-on').attr("checked", true);
-            $(".ip").html("<font style='font-family: verdana, sans-serif;font-size: 30px;font-weight: bold;'>connect</font>");
+            $(".ip").html("<font style='font-family: verdana, sans-serif;font-size: 30px;font-weight: bold;'>已连接</font>");
         }
         //});
     }
@@ -143,7 +150,7 @@ function popupFun() {
                     _f += '<div class="x-select-title">' + _d.d[i].n + '</div>  ';
                     var _l = '';
                     if (_d.d[i].l == 2) {
-                        _l = '<div class="x-select-badge">Premium</div>';
+                        _l = '<div class="x-select-badge">高级</div>';
                     }
                     _f += _l;
                     _f += '<div class="x-select-arrow"></div>';
@@ -168,14 +175,14 @@ function popupFun() {
             }
             if (state == 1) {
                 $("body").addClass("loading");
-                $(".ip").html("<font style='font-family: verdana, sans-serif;font-size: 30px;font-weight: bold;'>connecting</font>");
+                $(".ip").html("<font style='font-family: verdana, sans-serif;font-size: 30px;font-weight: bold;'>连接中</font>");
                 //chrome.storage.local.set({"_i":_i},function(){});
                 localStorage['_i'] = _i
                 //chrome.runtime.sendMessage(chrome.runtime.id,{'n':202}, function(response){});
                 winBackgroundPage.server.popupEvent(202);
             }
             if (state == 0) {
-                $(".ip").html("<font style='font-family: verdana, sans-serif;font-size: 30px;font-weight: bold;'>disconnecting</font>");
+                $(".ip").html("<font style='font-family: verdana, sans-serif;font-size: 30px;font-weight: bold;'>断开中</font>");
                 //chrome.storage.local.set({"_i":_i},function(){});
                 localStorage['_i'] = _i
                 //chrome.runtime.sendMessage(chrome.runtime.id,{'n':202}, function(response){});
@@ -241,14 +248,14 @@ function popupFun() {
         this.change = function () {
             if ($('#vpn-on').is(':checked')) {
                 $("body").addClass("loading");
-                $(".ip").html("<font style='font-family: verdana, sans-serif;font-size: 30px;font-weight: bold;'>connecting</font>");
+                $(".ip").html("<font style='font-family: verdana, sans-serif;font-size: 30px;font-weight: bold;'>连接中</font>");
                 var _title = $("#select_now").html();
                 //chrome.storage.local.set({"_i":_title},function(){});
                 localStorage['_i'] = _title
                 //chrome.runtime.sendMessage(chrome.runtime.id,{'n':200}, function(response){}); <span>IP </span> ...
                 winBackgroundPage.server.popupEvent(200);
             } else {
-                $(".ip").html("<font style='font-family: verdana, sans-serif;font-size: 30px;font-weight: bold;'>disconnecting</font>");
+                $(".ip").html("<font style='font-family: verdana, sans-serif;font-size: 30px;font-weight: bold;'>断开中</font>");
                 //chrome.runtime.sendMessage(chrome.runtime.id,{'n':404}, function(response){});
                 winBackgroundPage.server.popupEvent(404);
             }

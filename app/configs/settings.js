@@ -1,5 +1,5 @@
 import config from './../configs/app.config';
-import {ipcMain} from 'electron';
+import {ipcMain} from 'electron-better-ipc';
 
 let Store = require('electron-store');
 
@@ -19,13 +19,19 @@ store.set(config.storeValue);
     }
 });*/
 
-ipcMain.handle('getStore', (event, key) => {
+// https://github.com/sindresorhus/electron-better-ipc
+ipcMain.answerRenderer('get-store', (key) => {
     return store.get(key);
 });
-ipcMain.handle('setStore', (event, key, value) => {
-    return store.set(key, value);
+ipcMain.answerRenderer('set-store', (keyValue) => {
+    store.set(keyValue);
+    return 'ok';
 });
-// const foo = await ipcRenderer.invoke('getStore', 'APPIUM_PORT');
+
+/*const {ipcRenderer: ipc} = require('electron-better-ipc');
+(async () => {
+    const isLoad = await ipc.callMain('get-store', 'ADS_LOAD');
+    console.log(isLoad); // => false
+})();*/
 
 export default store;
-

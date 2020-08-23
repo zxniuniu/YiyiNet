@@ -391,13 +391,6 @@ export const installExtension = (extensionReference, forceDownload = false) => {
             console.error('electron-devtools-installer: Invalid JSON present in the IDMap file');
         }
     }
-
-    if (process.type !== 'browser') {
-        return Promise.reject(
-            new Error('electron-devtools-installer can only be used from the main process'),
-        );
-    }
-
     if (Array.isArray(extensionReference)) {
         return extensionReference.reduce(
             (accum, extension) => accum.then(() => install(extension, forceDownload)),
