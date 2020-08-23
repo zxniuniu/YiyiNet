@@ -2,7 +2,7 @@ import fs, {promises as fsp} from "fs";
 import {session} from "electron";
 import path from "path";
 import fetch from 'node-fetch';
-import {adsLoadSucc} from './../shared/settings';
+import store from './../configs/settings';
 
 import {downloadFile, getAdblockPath, isUrlValid} from "../utils";
 
@@ -179,7 +179,7 @@ function blockerEvent(blocker, enginePath) {
     }
     blocker.enableBlockingInSession(session.defaultSession);
     console.log('广告拦截器加载成功：' + enginePath);
-    adsLoadSucc();
+    store.set('ADS_LOAD', true);
 
     /*blocker.on('request-blocked', (request) => {
         let url = request.url.length > 120 ? request.url.substring(0, 120) + '...' : request.url;

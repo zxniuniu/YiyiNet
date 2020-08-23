@@ -4,7 +4,7 @@ import {app, ipcMain} from 'electron';
 import path from 'path';
 // import wd from 'wd';
 // import { fs, tempDir } from 'appium-support';
-import settings from '../shared/settings';
+// import settings from '../configs/settings';
 // import {createSession, killSession, getSessionHandler} from './appium-method-handler';
 import {openBrowserWindow} from './window-helpers';
 
@@ -15,9 +15,6 @@ let logWatcher = null;
 let batchedLogs = [];
 
 let logFile;
-
-// Delete saved server args, don't start until a server has been started
-settings.unsetSync('SERVER_ARGS');
 
 /*async function deleteLogfile() {
     if (logFile) {
@@ -70,7 +67,7 @@ function connectStartServer(mainWindow) {
         try {
             // set up the appium server running in this thread
             server = await appiumServer(args, true);
-            await settings.set('SERVER_ARGS', args);
+            // await settings.set('SERVER_ARGS', args);
             mainWindow.webContents.send('appium-start-ok');
         } catch (e) {
             mainWindow.webContents.send('appium-start-error', e.message);
@@ -93,7 +90,7 @@ function connectStopServer(mainWindow) {
         }
 
         clearInterval(logWatcher);
-        await settings.delete('SERVER_ARGS');
+        // await settings.delete('SERVER_ARGS');
     });
 }
 

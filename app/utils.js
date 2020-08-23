@@ -15,7 +15,7 @@ import {adblockerInstallFinishEvent} from './main/adblocker';
 import {hostileInstallFinishEvent} from './main/hosts';
 
 import config from "./configs/app.config";
-import {moduleInstallSucc} from './shared/settings';
+import store from './configs/settings';
 
 // import {DownloaderHelper} from 'node-downloader-helper';
 
@@ -665,6 +665,12 @@ export function installModule(needInstall) {
     // module.paths.push(getNpmInstallPath());
     // console.log(module.paths);
 
+    // NPM安装==========================================================================================================
+    // https://stackoverflow.com/questions/15957529/can-i-install-a-npm-package-from-javascript-running-in-node-js/15957574#15957574
+    // https://stackoverflow.com/questions/20686244/install-programmatically-a-npm-package-providing-its-version
+    // https://stackoverflow.com/questions/48717853/electron-js-use-npm-internally-programmatically
+    // https://stackoverflow.com/questions/34458417/run-node-js-server-file-automatically-after-launching-electron-app
+
     const {PluginManager} = require('live-plugin-manager');
     let manager = new PluginManager({
         pluginsPath: getNpmInstallPath(),
@@ -694,7 +700,7 @@ export function installModule(needInstall) {
                     if (i === moNum - 1) {
                         console.log('模块[' + modules + ']已完成安装，其中成功[' + succNum + ']个，失败[' + errNum + ']个');
                         if (errNum === 0) {
-                            moduleInstallSucc();
+                            store.set('MODULE_INSTALL', true);
                         }
                     }
                     done();
@@ -716,6 +722,28 @@ function moduleInstallDoneEvent(moduleStr, version) {
     // 修改Hosts解决Github无法访问的问题
     hostileInstallFinishEvent(moduleStr, version);
 
+}
+
+/**
+ * 重置参数值（启动时重置部分数据为false）
+ */
+export function resetDefaultObject() {
+    let resetDefault = Object.keys(config.defaultStoreValue);
+    store.reset(resetDefault);
+}
+
+/**
+ * 获取Appium端口
+ */
+export function getAppiumPort() {
+    return store.get('APPIUM_PORT');
+}
+
+/**
+ * 获取chromedriver端口
+ */
+export function getChromedriverPort() {
+    return store.get('CHROMEDRIVER_PORT');
 }
 
 async function installModule2(needInstall, type) {

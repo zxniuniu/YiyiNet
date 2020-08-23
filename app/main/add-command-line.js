@@ -12,7 +12,6 @@ export function addCommandLine() {
     // process.env.ELECTRON_HIDE_INTERNAL_MODULES = 'true';
     // require('electron').hideInternalModules();
 
-
 }
 
 

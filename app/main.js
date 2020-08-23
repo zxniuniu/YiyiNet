@@ -1,5 +1,5 @@
 // https://github.com/sindresorhus/awesome-electron
-import {app, ipcMain} from 'electron';
+import {app} from 'electron';
 import shellEnv from 'shell-env';
 import fixPath from 'fix-path';
 import config from './configs/app.config';
@@ -12,13 +12,31 @@ import {setAutoLaunch} from './main/auto-launch';
 import {setProtocol} from './main/protocal';
 import {addCommandLine} from './main/add-command-line';
 import {initializeIpc} from './main/ipcevent';
-import {settings, resetObj} from "./shared/settings";
+import store from "./configs/settings";
 import log from 'electron-log';
+import {resetDefaultObject} from './utils';
+
+import unhandled from 'electron-unhandled';
+import {debugInfo, openNewGitHubIssue} from 'electron-util';
+
+// 处理未捕获的异常
+unhandled({
+    reportButton: error => {
+        openNewGitHubIssue({
+            user: config.user,
+            repo: config.repo,
+            body: `\`\`\`\n${error.stack}\n\`\`\`\n\n---\n\n${debugInfo()}`
+        });
+    }
+});
 
 // 设置默认日志
 Object.assign(console, log.functions);
+
 addCommandLine();
-resetObj();
+
+// 启动前重置部分参数
+resetDefaultObject();
 
 // 下载模块
 // const electronDl = require('electron-dl');
@@ -128,10 +146,10 @@ function handleUrl(urlStr) {
     console.log('伪协议[' + config.protocol + ']地址：' + openUrl);
     // 主进程通讯监听渲染进程派发的OPENVIEW事件
     if (mainWindow === null) {
-        settings.set('openUrl', openUrl);
+        store.set('openUrl', openUrl);
     } else {
         mainWindow.webContents.send('protocol-open', openUrl);
-        settings.set('openUrl', '');
+        store.set('openUrl', '');
     }
 
     /*ipcMain.on(PROTOCOLVIEW, (event)=> {
@@ -140,12 +158,12 @@ function handleUrl(urlStr) {
     })*/
 }
 
-ipcMain.on('installModule', (event, needData) => {
+/*ipcMain.on('installModule', (event, needData) => {
     // console.log('needData:' + needData);
     installModule(needData.module, needData.type).then(result => {
         event.reply('installModuleReply', result);
     })
-});
+});*/
 
 // 下载按钮进行下载, https://github.com/sindresorhus/electron-dl
 /*ipcMain.on('download-button', async (event, {url}) => {

@@ -4,7 +4,7 @@ import {checkNewUpdates} from './auto-updater';
 import config from '../configs/app.config';
 import i18n from '../configs/i18next.config';
 import {getIco, isDebugUrl, packageJson, toggleShowHide} from './../utils';
-import settings from 'electron-settings';
+import store from './../configs/settings';
 
 let menuTemplates = {mac: {}, other: {}};
 let mainWindow = null;
@@ -366,7 +366,7 @@ function otherMenuView() {
         });
         submenu.push({
             label: i18n.t('Toggle Developer Tools'),
-            accelerator: 'Alt+Ctrl+I',
+            accelerator: 'Ctrl+Shift+I',
             click() {
                 if (!mainWindow.isVisible()) {
                     mainWindow.show();
@@ -392,7 +392,7 @@ function otherMenuView() {
         icon: getIco('unlockicon.ico'),
         click: function () {
             // https://discuss.atom.io/t/how-to-catch-the-event-of-clicking-the-app-windows-close-button-in-electron-app/21425
-            settings.setSync("FORCE_QUIT_FLAG", 'force');
+            store.set("FORCE_QUIT_FLAG", 'force');
             app.quit();
         }
     });

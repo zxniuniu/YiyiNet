@@ -9,9 +9,17 @@ export function killChromedriver() {
 }
 
 /**
+ * 结束Appium服务
+ */
+export function killAppiumService() {
+
+}
+
+/**
  * 停止客户端启动的所有服务进程
  */
 export function killAllServiceByYiyiNet() {
     killChromedriver();
 
+    killAppiumService();
 }

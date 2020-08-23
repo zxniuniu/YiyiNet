@@ -1,5 +1,5 @@
 import {app, dialog} from 'electron';
-import settings from '../shared/settings';
+import store from '../configs/settings';
 import path from 'path';
 import {initDynamicSplashScreen} from '@trodi/electron-splashscreen';
 import config from '../configs/app.config';
@@ -168,7 +168,7 @@ export function openBrowserWindow(opts) {
         // https://stackoverflow.com/questions/957537/how-can-i-display-a-javascript-object
         // console.log('当前关闭事件：' + require('util').inspect(event));
 
-        let quitFlag = settings.getSync("FORCE_QUIT_FLAG");
+        let quitFlag = store.get("FORCE_QUIT_FLAG");
         // console.log('quitFlag: ' + quitFlag);
         if (quitFlag !== 'install') {
             event.preventDefault();
@@ -238,9 +238,6 @@ export function openBrowserWindow(opts) {
     mainWindow.webContents.once('dom-ready', function () {
         closeSplashScreen(dynamicSplashScreen.splashScreen);
 
-        // console.log('===================================================dom-ready');
-        openDevTools();
-
         initYiyiNet();
 
         checkNewUpdates(mainWindow, false);
@@ -303,6 +300,9 @@ export function openBrowserWindow(opts) {
     // 也可以静默下载指定的文件
     // mainWindow.webContents.downloadURL("http://searchbox.bj.bcebos.com/miniapp/demo-1.0.1.zip");
 
+    // 打开开发者模式
+    openDevTools(mainWindow);
+
     return mainWindow;
 }
 
@@ -319,17 +319,20 @@ function closeSplashScreen(splashScreen) {
 
 // Sets the environment variables to a combination of process.env and whatever the user saved
 export async function setSavedEnv() {
-    const savedEnv = await settings.get('ENV');
+    const savedEnv = store.get('ENV');
     process.env = {
         ...process.env,
         ...savedEnv || {},
     };
 }
 
-function openDevTools() {
+function openDevTools(mainWindow) {
     // 打开开发工具 https://newsn.net/say/electron-param-debug.html
     // 隐藏窗体顶部菜单 https://newsn.net/say/electron-no-application-menu.html
+    console.log('config.isDev：' + config.isDev + '，isDebugUrl：' + isDebugUrl() + '，devToolsPostion：' + config.devToolsPostion);
     if (config.isDev || isDebugUrl()) {
-        mainWindow.webContents.openDevTools({mode: config.devToolsPostion});
+        // mainWindow.webContents.openDevTools({'mode': config.devToolsPostion});
+        mainWindow.webContents.openDevTools({mode: 'right'})
+        // mainWindow.toggleDevTools();
     }
 }

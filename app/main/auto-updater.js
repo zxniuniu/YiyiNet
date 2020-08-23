@@ -8,13 +8,14 @@
 import {app, dialog} from 'electron';
 import {autoUpdater} from 'electron-updater'; // https://www.electron.build/auto-update#AppUpdater
 import i18n from '../configs/i18next.config';
-import settings from "../shared/settings";
+import config from '../configs/app.config';
+
+import store from "./../configs/settings";
 import {getHttpOrHttps, packageJson} from "../utils";
 import semver from "semver";
 // import _ from 'lodash';
 
-const isDev = process.env.NODE_ENV === 'development';
-const runningLocally = isDev || process.env.RUNNING_LOCALLY;
+const runningLocally = config.isDev || process.env.RUNNING_LOCALLY;
 
 let checkNewUpdates = null; // _.noop;
 let mainWindow = null;
@@ -154,7 +155,7 @@ if (!runningLocally && !process.env.RUNNING_IN_SPECTRON) {
         }).then(res => {
             // console.log('res: '); console.dir(res);
             if (res && res.response && res.response === 0) {
-                settings.setSync("FORCE_QUIT_FLAG", 'install');
+                store.set("FORCE_QUIT_FLAG", 'install');
                 autoUpdater.quitAndInstall(false);
             }
         });
