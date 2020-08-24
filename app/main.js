@@ -2,6 +2,7 @@
 import {app} from 'electron';
 import shellEnv from 'shell-env';
 import fixPath from 'fix-path';
+import path from "path";
 import config from './configs/app.config';
 // import {addPepFlashCommandLine} from './main/pepflash';
 import {destroyTray, setTray} from './main/tray';
@@ -33,6 +34,9 @@ unhandled({
 
 // 设置默认日志
 Object.assign(console, log.functions);
+
+// 设置logs路径，默认为YiyiNet/YiyiNet/logs
+app.setAppLogsPath(path.join(app.getPath('userData'), 'logs'));
 
 addCommandLine();
 
