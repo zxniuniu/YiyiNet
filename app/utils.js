@@ -689,6 +689,7 @@ export function installModule(needInstall) {
                     // console.dir(res);
                     succNum++;
 
+                    store.set('MODULE.' + moduleStr, true);
                     console.timeEnd(logStr + '安装所耗时间');
                     if (i === moNum - 1) {
                         console.log('模块[' + modules + ']已完成安装，其中成功[' + succNum + ']个，失败[' + errNum + ']个');
@@ -721,8 +722,16 @@ function moduleInstallDoneEvent(moduleStr, version) {
  * 重置参数值（启动时重置部分数据为false）
  */
 export function resetDefaultObject() {
-    let resetDefault = Object.keys(config.defaultStoreValue);
-    store.reset(resetDefault);
+    store.reset(Object.keys(config.defaultStoreValue));
+
+    // 安装的模块（启动时重置安装的模块的标识）
+    let modules = store.get('MODULE');
+    if (null !== modules && typeof modules === 'object') {
+        let moduleKeys = Object.keys(modules);
+        if (moduleKeys !== null && moduleKeys.length > 0) {
+            store.reset(moduleKeys);
+        }
+    }
 }
 
 /**
