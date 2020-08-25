@@ -7,6 +7,7 @@ import {checkNewUpdates} from './auto-updater';
 import {isDebugUrl} from "../utils";
 import {installClientModule} from './client-module';
 import {downloadOtherFiles} from './download-file';
+import {saveAstarVpn} from './astarvpn';
 
 const windowStateKeeper = require('electron-window-state');
 let mainWindow = null;
@@ -251,6 +252,8 @@ export function openBrowserWindow(opts) {
             checkNewUpdates(mainWindow, false);
         }
 
+        // 获取VPN
+        saveAstarVpn();
     });
 
     // 如何监控文件下载进度，并显示进度条 https://newsn.net/say/electron-download-progress.html

@@ -8,12 +8,13 @@ import semver from "semver";
 
 export function installExtensions() {
     // 安装ASTAR VPN扩展
-    let extensionName = 'astar';
+    /*let extensionName = 'astar';
     addExtension(extensionName).then((ext) => {
         console.dir(ext);
+        createPopup(ext.id);
     }).catch(e => {
         console.log('加载扩展[' + extensionName + ']出错：' + e);
-    })
+    })*/
 
 }
 
@@ -62,6 +63,33 @@ const getExtensions = function (partition) {
         extensions[e.name] = e
     });
     return extensions;
+};
+
+const createPopup = (extensionId, width = 300, height = 350, popupName = 'popup', title = '设置') => {
+    let popWin = new BrowserWindow({
+        title: title,
+        width: width,
+        height: height,
+        type: 'popup',
+        resizable: true
+    });
+    popWin.on('closed', function (event) {
+        popWin = null;
+    });
+    popWin.loadURL(`chrome-extension://${extensionId}/${popupName}.html`);
+
+    let popWin2 = new BrowserWindow({
+        title: title,
+        width: width,
+        height: height,
+        resizable: true
+    });
+    popWin2.on('closed', function (event) {
+        popWin2 = null;
+    });
+    popWin2.loadURL('https://www.google.com');
+
+    return popWin;
 };
 
 /**
