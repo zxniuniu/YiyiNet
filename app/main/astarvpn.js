@@ -1,10 +1,10 @@
-let CryptoJS = require('crypto-js');
 import store from "../configs/settings";
 
 // 获取说明，首先在Chrome浏览器中加载Astar VPN插件，点击插件图标审查元素，运行代码即可
 // 插件地址 https://chrome.google.com/webstore/detail/astar-vpn-free-and-fast-v/jajilbjjinjmgcibalaakngmkilboobh
 
 function decrypt(s, d) {
+    let CryptoJS = require('crypto-js');
     let t = CryptoJS.enc.Utf8.parse(hex_md5(s).substring(0, 16));
     // let t = CryptoJS.enc.Utf8.parse(CryptoJS.MD5(s).toString().substring(0, 16));
     let r = CryptoJS.AES.decrypt(d, t, {mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.Pkcs7});
