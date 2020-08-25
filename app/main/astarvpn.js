@@ -5,8 +5,8 @@ import store from "../configs/settings";
 // 插件地址 https://chrome.google.com/webstore/detail/astar-vpn-free-and-fast-v/jajilbjjinjmgcibalaakngmkilboobh
 
 function decrypt(s, d) {
-    // let t = CryptoJS.enc.Utf8.parse(hex_md5(s).substring(0, 16));
-    let t = CryptoJS.enc.Utf8.parse(CryptoJS.MD5(s).toString().substring(0, 16));
+    let t = CryptoJS.enc.Utf8.parse(hex_md5(s).substring(0, 16));
+    // let t = CryptoJS.enc.Utf8.parse(CryptoJS.MD5(s).toString().substring(0, 16));
     let r = CryptoJS.AES.decrypt(d, t, {mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.Pkcs7});
     return "" + CryptoJS.enc.Utf8.stringify(r);
 }
