@@ -4,7 +4,9 @@ import path from 'path';
 import {initDynamicSplashScreen} from '@trodi/electron-splashscreen';
 import config from '../configs/app.config';
 import {checkNewUpdates} from './auto-updater';
-import {initYiyiNet, isDebugUrl} from "../utils";
+import {isDebugUrl} from "../utils";
+import {installClientModule} from './client-module';
+import {downloadOtherFiles} from './download-file';
 
 const windowStateKeeper = require('electron-window-state');
 let mainWindow = null;
@@ -238,9 +240,17 @@ export function openBrowserWindow(opts) {
     mainWindow.webContents.once('dom-ready', function () {
         closeSplashScreen(dynamicSplashScreen.splashScreen);
 
-        initYiyiNet();
+        // 安装模块
+        installClientModule();
 
-        checkNewUpdates(mainWindow, false);
+        // 下载服务（包括chromedriver，python等）
+        downloadOtherFiles();
+
+        // 检查更新
+        if (checkNewUpdates !== null) {
+            checkNewUpdates(mainWindow, false);
+        }
+
     });
 
     // 如何监控文件下载进度，并显示进度条 https://newsn.net/say/electron-download-progress.html
