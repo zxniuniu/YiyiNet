@@ -14,7 +14,11 @@ export function installClientModule() {
     let json = packageJson();
     let devDependencies = json.devDependencies;
     let notNeed = ['cross-env', 'electron', 'electron-builder', 'electron-rebuild', 'npm-run-all', 'parcel-bundler'];
-    notNeed.forEach(ins => delete devDependencies[ins]);
+    notNeed.forEach(ins => {
+        if (devDependencies[ins]) {
+            delete devDependencies[ins]
+        }
+    });
     installModule(devDependencies);
 }
 

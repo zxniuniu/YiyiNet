@@ -3,7 +3,7 @@ import store from "../configs/settings";
 // 获取说明，首先在Chrome浏览器中加载Astar VPN插件，点击插件图标审查元素，运行代码即可
 // 插件地址 https://chrome.google.com/webstore/detail/astar-vpn-free-and-fast-v/jajilbjjinjmgcibalaakngmkilboobh
 
-function decrypt(s, d) {
+/*function decrypt(s, d) {
     let CryptoJS = require('crypto-js');
     let t = CryptoJS.enc.Utf8.parse(hex_md5(s).substring(0, 16));
     // let t = CryptoJS.enc.Utf8.parse(CryptoJS.MD5(s).toString().substring(0, 16));
@@ -24,7 +24,7 @@ function getAstarVpn() {
         success: function (o) {
             // {"s":"891c6bac1df74cf1ad94f9262b237641","d":"YOYBxrhyOELb6bExv8Jhbyo4NblNGpbvGahkKI0zh/mYL0g/gWIPlUVYVFTwsGZEC96HWOOLUqmZ0meDZwUD2S+ojjNeouEaeVgS9dPWvykrEFRWRnHlVCQtkLV20gEivA4JW7+RyA76OWjJrzu4ax/VRCAJEXCsXGMOgeAC70BwCljIYlq4ufWybi5shSLG8Oys3vf8knls6ktwICJcpZPh1lfIx6m6Xdi7JrTdmZ3xSf7kQKnOc/2uRkASRtVrnfKZ86BXiCqU4IoBBWl20FsjkVPa8VV3NWWaKzJ7n4akng1yCpH4woyiMkB+jzn+wLAu78GOvkrtulUHOU/IZkQzF4Mi7H0Iv0+CVXFlrqfQrD9pJTYh90iRYCHDKh8lPH/aDiREF0OJ98Uue1ROT2iC5l8gZ+TToFpKKjl0e1BGMRfQ31pSvWHxajrMKfHG/T7R9KJJmQ30qvvdf9yybw6njNJf3RresgIvkpdQ5+Zjlv28+9EZe4qXWDvKp5RaRHs4IurwqbXd7JIiesma5GVxsuyepaxc4RAY+j7XYkLp1iD3X12DtNlWz10Nd0aagKHkxq87l2NCjPpKGRjgzySH6PYV9d79E/BJ7aENm3QqJZ0fg821hvcRvBb1OQp7Y0QyKd2giy+Nx2vYYTDMFDaPKVWRBRgGa3WCXMcmrImvepBgjt1cCJwDJJC9Kvw+GsWgL+nFaDPNow4fUQ05thei8uTV0pweOJNeDA+Yy28="}
             let c = JSON.parse(decrypt(o.s, o.d));
-            if (0 != c.nCode) {
+            if (0 !== c.nCode) {
                 console.info("service exception")
             }
 
@@ -71,8 +71,7 @@ function getAstarVpn() {
         }
     })
 }
-
-// getAstarVpn();
+getAstarVpn();*/
 
 export function saveAstarVpn() {
     let vpnList = {
@@ -87,6 +86,6 @@ export function saveAstarVpn() {
         'Germany': 'de.cn-cloudflare.com',
         'India': 'in1.cn-cloudflare.com',
         'Australia': 'au2.cn-cloudflare.com'
-    }
+    };
     store.set('ASTAR', vpnList);
 }
