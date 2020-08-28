@@ -9,6 +9,8 @@ import config from "./configs/app.config";
 import store from './configs/settings';
 import {ipcMain} from 'electron-better-ipc';
 
+let fetch = require("node-fetch");
+
 // import {DownloaderHelper} from 'node-downloader-helper';
 
 /*
@@ -91,7 +93,7 @@ export const getChromedriverFilePath = () => {
  * 获取工具类保存路径
  */
 export const getToolsPath = () => {
-    return path.join(getRootPath(), 'tools');
+    return checkPath(path.join(getRootPath(), 'tools'));
 };
 
 /**
@@ -195,6 +197,145 @@ export const downloadFile = (url, filePath) => {
         request.end();
     });
 };
+
+/**
+ * 获取Url对应的HTML
+ * @param url
+ * @returns {Promise<unknown>}
+ */
+export async function getHtml(url) {
+    return new Promise((resolve, reject) => {
+        fetch(url, {
+            method: 'GET'
+        }).then(res => {
+            resolve(res.text());
+        }).catch(err => {
+            reject(err);
+        })
+    });
+}
+
+/**
+ * 获取Url对应的JSON
+ * @param url
+ * @returns {Promise<unknown>}
+ */
+export async function getJson(url) {
+    return new Promise((resolve, reject) => {
+        fetch(url, {
+            method: 'GET'
+        }).then(res => {
+            resolve(res.json());
+        }).catch(err => {
+            reject(err);
+        })
+    });
+}
+
+/**
+ * 获取Url跳转的地址
+ * @param url
+ * @returns {Promise<unknown>}
+ */
+export async function getRedirected(url) {
+    return new Promise((resolve, reject) => {
+        fetch(url, {
+            method: 'GET',
+            redirect: 'manual',
+            follow: 0
+        }).then(res => {
+            resolve(res.headers.get('location'));
+        }).catch(err => {
+            reject(err);
+        })
+    });
+}
+
+/**
+ * 下载小文件
+ * @param url
+ * @param filePath 文件保存位置，包括文件名
+ * @returns {Promise<unknown>}
+ */
+export async function downloadSmall(url, filePath) {
+    return new Promise((resolve, reject) => {
+        fetch(url, {
+            method: 'GET',
+            headers: {'Content-Type': 'application/octet-stream'},
+        }).then(res => res.buffer()).then(_ => {
+            fs.writeFile(filePath, _, "binary", function (err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(filePath);
+                }
+            });
+        }).catch(err => {
+            reject(err);
+        })
+    });
+}
+
+/**
+ * 下载大文件
+ * @param fileURL
+ * @param filePath 文件保存位置，包括文件名
+ * @returns {Promise<unknown>}
+ */
+export async function downloadLarge(fileURL, filePath) {
+    return new Promise((resolve, reject) => {
+        //缓存文件路径
+        let tmpFileSavePath = filePath + ".tmp";
+        let fsize = 1, inteSecond = 1, startDate = Date.now();
+
+        //创建写入流
+        let fileStream = fs.createWriteStream(tmpFileSavePath)
+            .on('error', function (e) {
+                console.error('error==>', e);
+                reject(e);
+            }).on('ready', function () {
+                console.log("开始下载:", fileURL);
+            }).on('finish', function () {
+                //下载完成后重命名文件
+                fs.renameSync(tmpFileSavePath, filePath);
+                console.log('下载完成:', filePath);
+                resolve(filePath);
+            }).on('drain', function () {
+                let curByte = fileStream.bytesWritten;
+                if (Date.now() - startDate >= inteSecond * 1000) {
+                    startDate = Date.now();
+                    console.log('文件下载[' + filePath + ']，当前完成：' + (100 * curByte / fsize).toFixed(2) + '%');
+                    // process.stdout.write((curByte / fsize * 100).toFixed(4) + '%  ');
+                }
+            });
+
+        //请求文件
+        fetch(fileURL, {
+            method: 'GET',
+            headers: {'Content-Type': 'application/octet-stream'},
+            // timeout: 60000,
+        }).then(res => {
+            //获取请求头中的文件大小数据
+            fsize = res.headers.get("content-length");
+            inteSecond = Math.max(1, Math.round(fsize / 1024 / 1024 / 10));
+
+            /*//创建进度
+            let str = progressStream({
+                length: fsize,
+                time: 100 /!* ms *!/
+            });
+            // 下载进度
+            str.on('progress', function (progressData) {
+                //不换行输出
+                let percentage = Math.round(progressData.percentage) + '%';
+                console.log(percentage);
+            });*/
+            res.body/*.pipe(str)*/.pipe(fileStream);
+        }).catch(e => {
+            reject(e);
+        });
+    });
+}
 
 /**
  * 修改目录权限

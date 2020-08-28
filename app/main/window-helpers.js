@@ -4,11 +4,11 @@ import path from 'path';
 import {initDynamicSplashScreen} from '@trodi/electron-splashscreen';
 import config from '../configs/app.config';
 import {checkNewUpdates} from './auto-updater';
-import {getToolsPath, isDebugUrl} from "../utils";
+import {isDebugUrl} from "../utils";
 import {installClientModule} from './client-module';
 import {downloadOtherFiles} from './download-file';
 import {saveAstarVpn} from './astarvpn';
-import {downloadLatest} from './latest-release';
+import {downloadAllTools} from './latest-release';
 
 const windowStateKeeper = require('electron-window-state');
 let mainWindow = null;
@@ -173,8 +173,8 @@ export function openBrowserWindow(opts) {
         // console.log('当前关闭事件：' + require('util').inspect(event));
 
         let quitFlag = store.get("FORCE_QUIT_FLAG");
-        console.log('quitFlag: ' + quitFlag);
-        console.dir(event);
+        // console.log('quitFlag: ' + quitFlag);
+        // console.dir(event);
         if (quitFlag !== 'install') {
             event.preventDefault();
 
@@ -254,8 +254,8 @@ export function openBrowserWindow(opts) {
             checkNewUpdates(mainWindow, false);
         }
 
-        // 下载
-        downloadLatest('ytdl-org', 'youtube-dl', 'youtube-dl.exe', getToolsPath());
+        // 下载工具类软件
+        downloadAllTools();
 
         // 获取VPN
         saveAstarVpn();

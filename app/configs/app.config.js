@@ -23,7 +23,11 @@ const config = {
 
         CHROMEDRIVER_STATUS: false, // chromedriver是否启动
         APPIUM_STATUS: false, // appium是否启动
+
+        YOUTUBE_DL: false,
+        V2RAY_CORE: false,
     },
+
     storeValue: {
         DEFAULT_LANGUAGE: 'cn', // 默认语言，中文
 
