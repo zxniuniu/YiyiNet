@@ -6,6 +6,10 @@ import fs from "fs";
 import unzip from "unzip-crx";
 import semver from "semver";
 
+// https://github.com/electron/electron/blob/master/docs/api/extensions.md
+// 使用WebView打开扩展设置 https://github.com/electron/electron/issues/19447
+// https://github.com/getstation/electron-chrome-extension
+// https://github.com/sentialx/electron-extensions
 export function installExtensions() {
     // 安装ASTAR VPN扩展
     /*let extensionName = 'astar';

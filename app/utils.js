@@ -88,6 +88,13 @@ export const getChromedriverFilePath = () => {
 };
 
 /**
+ * 获取工具类保存路径
+ */
+export const getToolsPath = () => {
+    return path.join(getRootPath(), 'tools');
+};
+
+/**
  * 获取chromedriver文件名（平台兼容）
  */
 export const getChromedriverExeName = () => {
@@ -99,21 +106,21 @@ export const getChromedriverExeName = () => {
  */
 export const getPythonFolder = () => {
     return checkPath(path.join(getRootPath(), 'python'));
-}
+};
 
 /**
  * 获取Python所在路径
  */
 export const getPythonFilePath = () => {
     return path.join(getPythonFolder(), getPythonExeName());
-}
+};
 
 /**
  * 获取Python所有Exe
  */
 export const getPythonExeName = () => {
     return 'python' + (process.platform === 'win32' ? '.exe' : '');
-}
+};
 
 /**
  * 根据地址获取http或者https
@@ -222,7 +229,7 @@ export function delFolder(dir_path) {
         });
         fs.rmdirSync(dir_path);
     }
-}
+};
 
 /**
  * 根据图标生成指定大小的缩略图，以显示在菜单前
@@ -239,7 +246,7 @@ export function getIco(name, size) {
         img = img.resize({width: size});
     }
     return img;
-}
+};
 
 /**
  * 检查Module是否安装，而不加载Module
@@ -253,7 +260,7 @@ export function hasModule(req_module) {
     } catch (e) {
         return false;
     }
-}
+};
 
 /**
  * 是否是调试的地址（用于菜单和打开开发者工具）
@@ -261,7 +268,7 @@ export function hasModule(req_module) {
 export function isDebugUrl() {
     let url = config.mainUrl;
     return !app.isPackaged || (app.isPackaged && (url.indexOf('localhost') >= 0 || url.indexOf('cnbeta.com') >= 0));
-}
+};
 
 /**
  * Require each JS file in the main dir
