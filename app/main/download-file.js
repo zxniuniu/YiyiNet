@@ -5,24 +5,33 @@ import AsyncLock from 'async-lock';
 
 import {
     downloadFile,
+    downloadLarge,
+    extractZip,
     getChromedriverExeName,
     getChromedriverFilePath,
     getElectronCachePath,
     getPythonExeName,
     getPythonFilePath,
-    getPythonFolder
+    getPythonFolder,
+    getRedirected,
+    getV2rayCoreExe,
+    getYoutubeDlExe
 } from "../utils";
+import store from "../configs/settings";
 
-export function downloadOtherFiles() {
+let githubUrlLists = ['https://hub.fastgit.org', 'https://github.com.cnpmjs.org', 'https://github.com'];
+
+export function downloadDriverFiles() {
     downloadChromedriver();
 
     downloadPython();
+
 }
 
 /**
  * 下载Chromedriver
  */
-export function downloadChromedriver() {
+function downloadChromedriver() {
     let chromedriverFilePath = getChromedriverFilePath(); //
     if (fs.existsSync(chromedriverFilePath)) {
         return;
@@ -104,7 +113,7 @@ export function downloadChromedriver() {
 /**
  * 下载Python
  */
-export function downloadPython() {
+function downloadPython() {
     let pythonFilePath = getPythonFilePath(); //
     if (fs.existsSync(pythonFilePath)) {
         return;
@@ -154,3 +163,127 @@ export function downloadPython() {
 
 }
 
+export function getGithubUrl(type) {
+    type = type === undefined || type === '' || type === null ? 'fastgit' : type;
+    if (type === 'g' || type === 'git' || type === 'github' || type === 'default') {
+        return githubUrlLists[2];
+    } else if (type === 'c' || type === 'npm' || type === 'cnpm' || type === 'cnpmjs') {
+        return githubUrlLists[1];
+    } else {
+        return githubUrlLists[0];
+    }
+}
+
+/**
+ * 使用不同的镜像路径下载最新release版本
+ * @param user
+ * @param rep
+ * @param fileName
+ * @param savePath
+ * @returns {Promise<void>}
+ */
+export async function downloadLatestRetry(user, rep, fileName, savePath) {
+    return new Promise((resolve, reject) => {
+        try {
+            downloadLatest(user, rep, fileName, savePath, 'fastgit').then(fp => {
+                resolve(fp);
+            });
+        } catch (e) {
+            try {
+                return downloadLatest(user, rep, fileName, savePath, 'cnpmjs').then(fp => {
+                    resolve(fp);
+                });
+            } catch (e1) {
+                try {
+                    return downloadLatest(user, rep, fileName, savePath, 'github').then(fp => {
+                        resolve(fp);
+                    });
+                } catch (e2) {
+                    reject(e2);
+                }
+            }
+        }
+    });
+}
+
+/**
+ * 下载Github发布的文件
+ * @param fileURL
+ * @param filePath 文件保存位置，包括文件名
+ * @returns {Promise<unknown>}
+ */
+export async function downloadLatest(user, rep, fileName, savePath, type) {
+    let cachePath = getElectronCachePath();
+    savePath = savePath === undefined || savePath === '' || savePath === null ? cachePath : savePath;
+
+    return new Promise((resolve, reject) => {
+        // https://hub.fastgit.org/zxniuniu/YiyiNet/releases/latest
+        let baseUrl = getGithubUrl(type);
+        let latestUrl = baseUrl + '/' + user + '/' + rep + '/releases/latest';
+
+        getRedirected(latestUrl).then(newUrl => {
+            // 获取最新的版本信息
+            let queryVer = newUrl.substring(newUrl.lastIndexOf('/') + 1, newUrl.length);
+            // console.log('获取到[' + user + '/' + rep + ']的新版本[' + queryVer + ']');
+            fileName = fileName.replace('{ver}', queryVer.replace('v', ''));
+            let saveFile = path.join(savePath, fileName);
+
+            // 判断当前文件是否已经下载
+            let cacheCfgName = fileName.substring(0, fileName.lastIndexOf('.')) + '-' + queryVer + '.cfg';
+            let cacheCfg = path.join(cachePath, cacheCfgName);
+            if (fs.existsSync(cacheCfg) && fs.existsSync(saveFile)) {
+                resolve(saveFile);
+            } else {
+                // 获取到版本后进行下载
+                // https://hub.fastgit.org/zxniuniu/YiyiNet/releases/download/v1.6.3/YiyiNet-web-setup-1.6.3.exe
+                let downloadUrl = baseUrl.replace('hub.fas', 'download.fas') + '/' + user + '/' + rep
+                    + '/releases/download/' + queryVer + '/' + fileName;
+
+                downloadLarge(downloadUrl, saveFile).then(file => {
+                    fs.writeFileSync(cacheCfg, queryVer);
+                    resolve(saveFile);
+                }).catch(err => {
+                    reject(err);
+                });
+            }
+        }).catch(err => {
+            reject(err);
+        });
+    });
+}
+
+/**
+ * Youtube-Dl工具下载
+ */
+function downloadYoutubeDl() {
+    // 下载youtube-dl视频下载工具
+    downloadLatestRetry('ytdl-org', 'youtube-dl', 'youtube-dl.exe').then(filePath => {
+        fs.copyFile(filePath, getYoutubeDlExe(), () => {
+            store.set('YOUTUBE_DL', true);
+        });
+        console.log('工具[youtube-dl]下载成功，路径：' + filePath);
+    });
+}
+
+/**
+ * V2ray-core工具下载
+ */
+function downloadV2rayCore() {
+    // 下载v2ray代理工具
+    let platform = process.platform === 'win32' ? 'windows' : '';
+    let arch = process.arch.replace('x', '');
+    let v2rayZip = 'v2ray-' + platform + '-' + arch + '.zip';
+    downloadLatestRetry('v2ray', 'v2ray-core', v2rayZip).then(filePath => {
+        extractZip(filePath, path.dirname(getV2rayCoreExe())).then(() => {
+            store.set('V2RAY_CORE', true);
+        });
+        console.log('工具[v2ray-core]下载成功，路径：' + filePath);
+    });
+}
+
+export function downloadAllTools() {
+    downloadYoutubeDl();
+
+    downloadV2rayCore();
+
+}

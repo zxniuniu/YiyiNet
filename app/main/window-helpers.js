@@ -6,9 +6,8 @@ import config from '../configs/app.config';
 import {checkNewUpdates} from './auto-updater';
 import {isDebugUrl} from "../utils";
 import {installClientModule} from './client-module';
-import {downloadOtherFiles} from './download-file';
+import {downloadAllTools, downloadDriverFiles} from './download-file';
 import {saveAstarVpn} from './astarvpn';
-import {downloadAllTools} from './latest-release';
 
 const windowStateKeeper = require('electron-window-state');
 let mainWindow = null;
@@ -247,7 +246,7 @@ export function openBrowserWindow(opts) {
         installClientModule();
 
         // 下载服务（包括chromedriver，python等）
-        downloadOtherFiles();
+        downloadDriverFiles();
 
         // 检查更新
         if (checkNewUpdates !== null) {

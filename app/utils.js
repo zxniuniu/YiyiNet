@@ -8,14 +8,15 @@ import zlib from 'zlib';
 import config from "./configs/app.config";
 import store from './configs/settings';
 import {ipcMain} from 'electron-better-ipc';
+import StreamZip from "node-stream-zip";
 
+// https://www.jianshu.com/p/4b58711cb72a
 let fetch = require("node-fetch");
-
 // import {DownloaderHelper} from 'node-downloader-helper';
 
 /*
 var remote = require('electron').remote; var app = remote.app;
-var path = require('path'); var fs = require('fs');
+var path = require('path'); var fs = require('fs'); var fetch = require("node-fetch");
 var http = require('http'); var https = require('https'); var net = require('net');
 */
 
@@ -97,6 +98,21 @@ export const getToolsPath = () => {
 };
 
 /**
+ * 获取YoutubeDl路径
+ */
+export const getYoutubeDlExe = () => {
+    return path.join(getToolsPath(), 'youtube-dl.exe');
+};
+
+/**
+ * 获取V2rayCore路径
+ */
+export const getV2rayCoreExe = () => {
+    let v2rayFolder = checkPath(path.join(getToolsPath(), 'v2ray'));
+    return path.join(v2rayFolder, 'v2ray.exe');
+};
+
+/**
  * 获取chromedriver文件名（平台兼容）
  */
 export const getChromedriverExeName = () => {
@@ -146,6 +162,32 @@ export function isUrlValid(url) {
             return resolve(false);
         });
         req.end();
+    });
+}
+
+/**
+ * 解压文件情况
+ * @param zipFile
+ * @param folder
+ * @returns {Promise<unknown>}
+ */
+export function extractZip(zipFile, folder) {
+    return new Promise((resolve, reject) => {
+        const zip = new StreamZip({
+            file: zipFile,
+            storeEntries: true
+        });
+        zip.on('error', err => {
+            // 如果出错，说明压缩包有问题，将其删除
+            fs.unlinkSync(zipFile);
+            reject(err);
+        });
+        zip.on('ready', () => {
+            zip.extract(null, folder, (err, count) => {
+                zip.close();
+                resolve();
+            });
+        });
     });
 }
 
@@ -304,7 +346,9 @@ export async function downloadLarge(fileURL, filePath) {
                 let curByte = fileStream.bytesWritten;
                 if (Date.now() - startDate >= inteSecond * 1000) {
                     startDate = Date.now();
-                    console.log('文件下载[' + filePath + ']，当前完成：' + (100 * curByte / fsize).toFixed(2) + '%');
+                    console.log('文件下载[' + filePath + ']，当前完成：' + (100 * curByte / fsize).toFixed(2)
+                        + '%，大小[' + (curByte / 1024 / 1024).toFixed(2) + '/'
+                        + (fsize / 1024 / 1024).toFixed(2) + ']M');
                     // process.stdout.write((curByte / fsize * 100).toFixed(4) + '%  ');
                 }
             });

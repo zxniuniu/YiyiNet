@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import AsyncLock from 'async-lock';
 
 import {checkPath, downloadFile, getHttpOrHttps, getUserData} from './../utils';
 
@@ -134,11 +133,11 @@ export function hostileInstallFinishEvent(moduleStr, version) {
             fs.copyFileSync(hostile.HOSTS, backupHosts);
         }
 
-        let iLock = new AsyncLock({timeout: 60000});
+        /*let iLock = new AsyncLock({timeout: 60000});
         iLock.acquire("hosts", function (done) {
             addGithubRawHosts(hostile, done);
         }, function (err, ret) {
-        }, {});
+        }, {});*/
 
         // Googlehosts已经失效，不再使用
         /*iLock.acquire("hosts", function (done) {
