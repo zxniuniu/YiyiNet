@@ -20,24 +20,26 @@ const config = {
         FORCE_QUIT_FLAG: false, // 是否是强制退出，如果是则退出，否则隐藏主窗口
         MODULE_INSTALL: false, // 模块是否安装完成
         ADS_LOAD: false, // ADS是否加载
-
-        CHROMEDRIVER_STATUS: false, // chromedriver是否启动
-        APPIUM_STATUS: false, // appium是否启动
-
-        YOUTUBE_DL: false,
-        V2RAY_CORE: false,
+        CHROMEDRIVER: {
+            STATUS: false, // chromedriver是否启动
+            PORT: 9515, // CHROMEDRIVER端口
+            PID: 0 // CHROMEDRIVER的PID，用于结束进程
+        },
+        APPIUM: {
+            STATUS: false, // appium是否启动
+            PORT: 4723, // APPIUM端口
+            PID: 0 // APPIUM的PID，用于结束进程
+        },
+        TOOLS: {
+            YOUTUBE_DL: false,
+            V2RAY_CORE: false
+        }
     },
 
     storeValue: {
-        DEFAULT_LANGUAGE: 'cn', // 默认语言，中文
+        DEFAULT_LANGUAGE: 'cn' // 默认语言，中文
 
-        CHROMEDRIVER_PORT: 9515, // CHROMEDRIVER端口
-        CHROMEDRIVER_PID: 0, // CHROMEDRIVER的PID，用于结束进程
-
-        APPIUM_PORT: 4723, // APPIUM端口
-        APPIUM_PID: 0, // APPIUM的PID，用于结束进程
     }
-
 };
 
 export default config;

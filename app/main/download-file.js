@@ -19,6 +19,7 @@ import {
 } from "../utils";
 import store from "../configs/settings";
 
+// https://doc.fastgit.org/zh-cn/node.html#%E8%8A%82%E7%82%B9%E5%88%97%E8%A1%A8
 let githubUrlLists = ['https://hub.fastgit.org', 'https://github.com.cnpmjs.org', 'https://github.com'];
 
 export function downloadDriverFiles() {
@@ -120,7 +121,13 @@ function downloadPython() {
     }
 
     let pythonName = getPythonExeName();
-    let ver = '3.8.5', arch = process.arch;
+    let storeVer = store.get('TOOLS.PYTHON_VER'), ver = '3.8.5';
+    if (storeVer !== undefined && storeVer !== null && storeVer !== '') {
+        ver = storeVer;
+    } else {
+        store.set('TOOLS.PYTHON_VER', ver);
+    }
+    let arch = process.arch;
     let cachePath = getElectronCachePath();
 
     // 下载并将python放到目录
@@ -155,6 +162,7 @@ function downloadPython() {
         zip.on('ready', () => {
             zip.extract(null, getPythonFolder(), (err, count) => {
                 zip.close();
+                store.set('TOOLS.PYTHON_STATUS', true);
                 done();
             });
         });
@@ -184,25 +192,19 @@ export function getGithubUrl(type) {
  */
 export async function downloadLatestRetry(user, rep, fileName, savePath) {
     return new Promise((resolve, reject) => {
-        try {
+        downloadLatest(user, rep, fileName, savePath, 'cnpmjs').then(fp => {
+            resolve(fp);
+        }).catch(err => {
             downloadLatest(user, rep, fileName, savePath, 'fastgit').then(fp => {
                 resolve(fp);
-            });
-        } catch (e) {
-            try {
-                return downloadLatest(user, rep, fileName, savePath, 'cnpmjs').then(fp => {
+            }).catch(err2 => {
+                downloadLatest(user, rep, fileName, savePath, 'github').then(fp => {
                     resolve(fp);
-                });
-            } catch (e1) {
-                try {
-                    return downloadLatest(user, rep, fileName, savePath, 'github').then(fp => {
-                        resolve(fp);
-                    });
-                } catch (e2) {
-                    reject(e2);
-                }
-            }
-        }
+                }).catch(err3 => {
+                    reject('从cnpmjs, fastgit, github尝试下载均失败:' + err + err2 + err3);
+                })
+            })
+        })
     });
 }
 
@@ -222,9 +224,14 @@ export async function downloadLatest(user, rep, fileName, savePath, type) {
         let latestUrl = baseUrl + '/' + user + '/' + rep + '/releases/latest';
 
         getRedirected(latestUrl).then(newUrl => {
+            if (newUrl === null) {
+                reject('获取[' + user + '/' + rep + ']版本失败，获取结果为空，跳过下载');
+            }
+            console.log('获取[' + user + '/' + rep + ']版本新路径[' + newUrl + ']');
+
             // 获取最新的版本信息
             let queryVer = newUrl.substring(newUrl.lastIndexOf('/') + 1, newUrl.length);
-            // console.log('获取到[' + user + '/' + rep + ']的新版本[' + queryVer + ']');
+
             fileName = fileName.replace('{ver}', queryVer.replace('v', ''));
             let saveFile = path.join(savePath, fileName);
 
@@ -232,6 +239,7 @@ export async function downloadLatest(user, rep, fileName, savePath, type) {
             let cacheCfgName = fileName.substring(0, fileName.lastIndexOf('.')) + '-' + queryVer + '.cfg';
             let cacheCfg = path.join(cachePath, cacheCfgName);
             if (fs.existsSync(cacheCfg) && fs.existsSync(saveFile)) {
+                // TODO 解决是下载的最新，还是本来就是最新的
                 resolve(saveFile);
             } else {
                 // 获取到版本后进行下载
@@ -259,7 +267,7 @@ function downloadYoutubeDl() {
     // 下载youtube-dl视频下载工具
     downloadLatestRetry('ytdl-org', 'youtube-dl', 'youtube-dl.exe').then(filePath => {
         fs.copyFile(filePath, getYoutubeDlExe(), () => {
-            store.set('YOUTUBE_DL', true);
+            store.set('TOOLS.YOUTUBE_DL', true);
         });
         console.log('工具[youtube-dl]下载成功，路径：' + filePath);
     });
@@ -275,7 +283,7 @@ function downloadV2rayCore() {
     let v2rayZip = 'v2ray-' + platform + '-' + arch + '.zip';
     downloadLatestRetry('v2ray', 'v2ray-core', v2rayZip).then(filePath => {
         extractZip(filePath, path.dirname(getV2rayCoreExe())).then(() => {
-            store.set('V2RAY_CORE', true);
+            store.set('TOOLS.V2RAY_CORE', true);
         });
         console.log('工具[v2ray-core]下载成功，路径：' + filePath);
     });

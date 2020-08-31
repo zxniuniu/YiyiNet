@@ -13,9 +13,8 @@ import {setAutoLaunch} from './main/auto-launch';
 import {setProtocol} from './main/protocal';
 import {addCommandLine} from './main/add-command-line';
 import {initializeIpc} from './main/ipcevent';
-import store from "./configs/settings";
+import store, {resetDefaultObject} from "./configs/settings";
 import log from 'electron-log';
-import {resetDefaultObject} from './utils';
 
 import unhandled from 'electron-unhandled';
 import {debugInfo, openNewGitHubIssue} from 'electron-util';

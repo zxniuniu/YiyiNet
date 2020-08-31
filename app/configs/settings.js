@@ -9,21 +9,52 @@ let defaultStore = {
     watch: true
 };
 
-const store = new Store(defaultStore);
+let store = new Store(defaultStore);
 store.set(config.storeValue);
 
-// 模块安装完成
-/*store.onDidChange('MODULE_INSTALL', (newValue, oldValue) => {
-    if(newValue){
-        console.log('newValue:' + newValue + ', oldValue:' + oldValue);
+export function storeChangeEvent() {
+    // console.log('Store的值[changeEvent]：'); console.dir(store.store);
+    store.onDidChange('CHROMEDRIVER_PID', (newValue, oldValue) => {
+        console.log('CHROMEDRIVER_PID，值由[' + oldValue + ']变更为[' + newValue + ']');
+    });
+
+}
+
+/**
+ * 重置参数值（启动时重置部分数据为false）
+ */
+export function resetDefaultObject() {
+    // 重置已经存在的值
+    store.reset(Object.keys(config.defaultStoreValue));
+
+    // 安装的模块（启动时重置安装的模块的标识）
+    resetObjKey('MODULE');
+
+    // console.log('Store的值[resetAfter]：'); console.dir(store.store);
+}
+
+/**
+ * 重置对象的值
+ * @param objKey
+ */
+function resetObjKey(objKey) {
+    let modules = store.get(objKey);
+    if (null !== modules && typeof modules === 'object') {
+        let moduleKeys = Object.keys(modules);
+        if (moduleKeys !== null && moduleKeys.length > 0) {
+            moduleKeys.forEach(key => modules[key] = false);
+            store.set(objKey, modules);
+        }
     }
-});*/
+}
 
 // https://github.com/sindresorhus/electron-better-ipc
 ipcMain.answerRenderer('get-store', (key) => {
+    // console.log('get-store - keyValue: ' + key);
     return store.get(key);
 });
 ipcMain.answerRenderer('set-store', (keyValue) => {
+    // console.log('set-store - keyValue: '); // console.dir(keyValue);
     store.set(keyValue);
     return 'ok';
 });

@@ -515,22 +515,6 @@ export function toggleShowHide(mainWindow) {
 }
 
 /**
- * 重置参数值（启动时重置部分数据为false）
- */
-export function resetDefaultObject() {
-    store.reset(Object.keys(config.defaultStoreValue));
-
-    // 安装的模块（启动时重置安装的模块的标识）
-    let modules = store.get('MODULE');
-    if (null !== modules && typeof modules === 'object') {
-        let moduleKeys = Object.keys(modules);
-        if (moduleKeys !== null && moduleKeys.length > 0) {
-            store.reset(moduleKeys);
-        }
-    }
-}
-
-/**
  * 获取Appium端口
  */
 export function getAppiumPort() {

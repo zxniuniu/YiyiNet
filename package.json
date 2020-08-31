@@ -1,6 +1,6 @@
 {
   "name": "YiyiNet",
-  "version": "1.6.8",
+  "version": "1.6.9",
   "productName": "YiyiNet",
   "description": "依网, YiyiNet, 定时任务, 自动签到, 自动任务, 任务管理",
   "about": "依网(YiyiNet)：自动任务执行，如自动签到，自动浏览等",
@@ -65,6 +65,7 @@
   },
   "devDependencies": {
     "@cliqz/adblocker-electron": "^1.17.0",
+    "appium": "^1.18.0",
     "axios": "^0.20.0",
     "bluebird": "^3.7.2",
     "cheerio": "^1.0.0-rc.3",
@@ -84,11 +85,11 @@
     "parcel-bundler": "^1.12.4",
     "porthog": "^1.0.1",
     "puppeteer-core": "^5.2.1",
+    "python-shell": "^2.0.1",
     "ramda": "^0.27.1",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
-    "superagent": "^5.3.1",
-    "appium": "^1.18.0"
+    "superagent": "^5.3.1"
   },
   "dependenciesContainsOthers": {
     "@trodi/electron-splashscreen": "",
@@ -126,6 +127,7 @@
     "porthog": "",
     "puppeteer-core": "debug, devtools-protocol, extract-zip, https-proxy-agent, mime, pkg-dir, progress, proxy-from-env, rimraf, tar-fs, unbzip2-stream, ws",
     "ramda": "",
+    "python-shell": "",
     "request": "aws-sign2, aws4, caseless, combined-stream, extend, forever-agent, form-data, har-validator, http-signature, is-typedarray, isstream, json-stringify-safe, mime-types, oauth-sign, performance-now, qs, safe-buffer, tough-cookie, tunnel-agent, uuid",
     "request-promise": "request-promise-core, bluebird, stealthy-require, tough-cookie",
     "superagent": "component-emitter, cookiejar, debug, fast-safe-stringify, form-data, formidable, methods, mime, qs, readable-stream, semver",

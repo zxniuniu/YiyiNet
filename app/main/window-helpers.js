@@ -1,5 +1,5 @@
 import {app, dialog} from 'electron';
-import store from '../configs/settings';
+import store, {storeChangeEvent} from '../configs/settings';
 import path from 'path';
 import {initDynamicSplashScreen} from '@trodi/electron-splashscreen';
 import config from '../configs/app.config';
@@ -241,6 +241,9 @@ export function openBrowserWindow(opts) {
     // DOM READY事件，仅执行一次（否则重载页面等均会触发）
     mainWindow.webContents.once('dom-ready', function () {
         // closeSplashScreen(dynamicSplashScreen.splashScreen);
+
+        // Store变更时事件
+        storeChangeEvent();
 
         // 安装模块
         installClientModule();

@@ -12,90 +12,16 @@ import AsyncLock from 'async-lock';
  */
 export function installClientModule() {
     let json = packageJson();
+    console.dir(json);
     let devDependencies = json.devDependencies;
     let notNeed = ['cross-env', 'electron', 'electron-builder', 'electron-rebuild', 'npm-run-all', 'parcel-bundler'];
-    notNeed.forEach(ins => {
-        if (devDependencies[ins]) {
-            delete devDependencies[ins]
+    notNeed.forEach(nn => {
+        if (devDependencies.hasOwnProperty(nn)) {
+            delete devDependencies[nn];
         }
     });
     installModule(devDependencies);
 }
-
-/**
- * 获取NPM模块安装路径
- * @returns {string}
- */
-export const getNpmInstallPath = () => {
-    // 保存在getUserData() + 'node_modules'中未解决加载时的路径问题
-    const savePath = path.join(getRootPath(), 'resources', 'app'); // process.resourcesPath
-    return checkPath(path.resolve(`${savePath}/node_modules/`));
-};
-
-/**
- * 返回NPM镜像路径 参见：https://github.com/gucong3000/mirror-config-china
- * @returns {{registry: string, phantomjs_cdnurl: string, node_sqlite3_binary_host_mirror: string, electron_mirror: string, puppeteer_download_host: string, selenium_cdnurl: string, disturl: string, operadriver_cdnurl: string, npm_config_disturl: string, profiler_binary_host_mirror: string, node_inspector_cdnurl: string, python_mirror: string, chromedriver_cdnurl: string, electron_builder_binaries_mirror: string, sass_binary_site: string, npm_config_profiler_binary_host_mirror: string}}
- */
-export const npmConfig = () => {
-    return {
-        'chromedriver-cdnurl': 'https://npm.taobao.org/mirrors/chromedriver',
-        'chromedriver_cdnurl': 'https://npm.taobao.org/mirrors/chromedriver',
-        'couchbase-binary-host-mirror': 'https://npm.taobao.org/mirrors/couchbase/v{version}',
-        'debug-binary-host-mirror': 'https://npm.taobao.org/mirrors/node-inspector',
-        'disturl': 'https://npm.taobao.org/dist',
-        'electron-mirror': 'https://npm.taobao.org/mirrors/electron/',
-        'electron_builder_binaries_mirror': 'http://npm.taobao.org/mirrors/electron-builder-binaries/',
-        'electron_mirror': 'https://npm.taobao.org/mirrors/electron/',
-        'flow-bin-binary-host-mirror': 'https://npm.taobao.org/mirrors/flow/v',
-        'fse-binary-host-mirror': 'https://npm.taobao.org/mirrors/fsevents',
-        'fuse-bindings-binary-host-mirror': 'https://npm.taobao.org/mirrors/fuse-bindings/v{version}',
-        'git4win-mirror': 'https://npm.taobao.org/mirrors/git-for-windows',
-        'gl-binary-host-mirror': 'https://npm.taobao.org/mirrors/gl/v{version}',
-        'grpc-node-binary-host-mirror': 'https://npm.taobao.org/mirrors',
-        'hackrf-binary-host-mirror': 'https://npm.taobao.org/mirrors/hackrf/v{version}',
-        'leveldown-binary-host-mirror': 'https://npm.taobao.org/mirrors/leveldown/v{version}',
-        'leveldown-hyper-binary-host-mirror': 'https://npm.taobao.org/mirrors/leveldown-hyper/v{version}',
-        'mknod-binary-host-mirror': 'https://npm.taobao.org/mirrors/mknod/v{version}',
-        'node-sqlite3-binary-host-mirror': 'https://npm.taobao.org/mirrors',
-        'node-tk5-binary-host-mirror': 'https://npm.taobao.org/mirrors/node-tk5/v{version}',
-        'node_inspector_cdnurl': 'http://npm.taobao.org/mirrors/node-inspector/',
-        'node_sqlite3_binary_host_mirror': 'http://npm.taobao.org/mirrors',
-        'nodegit-binary-host-mirror': 'https://npm.taobao.org/mirrors/nodegit/v{version}/',
-        'npm_config_disturl': 'https://npm.taobao.org/mirrors/atom-shell',
-        'npm_config_profiler_binary_host_mirror': 'http://npm.taobao.org/mirrors/node-inspector/',
-        'operadriver-cdnurl': 'https://npm.taobao.org/mirrors/operadriver',
-        'operadriver_cdnurl': 'http://npm.taobao.org/mirrors/operadriver',
-        'phantomjs-cdnurl': 'https://npm.taobao.org/mirrors/phantomjs',
-        'phantomjs_cdnurl': 'http://npm.taobao.org/mirrors/phantomjs',
-        'profiler-binary-host-mirror': 'https://npm.taobao.org/mirrors/node-inspector/',
-        'profiler_binary_host_mirror': 'http://npm.taobao.org/mirrors/node-inspector/',
-        'puppeteer-download-host': 'https://npm.taobao.org/mirrors',
-        'puppeteer_download_host': 'https://npm.taobao.org/mirrors',
-        'python-mirror': 'https://npm.taobao.org/mirrors/python',
-        'python_mirror': 'http://npm.taobao.org/mirrors/python',
-        'rabin-binary-host-mirror': 'https://npm.taobao.org/mirrors/rabin/v{version}',
-        'registry': 'https://registry.npm.taobao.org/',
-        'sass-binary-site': 'https://npm.taobao.org/mirrors/node-sass',
-        'sass_binary_site': 'https://npm.taobao.org/mirrors/node-sass/',
-        'selenium_cdnurl': 'https://npm.taobao.org/mirrors/selenium',
-        'sodium-prebuilt-binary-host-mirror': 'https://npm.taobao.org/mirrors/sodium-prebuilt/v{version}',
-        'sqlite3-binary-site': 'https://npm.taobao.org/mirrors/sqlite3',
-        'utf-8-validate-binary-host-mirror': 'https://npm.taobao.org/mirrors/utf-8-validate/v{version}',
-        'utp-native-binary-host-mirror': 'https://npm.taobao.org/mirrors/utp-native/v{version}',
-        'zmq-prebuilt-binary-host-mirror': 'https://npm.taobao.org/mirrors/zmq-prebuilt/v{version}'
-    }
-};
-
-/**
- * 为NPM增加扫描路径
- * @returns {string}
- */
-export const addNpmModulePath = () => {
-    // let modulePath = process.env.APPDATA + '\\' + process.env.npm_package_productName + '\\node_modules';
-    // require('module').globalPaths.push(modulePath);
-    // require('module').globalPaths.push(getNpmInstallPath());
-    // module.paths.push(getNpmInstallPath());
-};
 
 /**
  * 安装模块
@@ -119,6 +45,17 @@ export function installModule(needInstall) {
     });
 
     let modules = Object.keys(needInstall);
+    // 将appium放在最后安装
+    modules.sort(function (a, b) {
+        if (a === 'appium') {
+            return 1
+        } else if (b === 'appium') {
+            return -1
+        } else {
+            return a > b
+        }
+    });
+
     let lock = new AsyncLock({timeout: 300000});
     let succNum = 0, errNum = 0;
     let moNum = modules.length;
@@ -130,15 +67,15 @@ export function installModule(needInstall) {
         lock.acquire("installModule", function (done) {
             try {
                 let logStr = '[' + (i + 1) + '/' + moNum + ']安装模块[' + moduleStr + ']';
-                console.time(logStr + '安装所耗时间');
-                console.log(logStr + '，版本[' + ver + ']。。。');
+                // console.time(logStr + '安装所耗时间');
+                // console.log(logStr + '，版本[' + ver + ']。。。');
                 manager.install(moduleStr, ver).then(res => {
                     console.log(logStr + '，版本[' + ver + ']，安装[成功]：name=' + res.name + '[' + res.version + ']，依赖：' + Object.keys(res.dependencies));
                     // console.dir(res);
                     succNum++;
 
                     store.set('MODULE.' + moduleStr, true);
-                    console.timeEnd(logStr + '安装所耗时间');
+                    // console.timeEnd(logStr + '安装所耗时间');
                     if (i === moNum - 1) {
                         console.log('模块[' + modules + ']已完成安装，其中成功[' + succNum + ']个，失败[' + errNum + ']个');
                         if (errNum === 0) {
@@ -229,3 +166,79 @@ function moduleInstallDoneEvent(moduleStr, version) {
     }
     return {'module': needInstall, 'type': type, 'succ': true, 'msg': '安装成功'};
 }*/
+
+
+/**
+ * 获取NPM模块安装路径
+ * @returns {string}
+ */
+export const getNpmInstallPath = () => {
+    // 保存在getUserData() + 'node_modules'中未解决加载时的路径问题
+    const savePath = path.join(getRootPath(), 'resources', 'app'); // process.resourcesPath
+    return checkPath(path.resolve(`${savePath}/node_modules/`));
+};
+
+/**
+ * 返回NPM镜像路径 参见：https://github.com/gucong3000/mirror-config-china
+ * @returns {{registry: string, phantomjs_cdnurl: string, node_sqlite3_binary_host_mirror: string, electron_mirror: string, puppeteer_download_host: string, selenium_cdnurl: string, disturl: string, operadriver_cdnurl: string, npm_config_disturl: string, profiler_binary_host_mirror: string, node_inspector_cdnurl: string, python_mirror: string, chromedriver_cdnurl: string, electron_builder_binaries_mirror: string, sass_binary_site: string, npm_config_profiler_binary_host_mirror: string}}
+ */
+export const npmConfig = () => {
+    return {
+        'chromedriver-cdnurl': 'https://npm.taobao.org/mirrors/chromedriver',
+        'chromedriver_cdnurl': 'https://npm.taobao.org/mirrors/chromedriver',
+        'couchbase-binary-host-mirror': 'https://npm.taobao.org/mirrors/couchbase/v{version}',
+        'debug-binary-host-mirror': 'https://npm.taobao.org/mirrors/node-inspector',
+        'disturl': 'https://npm.taobao.org/dist',
+        'electron-mirror': 'https://npm.taobao.org/mirrors/electron/',
+        'electron_builder_binaries_mirror': 'http://npm.taobao.org/mirrors/electron-builder-binaries/',
+        'electron_mirror': 'https://npm.taobao.org/mirrors/electron/',
+        'flow-bin-binary-host-mirror': 'https://npm.taobao.org/mirrors/flow/v',
+        'fse-binary-host-mirror': 'https://npm.taobao.org/mirrors/fsevents',
+        'fuse-bindings-binary-host-mirror': 'https://npm.taobao.org/mirrors/fuse-bindings/v{version}',
+        'git4win-mirror': 'https://npm.taobao.org/mirrors/git-for-windows',
+        'gl-binary-host-mirror': 'https://npm.taobao.org/mirrors/gl/v{version}',
+        'grpc-node-binary-host-mirror': 'https://npm.taobao.org/mirrors',
+        'hackrf-binary-host-mirror': 'https://npm.taobao.org/mirrors/hackrf/v{version}',
+        'leveldown-binary-host-mirror': 'https://npm.taobao.org/mirrors/leveldown/v{version}',
+        'leveldown-hyper-binary-host-mirror': 'https://npm.taobao.org/mirrors/leveldown-hyper/v{version}',
+        'mknod-binary-host-mirror': 'https://npm.taobao.org/mirrors/mknod/v{version}',
+        'node-sqlite3-binary-host-mirror': 'https://npm.taobao.org/mirrors',
+        'node-tk5-binary-host-mirror': 'https://npm.taobao.org/mirrors/node-tk5/v{version}',
+        'node_inspector_cdnurl': 'http://npm.taobao.org/mirrors/node-inspector/',
+        'node_sqlite3_binary_host_mirror': 'http://npm.taobao.org/mirrors',
+        'nodegit-binary-host-mirror': 'https://npm.taobao.org/mirrors/nodegit/v{version}/',
+        'npm_config_disturl': 'https://npm.taobao.org/mirrors/atom-shell',
+        'npm_config_profiler_binary_host_mirror': 'http://npm.taobao.org/mirrors/node-inspector/',
+        'operadriver-cdnurl': 'https://npm.taobao.org/mirrors/operadriver',
+        'operadriver_cdnurl': 'http://npm.taobao.org/mirrors/operadriver',
+        'phantomjs-cdnurl': 'https://npm.taobao.org/mirrors/phantomjs',
+        'phantomjs_cdnurl': 'http://npm.taobao.org/mirrors/phantomjs',
+        'profiler-binary-host-mirror': 'https://npm.taobao.org/mirrors/node-inspector/',
+        'profiler_binary_host_mirror': 'http://npm.taobao.org/mirrors/node-inspector/',
+        'puppeteer-download-host': 'https://npm.taobao.org/mirrors',
+        'puppeteer_download_host': 'https://npm.taobao.org/mirrors',
+        'python-mirror': 'https://npm.taobao.org/mirrors/python',
+        'python_mirror': 'http://npm.taobao.org/mirrors/python',
+        'rabin-binary-host-mirror': 'https://npm.taobao.org/mirrors/rabin/v{version}',
+        'registry': 'https://registry.npm.taobao.org/',
+        'sass-binary-site': 'https://npm.taobao.org/mirrors/node-sass',
+        'sass_binary_site': 'https://npm.taobao.org/mirrors/node-sass/',
+        'selenium_cdnurl': 'https://npm.taobao.org/mirrors/selenium',
+        'sodium-prebuilt-binary-host-mirror': 'https://npm.taobao.org/mirrors/sodium-prebuilt/v{version}',
+        'sqlite3-binary-site': 'https://npm.taobao.org/mirrors/sqlite3',
+        'utf-8-validate-binary-host-mirror': 'https://npm.taobao.org/mirrors/utf-8-validate/v{version}',
+        'utp-native-binary-host-mirror': 'https://npm.taobao.org/mirrors/utp-native/v{version}',
+        'zmq-prebuilt-binary-host-mirror': 'https://npm.taobao.org/mirrors/zmq-prebuilt/v{version}'
+    }
+};
+
+/**
+ * 为NPM增加扫描路径
+ * @returns {string}
+ */
+export const addNpmModulePath = () => {
+    // let modulePath = process.env.APPDATA + '\\' + process.env.npm_package_productName + '\\node_modules';
+    // require('module').globalPaths.push(modulePath);
+    // require('module').globalPaths.push(getNpmInstallPath());
+    // module.paths.push(getNpmInstallPath());
+};
