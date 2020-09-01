@@ -8,68 +8,66 @@ import {downloadFile, getAdblockPath, isUrlValid} from "../utils";
 
 export function adblockerInstallFinishEvent(moduleStr, version) {
     // 如果adblock安装完成，则增加广告过滤
-    if (moduleStr === '@cliqz/adblocker-electron') {
-        let adblockPath = getAdblockPath(), enginePath;
+    let adblockPath = getAdblockPath(), enginePath;
 
-        // 解决 raw.githubusercontent.com 无法访问的问题 https://learnku.com/articles/43426
+    // 解决 raw.githubusercontent.com 无法访问的问题 https://learnku.com/articles/43426
 
-        // 如果能够访问，则使用默认的
-        isUrlValid('https://raw.githubusercontent.com/cliqz-oss/adblocker/master/packages/adblocker/assets/ublock-origin/privacy.txt').then(usingDefaultEngine => {
-            console.log('当前raw.githubusercontent.com [' + (usingDefaultEngine ? '能够' : '不能') + '] 访问，使用 [' + (usingDefaultEngine ? '默认的地址系统加载' : '官方生成的Byte类型') + '] 的拦截器。。。');
+    // 如果能够访问，则使用默认的
+    isUrlValid('https://raw.githubusercontent.com/cliqz-oss/adblocker/master/packages/adblocker/assets/ublock-origin/privacy.txt').then(usingDefaultEngine => {
+        console.log('当前raw.githubusercontent.com [' + (usingDefaultEngine ? '能够' : '不能') + '] 访问，使用 [' + (usingDefaultEngine ? '默认的地址系统加载' : '官方生成的Byte类型') + '] 的拦截器。。。');
 
+        if (usingDefaultEngine) {
+            enginePath = path.join(adblockPath, 'adblocker-default.bin');
+        } else {
+            enginePath = path.join(adblockPath, 'adblocker-' + version + '.bin');
+        }
+        // 如果模型存在，则加载，否则先解析地址，再下载，再加载
+        if (fs.existsSync(enginePath)) {
+            addAdblockPlugin(enginePath, usingDefaultEngine, true);
+        } else {
             if (usingDefaultEngine) {
-                enginePath = path.join(adblockPath, 'adblocker-default.bin');
+                addAdblockPlugin(enginePath, usingDefaultEngine, false);
             } else {
-                enginePath = path.join(adblockPath, 'adblocker-' + version + '.bin');
-            }
-            // 如果模型存在，则加载，否则先解析地址，再下载，再加载
-            if (fs.existsSync(enginePath)) {
-                addAdblockPlugin(enginePath, usingDefaultEngine, true);
-            } else {
-                if (usingDefaultEngine) {
-                    addAdblockPlugin(enginePath, usingDefaultEngine, false);
-                } else {
-                    let allowedListPath = path.join(adblockPath, 'allowed-lists.json');
+                let allowedListPath = path.join(adblockPath, 'allowed-lists.json');
 
-                    /*'https://cdn.cliqz.com/adblocker/configs/desktop-full/allowed-lists.json',
-                    'https://cdn.cliqz.com/adblocker/configs/safari-tracking/allowed-lists.json',
-                    'https://cdn.cliqz.com/adblocker/configs/safari-cookiemonster/allowed-lists.json',
-                    'https://cdn.cliqz.com/adblocking/allowed-lists.json',
-                    'https://cdn.cliqz.com/adblocking/mobile/allowed-lists.json'*/
-                    let allowedListUrl = 'https://cdn.cliqz.com/adblocker/configs/desktop-full/allowed-lists.json';
-                    downloadFile(allowedListUrl, allowedListPath)
-                        .then(() => {
-                            console.log('解析拦截器地址，通过下载allowed-lists文件：' + allowedListUrl);
-                            fs.readFile(allowedListPath, 'utf8', (err, data) => {
-                                let json = JSON.parse(data);
-                                let engines = json.engines;
-                                let eKeys = Object.keys(engines);
-                                let byteUrl = null;
-                                for (let ei = 0; ei < eKeys.length; ei++) {
-                                    let url = engines[eKeys[ei]].url;
-                                    if (url.indexOf('/' + version + '/') > 0) {
-                                        byteUrl = url;
-                                        break;
-                                    }
+                /*'https://cdn.cliqz.com/adblocker/configs/desktop-full/allowed-lists.json',
+                'https://cdn.cliqz.com/adblocker/configs/safari-tracking/allowed-lists.json',
+                'https://cdn.cliqz.com/adblocker/configs/safari-cookiemonster/allowed-lists.json',
+                'https://cdn.cliqz.com/adblocking/allowed-lists.json',
+                'https://cdn.cliqz.com/adblocking/mobile/allowed-lists.json'*/
+                let allowedListUrl = 'https://cdn.cliqz.com/adblocker/configs/desktop-full/allowed-lists.json';
+                downloadFile(allowedListUrl, allowedListPath)
+                    .then(() => {
+                        console.log('解析拦截器地址，通过下载allowed-lists文件：' + allowedListUrl);
+                        fs.readFile(allowedListPath, 'utf8', (err, data) => {
+                            let json = JSON.parse(data);
+                            let engines = json.engines;
+                            let eKeys = Object.keys(engines);
+                            let byteUrl = null;
+                            for (let ei = 0; ei < eKeys.length; ei++) {
+                                let url = engines[eKeys[ei]].url;
+                                if (url.indexOf('/' + version + '/') > 0) {
+                                    byteUrl = url;
+                                    break;
                                 }
-                                // 下载EngineByte
-                                if (null !== byteUrl) {
-                                    downloadFile(byteUrl, enginePath)
-                                        .then(() => {
-                                            console.log('成功获取到拦截器地址，即将加载拦截器。。。');
-                                            addAdblockPlugin(enginePath, usingDefaultEngine, true);
-                                        }).catch((er) => {
-                                        console.log(`下载engine.byte失败，将无法加载拦截器：` + er);
-                                    });
-                                }
-                            });
-                        }).catch(err => {
-                        console.log(`下载广告allowed-lists失败， 无法完成解析获取拦截器：` + err);
-                    });
-                }
+                            }
+                            // 下载EngineByte
+                            if (null !== byteUrl) {
+                                downloadFile(byteUrl, enginePath)
+                                    .then(() => {
+                                        console.log('成功获取到拦截器地址，即将加载拦截器。。。');
+                                        addAdblockPlugin(enginePath, usingDefaultEngine, true);
+                                    }).catch((er) => {
+                                    console.log(`下载engine.byte失败，将无法加载拦截器：` + er);
+                                });
+                            }
+                        });
+                    }).catch(err => {
+                    console.log(`下载广告allowed-lists失败， 无法完成解析获取拦截器：` + err);
+                });
             }
-        });
-    }
+        }
+    });
 }
 
 function addAdblockPlugin(enginePath, usingDefaultEngine, fileExist) {
@@ -167,8 +165,18 @@ function addAdblockPlugin(enginePath, usingDefaultEngine, fileExist) {
                 console.error('加载拦截器失败：' + err);
             }
 
-            let blocker = ElectronBlocker.deserialize(data);
-            blockerEvent(blocker, enginePath);
+            // 解决 serialized engine version mismatch
+            try {
+                let blocker = ElectronBlocker.deserialize(data);
+                blockerEvent(blocker, enginePath);
+            } catch (e) {
+                console.log('广告拦截器序列化失败：');
+                console.error(e);
+                if (e.toString().indexOf('engine version mismatch') > 0) {
+                    fs.unlinkSync(enginePath);
+                    // TODO 序列化失败，无法加载存在的广告拦截器，重新加载？
+                }
+            }
         });
     }
 }

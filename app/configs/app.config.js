@@ -32,13 +32,14 @@ const config = {
         },
         TOOLS: {
             YOUTUBE_DL: false,
-            V2RAY_CORE: false
+            V2RAY_CORE: false,
+            CHROME_STATUS: false,
+            FIREFOX_STATUS: false
         }
     },
 
     storeValue: {
         DEFAULT_LANGUAGE: 'cn' // 默认语言，中文
-
     }
 };
 

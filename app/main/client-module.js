@@ -6,6 +6,7 @@ import {hostileInstallFinishEvent} from "./hosts";
 
 import path from "path";
 import AsyncLock from 'async-lock';
+import {puppeteerCoreInstallFinishEvent} from "./puppeteer";
 
 /**
  * 安装需在客户端上使用的模块
@@ -105,10 +106,15 @@ export function installModule(needInstall) {
 
 function moduleInstallDoneEvent(moduleStr, version) {
     // 广告过滤事件
-    adblockerInstallFinishEvent(moduleStr, version);
-
-    // 修改Hosts解决Github无法访问的问题
-    hostileInstallFinishEvent(moduleStr, version);
+    if (moduleStr === '@cliqz/adblocker-electron') {
+        adblockerInstallFinishEvent(moduleStr, version);
+    } else if (moduleStr === 'hostile') {
+        // 修改Hosts解决Github无法访问的问题
+        hostileInstallFinishEvent(moduleStr, version);
+    } else if (moduleStr === 'puppeteer-core') {
+        // puppeteer安装完成后下载chrome及firefox
+        puppeteerCoreInstallFinishEvent(moduleStr, version);
+    }
 
 }
 

@@ -26,7 +26,6 @@ export function downloadDriverFiles() {
     downloadChromedriver();
 
     downloadPython();
-
 }
 
 /**

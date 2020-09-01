@@ -119,6 +119,14 @@ export const getChromedriverExeName = () => {
     return 'chromedriver' + (process.platform === 'win32' ? '.exe' : '');
 };
 
+// =====================================================================================================================
+/**
+ * 获取Python所有Exe
+ */
+export const getPythonExeName = () => {
+    return 'python' + (process.platform === 'win32' ? '.exe' : '');
+};
+
 /**
  * 获取Python所在路径
  */
@@ -133,12 +141,96 @@ export const getPythonFilePath = () => {
     return path.join(getPythonFolder(), getPythonExeName());
 };
 
+
+// =====================================================================================================================
 /**
- * 获取Python所有Exe
+ * 获取Chrome所有Exe
  */
-export const getPythonExeName = () => {
-    return 'python' + (process.platform === 'win32' ? '.exe' : '');
+export const getChromeExeName = () => {
+    return 'chrome' + (process.platform === 'win32' ? '.exe' : '');
 };
+
+/**
+ * 获取Chrome所在路径
+ */
+export const getChromeFolder = () => {
+    return checkPath(path.join(getRootPath(), 'chrome'));
+};
+
+/**
+ * 获取Chrome所在路径
+ */
+export const getChromeFilePath = () => {
+    return path.join(getChromeFolder(), getChromeExeName());
+};
+
+// =====================================================================================================================
+/**
+ * 获取Firefox所有Exe
+ */
+export const getFirefoxExeName = () => {
+    return 'firefox' + (process.platform === 'win32' ? '.exe' : '');
+};
+
+/**
+ * 获取Firefox所在路径
+ */
+export const getFirefoxFolder = () => {
+    return checkPath(path.join(getRootPath(), 'firefox'));
+};
+
+/**
+ * 获取Python所在路径
+ */
+export const getFirefoxFilePath = () => {
+    return path.join(getFirefoxFolder(), getFirefoxExeName());
+};
+
+// =====================================================================================================================
+/*
+ * 复制目录、子目录，及其中的文件
+ * @param src {String} 要复制的目录
+ * @param dist {String} 复制到目标目录
+ */
+function copyDir(src, dist, callback) {
+    fs.access(dist, function (err) {
+        if (err) {
+            // 目录不存在时创建目录
+            fs.mkdirSync(dist);
+        }
+        _copy(null, src, dist);
+    });
+
+    function _copy(err, src, dist) {
+        if (err) {
+            callback(err);
+        } else {
+            fs.readdir(src, function (err, paths) {
+                if (err) {
+                    callback(err)
+                } else {
+                    paths.forEach(function (path) {
+                        let _src = src + '/' + path;
+                        let _dist = dist + '/' + path;
+                        fs.stat(_src, function (err, stat) {
+                            if (err) {
+                                callback(err);
+                            } else {
+                                // 判断是文件还是目录
+                                if (stat.isFile()) {
+                                    fs.writeFileSync(_dist, fs.readFileSync(_src));
+                                } else if (stat.isDirectory()) {
+                                    // 当是目录是，递归复制
+                                    copyDir(_src, _dist, callback)
+                                }
+                            }
+                        })
+                    })
+                }
+            })
+        }
+    }
+}
 
 /**
  * 根据地址获取http或者https

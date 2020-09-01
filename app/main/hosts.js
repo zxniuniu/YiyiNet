@@ -123,28 +123,26 @@ function downloadGooglehosts(hostile, done) {
  */
 export function hostileInstallFinishEvent(moduleStr, version) {
     // 如果hostile安装完成，则修改hosts文件内容
-    if (moduleStr === 'hostile') {
-        // console.log(moduleStr + version);
-        let hostile = require('hostile');
+    // console.log(moduleStr + version);
+    let hostile = require('hostile');
 
-        // 备份hosts文件
-        let backupHosts = path.join(getHostsPath(), 'hosts-backup');
-        if (!fs.existsSync(backupHosts)) {
-            fs.copyFileSync(hostile.HOSTS, backupHosts);
-        }
-
-        /*let iLock = new AsyncLock({timeout: 60000});
-        iLock.acquire("hosts", function (done) {
-            addGithubRawHosts(hostile, done);
-        }, function (err, ret) {
-        }, {});*/
-
-        // Googlehosts已经失效，不再使用
-        /*iLock.acquire("hosts", function (done) {
-            downloadGooglehosts(hostile, done);
-        }, function (err, ret) {
-        }, {});*/
+    // 备份hosts文件
+    let backupHosts = path.join(getHostsPath(), 'hosts-backup');
+    if (!fs.existsSync(backupHosts)) {
+        fs.copyFileSync(hostile.HOSTS, backupHosts);
     }
+
+    /*let iLock = new AsyncLock({timeout: 60000});
+    iLock.acquire("hosts", function (done) {
+        addGithubRawHosts(hostile, done);
+    }, function (err, ret) {
+    }, {});*/
+
+    // Googlehosts已经失效，不再使用
+    /*iLock.acquire("hosts", function (done) {
+        downloadGooglehosts(hostile, done);
+    }, function (err, ret) {
+    }, {});*/
 }
 
 
