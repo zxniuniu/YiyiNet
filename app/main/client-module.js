@@ -12,12 +12,21 @@ import AsyncLock from 'async-lock';
  */
 export function installClientModule() {
     let json = packageJson();
-    console.dir(json);
-    let devDependencies = json.devDependencies;
-    let notNeed = ['cross-env', 'electron', 'electron-builder', 'electron-rebuild', 'npm-run-all', 'parcel-bundler'];
-    notNeed.forEach(nn => {
-        if (devDependencies.hasOwnProperty(nn)) {
+    // console.dir(json);
+    let dependenciesKeys = Object.keys(json.dependencies);
+    dependenciesKeys.push('cross-env', 'electron', 'electron-builder', 'electron-rebuild', 'npm-run-all', 'parcel-bundler');
+    let devDependencies = json.dependenciesContainsOthers;
+    dependenciesKeys.forEach(nn => {
+        if (devDependencies[nn]) {
             delete devDependencies[nn];
+        }
+    });
+    Object.keys(devDependencies).forEach(key => {
+        let val = devDependencies[key];
+        if (val.indexOf('&') > 0) {
+            devDependencies[key] = val.split('&')[0];
+        } else {
+            delete devDependencies[key];
         }
     });
     installModule(devDependencies);
