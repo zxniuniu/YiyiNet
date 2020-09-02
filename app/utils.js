@@ -242,6 +242,63 @@ export function getHttpOrHttps(url) {
 }
 
 /**
+ * 解析获取最快的链接地址
+ * @returns {Promise<PCancelable<unknown> | *>}
+ */
+export async function fastUrl(urlArr) {
+    let got = require('got');
+    let pAny = require('p-any');
+    let taskArr = [];
+    urlArr.forEach(url => {
+        taskArr.push(got.head(url).then(() => url));
+    })
+    return pAny(taskArr);
+}
+
+/**
+ * 解析获取mozilla最快的链接地址
+ * @returns {Promise<PCancelable<unknown> | *>}
+ */
+export async function fastMozillaUrl() {
+    let mozillaUrls = ['http://archive.mozilla.org', 'http://download-origin.cdn.mozilla.net', 'http://ftp.mozilla.org',
+        'https://archive.mozilla.org', 'https://download-origin.cdn.mozilla.net', 'https://ftp.mozilla.org'];
+    return fastUrl(mozillaUrls);
+}
+
+/**
+ * 解析获取NPM最快的链接地址
+ * @returns {Promise<PCancelable<unknown> | *>}
+ */
+export async function fastNpmUrl() {
+    let npmUrlArr = ['https://npm.taobao.org/mirrors', 'https://mirrors.huaweicloud.com', 'https://cnpmjs.org/mirrors'];
+    return fastUrl(npmUrlArr);
+}
+
+/**
+ * 解析获取Github最快的链接地址
+ * @returns {Promise<PCancelable<unknown> | *>}
+ */
+export async function fastGithubUrl() {
+    // http://element-ui.cn/article/show-101839.aspx
+    // https://github.com/FastGitORG/github-accelerator
+    // https://doc.fastgit.org/zh-cn/
+    let githubUrlArr = ['https://hub.fastgit.org', 'https://github.com.cnpmjs.org', 'https://github.com'
+        /*'https://g.ioiox.com/https://github.com', 'https://gh.api.99988866.xyz/https://github.com', 'https://github.wuyanzheshui.workers.dev'*/];
+    return fastUrl(githubUrlArr);
+}
+
+/**
+ * 解析获取Github Raw最快的链接地址
+ * @returns {Promise<PCancelable<unknown> | *>}
+ */
+export async function fastGithubRawUrl() {
+    // http://element-ui.cn/article/show-101839.aspx
+    // https://doc.fastgit.org/zh-cn/node.html
+    let githubRawUrlArr = ['https://raw.fastgit.org', 'https://raw.githubusercontent.com'];
+    return fastUrl(githubRawUrlArr);
+}
+
+/**
  * 检查链接地址是否可用
  * isUrlValid('https://www.baidu.com', (flag)=>{console.log(flag)});
  */

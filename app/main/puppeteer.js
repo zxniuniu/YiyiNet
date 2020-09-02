@@ -2,7 +2,7 @@ import path from "path";
 import store from './../configs/settings';
 import fse from 'fs-extra';
 
-import {getChromeFilePath, getFirefoxFilePath, getUserData, packageJson} from "../utils";
+import {fastMozillaUrl, getChromeFilePath, getFirefoxFilePath, getUserData, packageJson} from "../utils";
 
 export function puppeteerCoreInstallFinishEvent(moduleStr, version) {
     downloadChrome();
@@ -47,21 +47,6 @@ async function testChrome() {
         product: 'chrome'
     });
     return browser;
-}
-
-/**
- * 解析获取最快的下载Firefox的链接地址
- * @returns {Promise<PCancelable<unknown> | *>}
- */
-async function fastMozillaUrl() {
-    let mozillaUrls = ['http://archive.mozilla.org', 'https://download-origin.cdn.mozilla.net', 'https://ftp.mozilla.org'];
-    let got = require('got');
-    let pAny = require('p-any');
-    let taskArr = [];
-    mozillaUrls.forEach(url => {
-        taskArr.push(got.head(url).then(() => url));
-    })
-    return pAny(taskArr);
 }
 
 /**
