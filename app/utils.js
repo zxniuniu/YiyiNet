@@ -245,13 +245,14 @@ export function getHttpOrHttps(url) {
  * 解析获取最快的链接地址
  * @returns {Promise<PCancelable<unknown> | *>}
  */
-export async function fastUrl(urlArr) {
+export async function fastUrl(urlArr, urlpath) {
     let got = require('got');
     let pAny = require('p-any');
     let taskArr = [];
+    urlpath = urlpath === undefined || urlpath === null ? '' : urlpath;
     urlArr.forEach(url => {
-        taskArr.push(got.head(url).then(() => url));
-    })
+        taskArr.push(got.head(url + urlpath).then(() => url));
+    });
     return pAny(taskArr);
 }
 
@@ -259,43 +260,43 @@ export async function fastUrl(urlArr) {
  * 解析获取mozilla最快的链接地址
  * @returns {Promise<PCancelable<unknown> | *>}
  */
-export async function fastMozillaUrl() {
-    let mozillaUrls = ['http://archive.mozilla.org', 'http://download-origin.cdn.mozilla.net', 'http://ftp.mozilla.org',
+export async function fastMozillaUrl(urlpath) {
+    let mozillaUrls = ['http://download-origin.cdn.mozilla.net', 'http://archive.mozilla.org', 'http://ftp.mozilla.org',
         'https://archive.mozilla.org', 'https://download-origin.cdn.mozilla.net', 'https://ftp.mozilla.org'];
-    return fastUrl(mozillaUrls);
+    return fastUrl(mozillaUrls, urlpath);
 }
 
 /**
  * 解析获取NPM最快的链接地址
  * @returns {Promise<PCancelable<unknown> | *>}
  */
-export async function fastNpmUrl() {
+export async function fastNpmUrl(urlpath) {
     let npmUrlArr = ['https://npm.taobao.org/mirrors', 'https://mirrors.huaweicloud.com', 'https://cnpmjs.org/mirrors'];
-    return fastUrl(npmUrlArr);
+    return fastUrl(npmUrlArr, urlpath);
 }
 
 /**
  * 解析获取Github最快的链接地址
  * @returns {Promise<PCancelable<unknown> | *>}
  */
-export async function fastGithubUrl() {
+export async function fastGithubUrl(urlpath) {
     // http://element-ui.cn/article/show-101839.aspx
     // https://github.com/FastGitORG/github-accelerator
     // https://doc.fastgit.org/zh-cn/
     let githubUrlArr = ['https://hub.fastgit.org', 'https://github.com.cnpmjs.org', 'https://github.com'
         /*'https://g.ioiox.com/https://github.com', 'https://gh.api.99988866.xyz/https://github.com', 'https://github.wuyanzheshui.workers.dev'*/];
-    return fastUrl(githubUrlArr);
+    return fastUrl(githubUrlArr, urlpath);
 }
 
 /**
  * 解析获取Github Raw最快的链接地址
  * @returns {Promise<PCancelable<unknown> | *>}
  */
-export async function fastGithubRawUrl() {
+export async function fastGithubRawUrl(urlpath) {
     // http://element-ui.cn/article/show-101839.aspx
     // https://doc.fastgit.org/zh-cn/node.html
     let githubRawUrlArr = ['https://raw.fastgit.org', 'https://raw.githubusercontent.com'];
-    return fastUrl(githubRawUrlArr);
+    return fastUrl(githubRawUrlArr, urlpath);
 }
 
 /**
