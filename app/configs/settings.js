@@ -28,7 +28,7 @@ export function resetDefaultObject() {
     store.reset(Object.keys(config.defaultStoreValue));
 
     // 安装的模块（启动时重置安装的模块的标识）
-    resetObjKey('MODULE');
+    resetObjKey('MODULE,CHROMEDRIVER,APPIUM,TOOLS');
 
     // console.log('Store的值[resetAfter]：'); console.dir(store.store);
 }
@@ -37,15 +37,25 @@ export function resetDefaultObject() {
  * 重置对象的值
  * @param objKey
  */
-function resetObjKey(objKey) {
-    let modules = store.get(objKey);
-    if (null !== modules && typeof modules === 'object') {
-        let moduleKeys = Object.keys(modules);
-        if (moduleKeys !== null && moduleKeys.length > 0) {
-            moduleKeys.forEach(key => modules[key] = false);
-            store.set(objKey, modules);
+function resetObjKey(objKeys) {
+    objKeys.split(',').forEach(objKey => {
+        let modules = store.get(objKey);
+        if (null !== modules && typeof modules === 'object') {
+            let moduleKeys = Object.keys(modules);
+            if (moduleKeys !== null && moduleKeys.length > 0) {
+                let modifyFlag = false;
+                moduleKeys.forEach(key => {
+                    if (modules[key] === true) {
+                        modules[key] = false;
+                        modifyFlag = true;
+                    }
+                });
+                if (modifyFlag) {
+                    store.set(objKey, modules);
+                }
+            }
         }
-    }
+    });
 }
 
 // https://github.com/sindresorhus/electron-better-ipc

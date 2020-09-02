@@ -35,7 +35,7 @@ unhandled({
 Object.assign(console, log.functions);
 
 // 设置logs路径，默认为YiyiNet/YiyiNet/logs
-app.setAppLogsPath(path.join(app.getPath('userData'), 'logs'));
+app.setAppLogsPath(path.join(app.getPath('userData'), 'Logs'));
 
 addCommandLine();
 

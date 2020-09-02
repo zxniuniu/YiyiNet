@@ -2,7 +2,7 @@ import path from "path";
 import store from './../configs/settings';
 import fse from 'fs-extra';
 
-import {getChromeFilePath, getFirefoxFilePath, getRootPath, packageJson} from "../utils";
+import {getChromeFilePath, getFirefoxFilePath, getUserData, packageJson} from "../utils";
 
 export function puppeteerCoreInstallFinishEvent(moduleStr, version) {
     downloadChrome();
@@ -10,13 +10,17 @@ export function puppeteerCoreInstallFinishEvent(moduleStr, version) {
     downloadFirefox();
 }
 
+/**
+ * 下载Chrome
+ * @returns {Promise<void>}
+ */
 async function downloadChrome() {
     // 下载Chrome
     let chromeFilePath = getChromeFilePath();
     if (!fse.existsSync(chromeFilePath)) {
         let puppeteer = require('puppeteer-core');
         let browserFetcher = puppeteer.createBrowserFetcher({
-            path: getRootPath(),
+            path: getUserData(),
             host: 'https://npm.taobao.org/mirrors', // https://cnpmjs.org/mirrors/
             product: 'chrome' // chrome, firefox
         });
@@ -45,20 +49,38 @@ async function testChrome() {
     return browser;
 }
 
+/**
+ * 解析获取最快的下载Firefox的链接地址
+ * @returns {Promise<PCancelable<unknown> | *>}
+ */
+async function fastMozillaUrl() {
+    let mozillaUrls = ['http://archive.mozilla.org', 'https://download-origin.cdn.mozilla.net', 'https://ftp.mozilla.org'];
+    let got = require('got');
+    let pAny = require('p-any');
+    let taskArr = [];
+    mozillaUrls.forEach(url => {
+        taskArr.push(got.head(url).then(() => url));
+    })
+    return pAny(taskArr);
+}
+
+/**
+ * 下载Firefox浏览器
+ * @returns {Promise<void>}
+ */
 async function downloadFirefox() {
     // 下载Firefox
     let firefoxFilePath = getFirefoxFilePath();
     if (!fse.existsSync(firefoxFilePath)) {
         let puppeteer = require('puppeteer-core');
         let browserFetcher = puppeteer.createBrowserFetcher({
-            path: getRootPath(),
-            // host: 'https://npm.taobao.org/mirrors', // https://cnpmjs.org/mirrors/
+            path: getUserData(),
+            host: (await fastMozillaUrl()) + '/pub/firefox/nightly/latest-mozilla-central',
             product: 'firefox' // chrome, firefox
         });
 
-        let firefoxVerJson = packageJson().firefoxVer.version;
-        let firefoxVerStore = store.get('TOOLS.FIREFOX_VER', 0);
-        let firefoxVer = '' + Math.max(firefoxVerJson, firefoxVerStore);
+        let firefoxVerStore = store.get('TOOLS.FIREFOX_VER', '0');
+        let firefoxVer = firefoxVerStore === '0' ? packageJson().firefoxVer.version : firefoxVerStore;
         store.set('TOOLS.FIREFOX_VER', firefoxVer);
 
         // let canDownload = await browserFetcher.canDownload(firefoxRevision);
@@ -68,13 +90,23 @@ async function downloadFirefox() {
     }
 }
 
+/**
+ * 采用browserFetcher下载
+ * @param browserFetcher
+ * @param downloadVer
+ * @param exePath
+ * @param type
+ */
 function downloadBrowser(browserFetcher, downloadVer, exePath, type) {
-    let logSecondInteval = 10; // 10秒输出一次下载进度
-    let startDate = Date.now();
+    let logSecondInterval = 10; // 10秒输出一次下载进度
+    let startDate = Date.now(), curDate = Date.now();
+    type = type.toLowerCase() === 'firefox' ? 'Firefox' : 'Chrome';
     browserFetcher.download(downloadVer, (downloadedBytes, totalBytes) => {
-        if (Date.now() - startDate >= logSecondInteval * 1000) {
-            console.log('正在下载' + (type === 'firefox' ? 'Firefox' : 'Chrome') + '，已完成[' + (100 * downloadedBytes / totalBytes).toFixed(2)
-                + '%]，当前[' + (downloadedBytes / 1024 / 1024).toFixed(2) + '/' + (totalBytes / 1024 / 1024).toFixed(2) + 'M]');
+        if (Date.now() - startDate >= logSecondInterval * 1000) {
+            let speed = (downloadedBytes / 1024 / (Date.now() - curDate) * 1000).toFixed(2);
+            console.log('正在下载' + type + '，已完成[' + (100 * downloadedBytes / totalBytes).toFixed(2) + '%]，当前['
+                + (downloadedBytes / 1024 / 1024).toFixed(2) + '/' + (totalBytes / 1024 / 1024).toFixed(2) + ']M，'
+                + '速度[' + speed + 'Kb/S]，预计还需要[' + ((totalBytes - downloadedBytes) / 1024 / speed / 60).toFixed(2) + ']分钟');
             startDate = Date.now();
         }
     }).then(revisionInfo => {
@@ -83,8 +115,10 @@ function downloadBrowser(browserFetcher, downloadVer, exePath, type) {
             if (err) {
                 return console.error(err);
             } else {
-                store.set('TOOLS.' + (type === 'firefox' ? 'FIREFOX' : 'CHROME') + '_STATUS', true);
-                fse.remove(revisionInfo.folderPath);
+                store.set('TOOLS.' + type.toUpperCase() + '_STATUS', true);
+                fse.remove(revisionInfo.folderPath).then(() => {
+                    console.log('浏览器[' + type + ']下载成功，链接：' + revisionInfo.url);
+                });
             }
         })
     }).catch(err => {

@@ -39,7 +39,11 @@ const config = {
     },
 
     storeValue: {
-        DEFAULT_LANGUAGE: 'cn' // 默认语言，中文
+        DEFAULT_LANGUAGE: 'cn', // 默认语言，中文
+        ENV: {
+            // https://playwright.dev/#version=v1.3.0&path=docs%2Finstallation.md&q=
+            PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1, // 配置playwright不自动下载浏览器
+        }
     }
 };
 

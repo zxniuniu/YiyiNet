@@ -94,7 +94,7 @@ export const getChromedriverFilePath = () => {
  * 获取工具类保存路径
  */
 export const getToolsPath = () => {
-    return checkPath(path.join(getRootPath(), 'tools'));
+    return checkPath(path.join(getUserData(), 'Tools'));
 };
 
 /**
@@ -131,7 +131,7 @@ export const getPythonExeName = () => {
  * 获取Python所在路径
  */
 export const getPythonFolder = () => {
-    return checkPath(path.join(getRootPath(), 'python'));
+    return checkPath(path.join(getUserData(), 'Python'));
 };
 
 /**
@@ -154,7 +154,7 @@ export const getChromeExeName = () => {
  * 获取Chrome所在路径
  */
 export const getChromeFolder = () => {
-    return checkPath(path.join(getRootPath(), 'chrome'));
+    return checkPath(path.join(getUserData(), 'Chrome'));
 };
 
 /**
@@ -176,7 +176,7 @@ export const getFirefoxExeName = () => {
  * 获取Firefox所在路径
  */
 export const getFirefoxFolder = () => {
-    return checkPath(path.join(getRootPath(), 'firefox'));
+    return checkPath(path.join(getUserData(), 'Firefox'));
 };
 
 /**

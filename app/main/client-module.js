@@ -87,10 +87,8 @@ export function installModule(needInstall) {
                     store.set('MODULE.' + moduleStr, true);
                     // console.timeEnd(logStr + '安装所耗时间');
                     if (i === moNum - 1) {
-                        console.log('模块[' + modules + ']已完成安装，其中成功[' + succNum + ']个，失败[' + errNum + ']个');
-                        if (errNum === 0) {
-                            store.set('MODULE_INSTALL', true);
-                        }
+                        console.log('模块已完成安装，其中成功[' + succNum + ']个，失败[' + errNum + ']个，模块[' + modules + ']');
+                        store.set('MODULE_INSTALL', errNum === 0);
                     }
                     done();
                     moduleInstallDoneEvent(moduleStr, res.version.replace("^", ""));
