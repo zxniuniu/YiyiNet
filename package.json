@@ -11,7 +11,11 @@
   "chromiumVer": {
     "revisionUrl": "http://omahaproxy.appspot.com/deps.json?version=85.0.4183.86",
     "verUrl": "https://npm.taobao.org/mirrors/chromium-browser-snapshots/Win_x64/",
-    "10.1.0": "85.0.4183.86&782078"
+    "version": "85.0.4183.86&782078"
+  },
+  "firefoxVer": {
+    "verUrl": "http://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central/",
+    "version": "82.0a1"
   },
   "main": "./dist/main.js",
   "scripts": {
