@@ -18,7 +18,7 @@ const config = {
     // Store保存的数据
     defaultStoreValue: {
         FORCE_QUIT_FLAG: false, // 是否是强制退出，如果是则退出，否则隐藏主窗口
-        MODULE_INSTALL: false, // 模块是否安装完成
+        MODULE_INSTALL: false, // 模块是否全部安装完成
         ADS_LOAD: false, // ADS是否加载
         CHROMEDRIVER: {
             STATUS: false, // chromedriver是否启动
@@ -31,10 +31,11 @@ const config = {
             PID: 0 // APPIUM的PID，用于结束进程
         },
         TOOLS: {
-            YOUTUBE_DL: false,
-            V2RAY_CORE: false,
-            CHROME_STATUS: false,
-            FIREFOX_STATUS: false
+            YOUTUBE_DL: false, // 是否下载
+            V2RAY_CORE: false, // 是否下载
+            V2RAY_STATUS: false, // 是否启动
+            CHROME_STATUS: false, // 是否下载
+            FIREFOX_STATUS: false // 是否下载
         }
     },
 

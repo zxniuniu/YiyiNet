@@ -72,9 +72,9 @@ async function downloadBrowser(exePath, type) {
     browserFetcher.download(storeVer, (downloadedBytes, totalBytes) => {
         if (Date.now() - startDate >= logSecondInterval * 1000) {
             let speed = (downloadedBytes / 1024 / (Date.now() - curDate) * 1000).toFixed(2);
-            console.log('正在下载' + type + '，已完成[' + (100 * downloadedBytes / totalBytes).toFixed(2) + '%]，当前['
+            console.log('正在下载' + type + '，完成[' + (100 * downloadedBytes / totalBytes).toFixed(2) + '%]，当前['
                 + (downloadedBytes / 1024 / 1024).toFixed(2) + '/' + (totalBytes / 1024 / 1024).toFixed(2) + ']M，'
-                + '速度[' + speed + 'Kb/S]，预计还需要[' + ((totalBytes - downloadedBytes) / 1024 / speed / 60).toFixed(2) + ']分钟');
+                + '速度[' + speed + 'Kb/S]，预计还需[' + ((totalBytes - downloadedBytes) / 1024 / speed / 60).toFixed(2) + ']分钟');
             startDate = Date.now();
         }
     }).then(revisionInfo => {

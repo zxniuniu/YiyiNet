@@ -247,13 +247,13 @@ export function getHttpOrHttps(url) {
  */
 export async function fastUrl(urlArr, urlpath) {
     let got = require('got');
-    let pAny = require('p-any');
+    let pFun = require('p-fun');
     let taskArr = [];
     urlpath = urlpath === undefined || urlpath === null ? '' : urlpath;
     urlArr.forEach(url => {
         taskArr.push(got.head(url + urlpath).then(() => url));
     });
-    return pAny(taskArr);
+    return pFun.any(taskArr);
 }
 
 /**
