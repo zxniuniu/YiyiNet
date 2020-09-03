@@ -1,5 +1,5 @@
 import store from "../configs/settings";
-import {checkPath, getRootPath, packageJson} from "../utils";
+import {checkPath, getPythonFilePath, getPythonScriptsPath, getRootPath, packageJson} from "../utils";
 
 import {adblockerInstallFinishEvent} from "./adblocker";
 import {hostileInstallFinishEvent} from "./hosts";
@@ -112,6 +112,18 @@ function moduleInstallDoneEvent(moduleStr, version) {
     } else if (moduleStr === 'puppeteer-core') {
         // puppeteer安装完成后下载chrome及firefox
         puppeteerCoreInstallFinishEvent(moduleStr, version);
+    } else if (moduleStr === 'python-shell') {
+        // 设置python-shell默认参数值
+        // https://hub.fastgit.org/extrabacon/python-shell#api-reference
+        let {PythonShell} = require('python-shell');
+        PythonShell.defaultOptions = {
+            pythonPath: getPythonFilePath(),
+            scriptPath: getPythonScriptsPath(),
+            pythonOptions: ['-u'], // get print results in real-time
+
+            // mode: 'text', // 'text', 'json', 'binary'
+            // args: ['value1', 'value2', 'value3']
+        };
     }
 
 }

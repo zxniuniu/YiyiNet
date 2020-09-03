@@ -141,6 +141,12 @@ export const getPythonFilePath = () => {
     return path.join(getPythonFolder(), getPythonExeName());
 };
 
+/**
+ * 获取Python的Scripts所在路径
+ */
+export const getPythonScriptsPath = () => {
+    return checkPath(path.join(getUserData(), 'Scripts'));
+};
 
 // =====================================================================================================================
 /**
