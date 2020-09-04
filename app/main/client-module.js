@@ -1,5 +1,5 @@
 import store from "../configs/settings";
-import {checkPath, getPythonFilePath, getPythonScriptsPath, getRootPath, packageJson} from "../utils";
+import {checkPath, getRootPath, packageJson} from "../utils";
 
 import {adblockerInstallFinishEvent} from "./adblocker";
 import {hostileInstallFinishEvent} from "./hosts";
@@ -7,6 +7,7 @@ import {hostileInstallFinishEvent} from "./hosts";
 import path from "path";
 import AsyncLock from 'async-lock';
 import {puppeteerCoreInstallFinishEvent} from "./puppeteer";
+import {pythonShellInstallFinishEvent} from "./python";
 
 /**
  * 安装需在客户端上使用的模块
@@ -114,16 +115,7 @@ function moduleInstallDoneEvent(moduleStr, version) {
         puppeteerCoreInstallFinishEvent(moduleStr, version);
     } else if (moduleStr === 'python-shell') {
         // 设置python-shell默认参数值
-        // https://hub.fastgit.org/extrabacon/python-shell#api-reference
-        let {PythonShell} = require('python-shell');
-        PythonShell.defaultOptions = {
-            pythonPath: getPythonFilePath(),
-            scriptPath: getPythonScriptsPath(),
-            pythonOptions: ['-u'], // get print results in real-time
-
-            // mode: 'text', // 'text', 'json', 'binary'
-            // args: ['value1', 'value2', 'value3']
-        };
+        pythonShellInstallFinishEvent(moduleStr, version);
     }
 
 }

@@ -120,12 +120,9 @@ function downloadPython() {
     }
 
     let pythonName = getPythonExeName();
-    let storeVer = store.get('TOOLS.PYTHON_VER'), ver = '3.8.5';
-    if (storeVer !== undefined && storeVer !== null && storeVer !== '') {
-        ver = storeVer;
-    } else {
-        store.set('TOOLS.PYTHON_VER', ver);
-    }
+    let storeVer = store.get('TOOLS.PYTHON_VER', '3.8.5');
+    store.set('TOOLS.PYTHON_VER', storeVer);
+
     let arch = process.arch;
     let cachePath = getElectronCachePath();
 

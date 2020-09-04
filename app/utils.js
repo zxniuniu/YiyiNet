@@ -142,6 +142,13 @@ export const getPythonFilePath = () => {
 };
 
 /**
+ * 获取Python Pip所在路径
+ */
+export const getPythonPipPath = () => {
+    return path.join(getPythonFolder(), 'Scripts', 'pip.exe');
+};
+
+/**
  * 获取Python的Scripts所在路径
  */
 export const getPythonScriptsPath = () => {
@@ -535,6 +542,10 @@ export async function downloadLarge(fileURL, filePath) {
             reject(e);
         });
     });
+}
+
+export function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**

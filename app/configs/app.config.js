@@ -44,6 +44,9 @@ const config = {
         ENV: {
             // https://playwright.dev/#version=v1.3.0&path=docs%2Finstallation.md&q=
             PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1, // 配置playwright不自动下载浏览器
+        },
+        INSTALL: {
+            PIP_STATUS: false, // Pip是否安装
         }
     }
 };
