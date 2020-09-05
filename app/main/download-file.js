@@ -10,7 +10,6 @@ import {
     getChromedriverExeName,
     getChromedriverFilePath,
     getElectronCachePath,
-    getPythonExeName,
     getPythonFilePath,
     getPythonFolder,
     getRedirected,
@@ -115,13 +114,15 @@ function downloadChromedriver() {
  */
 function downloadPython() {
     let pythonFilePath = getPythonFilePath(); //
-    if (fs.existsSync(pythonFilePath)) {
-        return;
-    }
 
-    let pythonName = getPythonExeName();
+    // let pythonName = getPythonExeName();
     let storeVer = store.get('TOOLS.PYTHON_VER', '3.8.5');
     store.set('TOOLS.PYTHON_VER', storeVer);
+
+    if (fs.existsSync(pythonFilePath)) {
+        store.set('TOOLS.PYTHON_STATUS', true);
+        return;
+    }
 
     let arch = process.arch;
     let cachePath = getElectronCachePath();

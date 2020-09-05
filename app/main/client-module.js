@@ -105,6 +105,7 @@ export function installModule(needInstall) {
 
 function moduleInstallDoneEvent(moduleStr, version) {
     // 广告过滤事件
+    // console.log('moduleStr：' + moduleStr + "，version：" + version);
     if (moduleStr === '@cliqz/adblocker-electron') {
         adblockerInstallFinishEvent(moduleStr, version);
     } else if (moduleStr === 'hostile') {

@@ -155,6 +155,14 @@ export const getPythonScriptsPath = () => {
     return checkPath(path.join(getUserData(), 'Scripts'));
 };
 
+/**
+ * 获取Python镜像路径
+ */
+export const getPythonMirrorsUrl = () => {
+    return 'https://mirrors.aliyun.com/pypi/simple/';
+};
+
+
 // =====================================================================================================================
 /**
  * 获取Chrome所有Exe
