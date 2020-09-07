@@ -31,15 +31,19 @@ export function installClientModule() {
             delete devDependencies[key];
         }
     });
-    installModule(devDependencies);
+
+    // 获取是否是第一次安装，如果是第一次安装，完成后再安装一次
+    let hasInstall = store.get('INSTALL.ALREADY_INSTALL', false);
+    installModule(devDependencies, hasInstall);
 }
 
 /**
  * 安装模块
  * @param needInstall ｛‘module1': 'version1', ‘module2': 'version2'...｝
+ * @param hasInstall 模块是否已经安装过（未安装过时安装两次，第二次确认）
  * @returns {Promise<void>}
  */
-export function installModule(needInstall) {
+export function installModule(needInstall, hasInstall) {
     // module.paths.push(getNpmInstallPath());
     // console.log(module.paths);
 
@@ -49,6 +53,9 @@ export function installModule(needInstall) {
     // https://stackoverflow.com/questions/48717853/electron-js-use-npm-internally-programmatically
     // https://stackoverflow.com/questions/34458417/run-node-js-server-file-automatically-after-launching-electron-app
 
+    if (!hasInstall) {
+        console.log('指定的所有模块标记是未安装过，当前为第一次安装，完成后会再进行一次安装，并执行安装完成后的事件');
+    }
     const {PluginManager} = require('live-plugin-manager');
     let manager = new PluginManager({
         pluginsPath: getNpmInstallPath(),
@@ -89,6 +96,11 @@ export function installModule(needInstall) {
                     // console.timeEnd(logStr + '安装所耗时间');
                     if (i === moNum - 1) {
                         console.log('模块已完成安装，其中成功[' + succNum + ']个，失败[' + errNum + ']个，模块[' + modules + ']');
+
+                        if (!hasInstall) {
+                            store.set('INSTALL.ALREADY_INSTALL', true);
+                            installModule(needInstall, true);
+                        }
                         store.set('MODULE_INSTALL', errNum === 0);
                     }
                     done();

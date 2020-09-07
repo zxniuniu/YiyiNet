@@ -46,6 +46,7 @@ const config = {
         },
         INSTALL: {
             PIP_STATUS: false, // Pip是否安装
+            ALREADY_INSTALL: false, // 模块是否安装过，未安装过时，安装两次
         }
     }
 };
