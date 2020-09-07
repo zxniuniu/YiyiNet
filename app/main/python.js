@@ -2,14 +2,7 @@ import fs from "fs";
 import path from "path";
 import store from './../configs/settings';
 
-import {
-    downloadSmall,
-    getPythonFilePath,
-    getPythonFolder,
-    getPythonMirrorsUrl,
-    getPythonPipPath,
-    sleep
-} from "../utils";
+import {downloadSmall, fastPypiUrl, getPythonFilePath, getPythonFolder, getPythonPipPath, sleep} from "../utils";
 
 export function pythonShellInstallFinishEvent(moduleStr, version) {
     // https://hub.fastgit.org/extrabacon/python-shell#api-reference
@@ -51,14 +44,16 @@ async function installPip(PythonShell) {
 
         let pFun = require('p-fun');
         let waitInterval = 2000, waitMinutes = 30;
+        let fastMirror = await fastPypiUrl();
         // 等待python下载安装完成
         pFun.waitFor(() => store.get('TOOLS.PYTHON_STATUS'), {
             interval: waitInterval,
             timeout: waitMinutes * 60 * 1000
         }).then(() => {
+            // https://github.com/remoteinterview/zero/blob/4db4a51eb87f74acc9eed080404d58f8b27fa0c5/packages/handler-python/installPip.js
             PythonShell.run(savePath, {
                 // https://developer.aliyun.com/mirror/pypi
-                args: ['-i', getPythonMirrorsUrl()]
+                args: ['-i', fastMirror]
             }, function (err, result) {
                 if (err) throw err;
                 // console.dir(result);
@@ -73,7 +68,7 @@ async function installPip(PythonShell) {
                         store.set('INSTALL.PIP_STATUS', true);
                         console.log('通过下载get-pip.py文件，安装pip成功，您可以使用pip进行Python模块安装了！');
 
-                        installPythonModules(PythonShell);
+                        installPythonModules(PythonShell, fastMirror);
                     });
                 } else {
                     console.log('安装Pip完成，未报错，但未安装在Python根目录下的Scripts下？');
@@ -90,7 +85,32 @@ async function installPip(PythonShell) {
 /**
  * 安装Python模块
  */
-function installPythonModules(PythonShell) {
+function installPythonModules(PythonShell, fastMirror) {
+    // scrapy安装失败 星夜回缘 2020-09-07 09:47:31
+    /*PythonShell.run(getPythonFilePath(), {
+        args: ['-m', 'pip', 'install', 'scrapy', '-i', fastMirror]
+    }, function (err, result) {
+        if (err) throw err;
+        console.dir(result);
+    });*/
+}
 
+/**
+ * 使用Pip安装Python模块
+ * @param srcDir
+ * @param args
+ * @returns {Promise<void>}
+ */
+async function installByPip(srcDir, ...args) {
+    let pipExe = getPythonPipPath();
+    console.log(`Running "pip install -t ${srcDir} ${args.join(' ')}"`);
+    try {
+        let execa = require('execa');
+        const ret = await execa(pipExe, ['install', '-t', srcDir, ...args]);
+        console.log(ret.stdout);
+    } catch (err) {
+        console.error(`Failed to run "pip install -t ${srcDir} ${args.join(' ')}": ${err}`);
+        throw err;
+    }
 }
 

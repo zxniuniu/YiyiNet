@@ -155,14 +155,6 @@ export const getPythonScriptsPath = () => {
     return checkPath(path.join(getUserData(), 'Scripts'));
 };
 
-/**
- * 获取Python镜像路径
- */
-export const getPythonMirrorsUrl = () => {
-    return 'https://mirrors.aliyun.com/pypi/simple/';
-};
-
-
 // =====================================================================================================================
 /**
  * 获取Chrome所有Exe
@@ -318,6 +310,17 @@ export async function fastGithubRawUrl(urlpath) {
     // https://doc.fastgit.org/zh-cn/node.html
     let githubRawUrlArr = ['https://raw.fastgit.org', 'https://raw.githubusercontent.com'];
     return fastUrl(githubRawUrlArr, urlpath);
+}
+
+/**
+ * 解析获取Python最快的镜像地址
+ * @returns {Promise<PCancelable<unknown> | *>}
+ */
+export async function fastPypiUrl(urlpath) {
+    // https://www.cnblogs.com/yuki-nana/p/10898774.html
+    let pypiUrls = ['https://mirrors.aliyun.com/pypi/simple/', 'https://pypi.douban.com/simple/', 'https://pypi.tuna.tsinghua.edu.cn/simple',
+        'https://pypi.mirrors.ustc.edu.cn/simple/'];
+    return fastUrl(pypiUrls, urlpath);
 }
 
 /**

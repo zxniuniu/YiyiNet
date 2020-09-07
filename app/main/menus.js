@@ -3,7 +3,7 @@ import {app, dialog, Menu, shell} from 'electron';
 import {checkNewUpdates} from './auto-updater';
 import config from '../configs/app.config';
 import i18n from '../configs/i18next.config';
-import {getIco, isDebugUrl, packageJson, toggleShowHide} from './../utils';
+import {getIco, isDebugUrl, packageJson, toggleShowHide} from '../utils';
 import store from './../configs/settings';
 
 let menuTemplates = {mac: {}, other: {}};

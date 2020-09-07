@@ -1,4 +1,4 @@
-import config from './../configs/app.config';
+import config from './app.config';
 import {ipcMain} from 'electron-better-ipc';
 
 let Store = require('electron-store');

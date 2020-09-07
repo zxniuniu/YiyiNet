@@ -38,7 +38,6 @@ const config = {
             FIREFOX_STATUS: false // 是否下载
         }
     },
-
     storeValue: {
         DEFAULT_LANGUAGE: 'cn', // 默认语言，中文
         ENV: {
