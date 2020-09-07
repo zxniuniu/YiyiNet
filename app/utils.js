@@ -246,6 +246,15 @@ function copyDir(src, dist, callback) {
 }
 
 /**
+ * 检查过去的天数
+ * @param startDate
+ * @returns {number}
+ */
+export function pastDays(startDate) {
+    return (Date.now() - startDate) / 1000 / 60 / 60 / 24;
+}
+
+/**
  * 根据地址获取http或者https
  * @param url
  * @returns {any}

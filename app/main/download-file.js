@@ -14,7 +14,8 @@ import {
     getPythonFolder,
     getRedirected,
     getV2rayCoreExe,
-    getYoutubeDlExe
+    getYoutubeDlExe,
+    pastDays
 } from "../utils";
 import store from "../configs/settings";
 
@@ -207,9 +208,12 @@ export async function downloadLatestRetry(user, rep, fileName, savePath) {
 
 /**
  * 下载Github发布的文件
- * @param fileURL
- * @param filePath 文件保存位置，包括文件名
  * @returns {Promise<unknown>}
+ * @param user
+ * @param rep
+ * @param fileName
+ * @param savePath
+ * @param type
  */
 export async function downloadLatest(user, rep, fileName, savePath, type) {
     let cachePath = getElectronCachePath();
@@ -262,12 +266,21 @@ export async function downloadLatest(user, rep, fileName, savePath, type) {
  */
 function downloadYoutubeDl() {
     // 下载youtube-dl视频下载工具
-    downloadLatestRetry('ytdl-org', 'youtube-dl', 'youtube-dl.exe').then(filePath => {
-        fs.copyFile(filePath, getYoutubeDlExe(), () => {
-            store.set('TOOLS.YOUTUBE_DL', true);
+    let youtubeDate = store.get('TOOLS.YOUTUBE_DL_DATE', 0);
+    let needDownload = pastDays(youtubeDate) > store.get('TOOLS_DOWNLOAD_INTERVAL_DAYS', 10);
+    let youtubeDlExe = getYoutubeDlExe();
+
+    if (!fs.existsSync(youtubeDlExe) || needDownload) {
+        downloadLatestRetry('ytdl-org', 'youtube-dl', 'youtube-dl.exe').then(filePath => {
+            fs.copyFile(filePath, youtubeDlExe, () => {
+                store.set('TOOLS.YOUTUBE_DL', true);
+                store.set('TOOLS.YOUTUBE_DL_DATE', Date.now());
+            });
+            console.log('工具[youtube-dl]下载成功，路径：' + filePath);
         });
-        console.log('工具[youtube-dl]下载成功，路径：' + filePath);
-    });
+    } else {
+        store.set('TOOLS.YOUTUBE_DL', true);
+    }
 }
 
 /**
@@ -275,15 +288,25 @@ function downloadYoutubeDl() {
  */
 function downloadV2rayCore() {
     // 下载v2ray代理工具
-    let platform = process.platform === 'win32' ? 'windows' : '';
-    let arch = process.arch.replace('x', '');
-    let v2rayZip = 'v2ray-' + platform + '-' + arch + '.zip';
-    downloadLatestRetry('v2ray', 'v2ray-core', v2rayZip).then(filePath => {
-        extractZip(filePath, path.dirname(getV2rayCoreExe())).then(() => {
-            store.set('TOOLS.V2RAY_CORE', true);
+    let v2rayDate = store.get('TOOLS.V2RAY_DATE', 0);
+    let needDownload = pastDays(v2rayDate) > store.get('TOOLS_DOWNLOAD_INTERVAL_DAYS', 10);
+    let v2rayExe = getV2rayCoreExe();
+
+    if (!fs.existsSync(v2rayExe) || needDownload) {
+        let platform = process.platform === 'win32' ? 'windows' : '';
+        let arch = process.arch.replace('x', '');
+        let v2rayZip = 'v2ray-' + platform + '-' + arch + '.zip';
+
+        downloadLatestRetry('v2ray', 'v2ray-core', v2rayZip).then(filePath => {
+            extractZip(filePath, path.dirname(v2rayExe)).then(() => {
+                store.set('TOOLS.V2RAY_CORE', true);
+                store.set('TOOLS.V2RAY_DATE', Date.now());
+            });
+            console.log('工具[v2ray-core]下载成功，路径：' + filePath);
         });
-        console.log('工具[v2ray-core]下载成功，路径：' + filePath);
-    });
+    } else {
+        store.set('TOOLS.V2RAY_CORE', true);
+    }
 }
 
 export function downloadAllTools() {

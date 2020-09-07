@@ -32,14 +32,17 @@ const config = {
         },
         TOOLS: {
             YOUTUBE_DL: false, // 是否下载
+            YOUTUBE_DL_DATE: 0, // YoutubeDl最新下载日期
             V2RAY_CORE: false, // 是否下载
             V2RAY_STATUS: false, // 是否启动
+            V2RAY_DATE: 0, // v2ray下载日期
             CHROME_STATUS: false, // 是否下载
             FIREFOX_STATUS: false // 是否下载
         }
     },
     storeValue: {
         DEFAULT_LANGUAGE: 'cn', // 默认语言，中文
+        TOOLS_DOWNLOAD_INTERVAL_DAYS: 10, // 检查软件更新间隔的天数
         ENV: {
             // https://playwright.dev/#version=v1.3.0&path=docs%2Finstallation.md&q=
             PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1, // 配置playwright不自动下载浏览器
