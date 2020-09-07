@@ -4,7 +4,7 @@ import path from 'path';
 import {initDynamicSplashScreen} from '@trodi/electron-splashscreen';
 import config from '../configs/app.config';
 import {checkNewUpdates} from './auto-updater';
-import {isDebugUrl} from "../utils";
+import {getPythonFolder, getPythonPipPath, isDebugUrl} from "../utils";
 import {installClientModule} from './client-module';
 import {downloadAllTools, downloadDriverFiles} from './download-file';
 import {saveAstarVpn} from './astarvpn';
@@ -338,12 +338,21 @@ function closeSplashScreen(splashScreen) {
 }
 
 // Sets the environment variables to a combination of process.env and whatever the user saved
-export async function setSavedEnv() {
+export function setSavedEnv() {
     const savedEnv = store.get('ENV');
+
+    let envPath = [
+        getPythonFolder(),
+        path.dirname(getPythonPipPath()),
+    ].join(';');
+
     process.env = {
         ...process.env,
         ...savedEnv || {},
+        Path: process.env.Path + ";" + envPath,
     };
+
+    // console.log("process: "); console.dir(process);
 }
 
 function openDevTools(mainWindow) {

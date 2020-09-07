@@ -192,7 +192,7 @@ function moduleInstallDoneEvent(moduleStr, version) {
  */
 export const getNpmInstallPath = () => {
     // 保存在getUserData() + 'node_modules'中未解决加载时的路径问题
-    const savePath = path.join(getRootPath(), 'resources', 'app'); // process.resourcesPath
+    const savePath = path.join(getRootPath(), 'resources'); // process.resourcesPath
     return checkPath(path.resolve(`${savePath}/node_modules/`));
 };
 
