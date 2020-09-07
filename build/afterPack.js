@@ -108,6 +108,25 @@ async function downloadChromedriver(context) {
     }
 }
 
+
+async function doExtractNodeModules(context) {
+    let asar = require('asar');
+    let resourcesDir = path.join(context.appOutDir, 'resources');
+    let appDir = path.join(resourcesDir, 'app');
+    let asarDir = path.join(resourcesDir, 'app.asar');
+
+    // 解压后复制node_modules
+    await asar.extractAll(asarDir, appDir);
+    fs.renameSync(path.join(appDir, 'node_modules'), path.join(resourcesDir, 'node_modules'))
+    // await copyDir(path.join(resourcesDir, 'app', 'node_modules'), path.join(resourcesDir, 'node_modules'), console.log);
+
+    // 重新压缩asar文件
+    asar.createPackage(appDir, asarDir).then(() => {
+        removeDir(appDir);
+        console.log('\t解压app.asar中的node_modules文件夹到资源目录，并已重新生成app.asar文件');
+    });
+}
+
 async function afterPack(context) {
     // 删除 README 文件，使其不加入 Setup 包中。
     /*let readmePath = path.join(context.appOutDir,"resources/app.asar.unpacked/README.md");
@@ -129,6 +148,72 @@ async function afterPack(context) {
 
     // 目前不下载并复制到打包目录了，软件在打开时自动下载
     // await downloadChromedriver(context);
+
+    // 解压app.asar并将node_modules拷贝到文件夹外面
+    doExtractNodeModules(context);
+
 }
+
+/*
+ * 复制目录、子目录，及其中的文件
+ * @param src {String} 要复制的目录
+ * @param dist {String} 复制到目标目录
+ */
+function copyDir(src, dist, callback) {
+    fs.access(dist, function (err) {
+        if (err) {
+            // 目录不存在时创建目录
+            fs.mkdirSync(dist);
+        }
+        _copy(null, src, dist);
+    });
+
+    function _copy(err, src, dist) {
+        if (err) {
+            callback(err);
+        } else {
+            fs.readdir(src, function (err, paths) {
+                if (err) {
+                    callback(err)
+                } else {
+                    paths.forEach(function (path) {
+                        let _src = src + '/' + path;
+                        let _dist = dist + '/' + path;
+                        fs.stat(_src, function (err, stat) {
+                            if (err) {
+                                callback(err);
+                            } else {
+                                // 判断是文件还是目录
+                                if (stat.isFile()) {
+                                    fs.writeFileSync(_dist, fs.readFileSync(_src));
+                                } else if (stat.isDirectory()) {
+                                    // 当是目录是，递归复制
+                                    copyDir(_src, _dist, callback)
+                                }
+                            }
+                        })
+                    })
+                }
+            })
+        }
+    }
+}
+
+function removeDir(dir) {
+    let files = fs.readdirSync(dir)
+    for (var i = 0; i < files.length; i++) {
+        let newPath = path.join(dir, files[i]);
+        let stat = fs.statSync(newPath)
+        if (stat.isDirectory()) {
+            //如果是文件夹就递归下去
+            removeDir(newPath);
+        } else {
+            //删除文件
+            fs.unlinkSync(newPath);
+        }
+    }
+    fs.rmdirSync(dir)//如果文件夹是空的，就将自己删除掉
+}
+
 
 module.exports = afterPack;

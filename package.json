@@ -1,6 +1,6 @@
 {
   "name": "YiyiNet",
-  "version": "1.7.3",
+  "version": "1.7.4",
   "productName": "YiyiNet",
   "description": "依网, YiyiNet, 定时任务, 自动签到, 自动任务, 任务管理",
   "about": "依网(YiyiNet)：自动任务执行，如自动签到，自动浏览等",
@@ -21,6 +21,7 @@
   "scripts": {
     "dev": "chcp 65001 && npm run build-main-dev && electron . --debug --inspect=8888",
     "start": "chcp 65001 && npm run build-main-dev && xcopy .\\dist D:\\YiyiNet\\resources\\app\\dist /E /Y && D:\\YiyiNet\\YiyiNet.exe",
+    "start2": "chcp 65001 && D:\\YiyiNet\\YiyiNet.exe",
     "delete": "rmdir /S /Q node_modules",
     "rebuild": "electron-rebuild",
     "postinstall": "electron-builder install-app-deps",
@@ -75,6 +76,7 @@
   "devDependencies": {
     "@cliqz/adblocker-electron": "^1.17.0",
     "appium": "^1.18.0",
+    "asar": "^3.0.3",
     "axios": "^0.20.0",
     "bluebird": "^3.7.2",
     "cheerio": "^1.0.0-rc.3",
@@ -85,6 +87,7 @@
     "electron": "^10.1.0",
     "electron-builder": "^22.7.0",
     "electron-rebuild": "^1.11.0",
+    "execa": "^4.0.3",
     "gh-got": "^9.0.0",
     "got": "^11.5.2",
     "hostile": "^1.3.2",
@@ -137,6 +140,7 @@
     "crawler": "^1.2.2&bottleneckp, cheerio, iconv-lite, lodash, request, seenreq, type-is",
     "crypto-js": "^4.0.0&",
     "download": "^8.0.0&archive-type, content-disposition, decompress, ext-name, file-type, filenamify, get-stream, got, make-dir, p-event, pify",
+    "execa": "^4.0.3&cross-spawn, get-stream, human-signals, is-stream, merge-stream, npm-run-path, onetime, signal-exit, strip-final-newline,",
     "gh-got": "^9.0.0&got",
     "got": "^11.5.2&@sindresorhus/is, @szmarczak/http-timer, @types/cacheable-request, @types/responselike, cacheable-lookup, cacheable-request, decompress-response, http2-wrapper, lowercase-keys, p-cancelable, responselike",
     "hostile": "^1.3.2&chalk, minimist, once, split, through",
@@ -178,9 +182,9 @@
     "extraResources": [
       "res_backup"
     ],
-    "asar": false,
+    "asar": true,
     "asarUnpack": [
-      "./node_modules/**/*"
+      "./node_modules_2/**/*"
     ],
     "win": {
       "icon": "./assets/icon/app.ico",
