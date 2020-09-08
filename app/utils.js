@@ -199,6 +199,20 @@ export const getFirefoxFilePath = () => {
     return path.join(getFirefoxFolder(), getFirefoxExeName());
 };
 
+/**
+ * 获取Jre所在路径
+ */
+export const getJreFolder = () => {
+    return checkPath(path.join(getUserData(), 'Jre'));
+};
+
+/**
+ * 获取Jre所在路径（exe路径）
+ */
+export const getJrePath = () => {
+    return path.join(getJreFolder(), 'bin', 'java.exe');
+};
+
 // =====================================================================================================================
 /*
  * 复制目录、子目录，及其中的文件

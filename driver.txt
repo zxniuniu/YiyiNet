@@ -1,0 +1,183 @@
+var webdriver = require('selenium-webdriver');
+var driver = new webdriver.Builder()
+  .usingServer('http://localhost:9515')
+  .withCapabilities({
+		chromeOptions: {
+			binary: pro'C:\\Program Files\\YiyiNet\\chrome\\chrome.exe'
+		}
+	})
+   // .setProxy(proxy.pac('http://proxy.mysite.fr/proxy.pac'))
+  .forBrowser('chrome')
+  .build();
+driver.get('https://cn.bing.com');
+let searchStr = '张小妞';
+driver.findElement(webdriver.By.name('q')).sendKeys(searchStr)
+driver.findElement(webdriver.By.name('go')).click()
+driver.wait(() => {
+  return driver.getTitle().then((title) => {
+    return title === searchStr + ' - 国内版 Bing'
+  })
+}, 1000);
+driver.close();
+
+// =========================================================================
+let webdriverio = require('webdriverio')
+let options = {
+  host: 'localhost', // Use localhost as chrome driver server
+  port: 9515, // "9515" is the port opened by chrome driver.
+  capabilities: {
+    browserName: 'chrome',
+    'goog:chromeOptions': {
+      binary: 'C:\\Program Files\\YiyiNet\\chrome\\chrome.exe', // Path to your Electron binary.
+      args: [/* cli arguments */] // Optional, perhaps 'app=' + /path/to/your/app/
+    },
+    // Proxy: {proxyType: pac, proxyAutoconfigUrl: 'http://proxy.mysite.fr/proxy.pac' }
+  }
+}
+let client = await webdriverio.remote(options)
+let page = client
+  .url('https://cn.bing.com')
+  .setValue('#sb_form_q', 'webdriverio')
+  .click('#sb_form_go')
+  .getTitle().then((title) => {
+    console.log('Title was: ' + title)
+  });
+  
+// =========================================================================
+let puppeteer = require('puppeteer-core');
+
+let browser = await puppeteer.launch({
+	headless: false,
+	executablePath: 'C:\\Program Files\\YiyiNet\\chrome\\chrome.exe',
+	ignoreHTTPSErrors: true,
+	// https://www.chromium.org/developers/design-documents/network-settings
+	args: [
+	  '--proxy-server=https://usa.cn-cloudflare.com:443',
+	  '--ignore-certificate-errors',
+	],
+	defaultViewport: {
+	  width: 600,
+	  height: 300,
+	  deviceScaleFactor: 1
+	}
+});
+
+let page = await browser.newPage();
+await page.goto('https://www.youtube.com');
+await page.screenshot({path: 'aaabbbccc.png'});
+
+await browser.close();
+
+// 当前无法控制scrapy的自动安装（需要编译器？)
+let pythonPath = 'C:/Users/bluef/Desktop/1ppt.com-PPT/get-pip.py';
+let pyshell = new PythonShell(pythonPath, {
+	'pythonPath': 'C:/Program Files/YiyiNet/python/python.exe',
+	'pythonOptions': ['-u'],
+	// 'scriptPath': ''
+});
+
+// sends a message to the Python script via stdin
+pyshell.send('hello');
+
+pyshell.on('message', function (message) {
+  // received a message sent from the Python script (a simple "print" statement)
+  console.log(message);
+});
+
+// end the input stream and allow the process to exit
+pyshell.end(function (err,code,signal) {
+  if (err) throw err;
+  console.log('The exit code was: ' + code);
+  console.log('The exit signal was: ' + signal);
+  console.log('finished');
+});
+
+
+
+https://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jre-8u131-windows-x64.tar.gz
+
+https://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jre-8u131-windows-x64.tar.gz
+
+
+
+const util = require('util');
+const fs = require('fs');
+const streamPipeline = util.promisify(require('stream').pipeline);
+
+
+
+url: url(),
+rejectUnauthorized: false,
+agent: false,
+
+        
+method: 'GET',
+headers: {},            // Request headers. format is the identical to that accepted by the Headers constructor (see below)
+body: null,             // Request body. can be null, a string, a Buffer, a Blob, or a Node.js Readable stream
+redirect: 'follow',     // Set to `manual` to extract redirect headers, `error` to reject redirect
+signal: null,           // Pass an instance of AbortSignal to optionally abort requests
+
+// The following properties are node-fetch extensions
+follow: 20,             // maximum redirect count. 0 to not follow redirect
+compress: true,         // support gzip/deflate content encoding. false to disable
+size: 0,                // maximum response body size in bytes. 0 to disable
+agent: null,            // http(s).Agent instance or function that returns an instance (see below)
+highWaterMark: 16384,   // the maximum number of bytes to store in the internal buffer before ceasing to read from the underlying resource.
+insecureHTTPParser: false 
+        
+        
+
+const install = exports.install = callback => {
+    var urlStr = url();
+    console.log("Downloading from: ", urlStr);
+    callback = callback || (() => {});
+    rimraf.sync(jreDir());
+    request
+      .get({
+        url: url(),
+        rejectUnauthorized: false,
+        agent: false,
+        headers: {
+          connection: 'keep-alive',
+          'Cookie': 'gpw_e24=http://www.oracle.com/; oraclelicense=accept-securebackup-cookie'
+        }
+      })
+      .on('response', res => {
+        var len = parseInt(res.headers['content-length'], 10);
+        var bar = new ProgressBar('  downloading and preparing JRE [:bar] :percent :etas', {
+          complete: '=',
+          incomplete: ' ',
+          width: 80,
+          total: len
+        });
+        res.on('data', chunk => bar.tick(chunk.length));
+      })
+      .on('error', err => {
+        console.log(`problem with request: ${err.message}`);
+        callback(err);
+      })
+      .on('end', () => {
+        try{
+          if (smoketest()) callback(); else callback("Smoketest failed.");
+        }catch(err){
+          callback(err);
+        }
+      })
+      .pipe(zlib.createUnzip())
+      .pipe(tar.extract(jreDir()));
+  };
+
+
+
+
+
+let rs = fs.createReadStream(fileTar);
+      //zlib.createGunzip()创建一个gunzip转换流
+      let dst = path.join('D:/abc', path.basename(fileTar, '.tar.gz'));
+      rs.pipe(zlib.createGunzip()).pipe(fs.createWriteStream(dst));
+
+
+
+
+
+

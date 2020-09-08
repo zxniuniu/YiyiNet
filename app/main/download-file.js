@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import StreamZip from "node-stream-zip";
 import AsyncLock from 'async-lock';
-
 import {
     downloadFile,
     downloadLarge,
@@ -10,6 +9,8 @@ import {
     getChromedriverExeName,
     getChromedriverFilePath,
     getElectronCachePath,
+    getJreFolder,
+    getJrePath,
     getPythonFilePath,
     getPythonFolder,
     getRedirected,
@@ -18,6 +19,9 @@ import {
     pastDays
 } from "../utils";
 import store from "../configs/settings";
+
+let fetch = require('node-fetch');
+let zlib = require('zlib');
 
 // https://doc.fastgit.org/zh-cn/node.html#%E8%8A%82%E7%82%B9%E5%88%97%E8%A1%A8
 let githubUrlLists = ['https://hub.fastgit.org', 'https://github.com.cnpmjs.org', 'https://github.com'];
@@ -308,6 +312,52 @@ function downloadV2rayCore() {
         store.set('TOOLS.V2RAY_CORE', true);
     }
 }
+
+function downloadJre() {
+    let jreExe = getJrePath();
+    if (!fs.existsSync(jreExe)) {
+        let version = '8u131', buildNum = '11';
+        let url = getJreDownloadUrl(version, buildNum);
+
+        let fileTar = path.join(getElectronCachePath(), 'jre222.tar.gz');
+        let fileStream = fs.createWriteStream(fileTar)
+            .on('error', function (e) {
+                console.error('error==>', e);
+            }).on('finish', function () {
+                //下载完成后解压缩文件
+                extractZip(fileTar, getJreFolder()).then(() => {
+                    console.log('下载完成:', fileTar);
+                    // store.set('TOOLS.V2RAY_CORE', true);
+                });
+            });
+        fetch(url, {
+            headers: {
+                connection: 'keep-alive',
+                'Cookie': 'gpw_e24=http://www.oracle.com/; oraclelicense=accept-securebackup-cookie'
+            },
+            agent: null,
+            insecureHTTPParser: true
+        }).then(res => {
+            console.dir(res.headers); // application/x-gzip
+
+            res.body.pipe(fileStream);
+        });
+
+        // .pipe(tar.extract(jreDir()));
+
+        function getJreDownloadUrl(version, buildNum) {
+            let hash = 'd54c1d3a095b4ff2b6607d096fa80163';
+            let platform = process.platform;
+            platform = platform === 'darwin' ? 'macosx' : platform === 'win32' ? 'windows' : platform;
+            let arch = process.arch;
+            arch = arch === 'ia32' || arch === 'x86' ? 'i586' : arch;
+
+            return 'https://download.oracle.com/otn-pub/java/jdk/' + version + '-b' + buildNum
+                + '/' + hash + '/jre-' + version + '-' + platform + '-' + arch + '.tar.gz';
+        }
+    }
+}
+
 
 export function downloadAllTools() {
     downloadYoutubeDl();
