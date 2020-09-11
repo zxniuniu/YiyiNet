@@ -10,6 +10,9 @@ import store from './configs/settings';
 import {ipcMain} from 'electron-better-ipc';
 import StreamZip from "node-stream-zip";
 
+import fse from "live-plugin-manager/node_modules/fs-extra";
+import tar from 'live-plugin-manager/node_modules/tar';
+
 // https://www.jianshu.com/p/4b58711cb72a
 let fetch = require("node-fetch");
 // import {DownloaderHelper} from 'node-downloader-helper';
@@ -363,7 +366,7 @@ export function isUrlValid(url) {
 }
 
 /**
- * 解压文件情况
+ * 解压Zip文件
  * @param zipFile
  * @param folder
  * @returns {Promise<unknown>}
@@ -385,6 +388,26 @@ export function extractZip(zipFile, folder) {
                 resolve();
             });
         });
+    });
+}
+
+
+/**
+ * 解压Tar文件
+ * @param tarFile
+ * @param folder
+ * @returns {Promise<unknown>}
+ */
+export function extractTar(tarFile, folder) {
+    return new Promise((resolve, reject) => {
+        tar.extract({
+            cwd: folder,
+            file: tarFile
+        }).then(() => {
+            resolve();
+        }).catch((err) => {
+            reject(err);
+        })
     });
 }
 
@@ -494,13 +517,15 @@ export async function getRedirected(url) {
  * 下载小文件
  * @param url
  * @param filePath 文件保存位置，包括文件名
+ * @param options
  * @returns {Promise<unknown>}
  */
-export async function downloadSmall(url, filePath) {
+export async function downloadSmall(url, filePath, options) {
     return new Promise((resolve, reject) => {
         fetch(url, {
             method: 'GET',
             headers: {'Content-Type': 'application/octet-stream'},
+            ...options || {},
         }).then(res => res.buffer()).then(_ => {
             fs.writeFile(filePath, _, "binary", function (err) {
                 if (err) {
@@ -519,13 +544,16 @@ export async function downloadSmall(url, filePath) {
  * 下载大文件
  * @param fileURL
  * @param filePath 文件保存位置，包括文件名
+ * @param options
  * @returns {Promise<unknown>}
  */
-export async function downloadLarge(fileURL, filePath) {
+export async function downloadLarge(fileURL, filePath, options) {
     return new Promise((resolve, reject) => {
         //缓存文件路径
         let tmpFileSavePath = filePath + ".tmp";
-        let fsize = 1, inteSecond = 1, startDate = Date.now();
+        let totalBytes = 1, logSecondInterval = 1;
+        let startDate = Date.now(), curDate = Date.now();
+        let fileName = path.basename(filePath);
 
         //创建写入流
         let fileStream = fs.createWriteStream(tmpFileSavePath)
@@ -540,37 +568,26 @@ export async function downloadLarge(fileURL, filePath) {
                 console.log('下载完成:', filePath);
                 resolve(filePath);
             }).on('drain', function () {
-                let curByte = fileStream.bytesWritten;
-                if (Date.now() - startDate >= inteSecond * 1000) {
+                let downloadedBytes = fileStream.bytesWritten;
+                if (Date.now() - startDate >= logSecondInterval * 1000) {
+                    let speed = (downloadedBytes / 1024 / (Date.now() - curDate) * 1000).toFixed(2);
+                    console.log('正在下载[' + fileName + ']，完成[' + (100 * downloadedBytes / totalBytes).toFixed(2) + '%]，当前['
+                        + (downloadedBytes / 1024 / 1024).toFixed(2) + '/' + (totalBytes / 1024 / 1024).toFixed(2) + ']M，'
+                        + '速度[' + speed + 'Kb/S]，预计还需[' + ((totalBytes - downloadedBytes) / 1024 / speed / 60).toFixed(2) + ']分钟');
                     startDate = Date.now();
-                    console.log('文件下载[' + filePath + ']，当前完成：' + (100 * curByte / fsize).toFixed(2)
-                        + '%，大小[' + (curByte / 1024 / 1024).toFixed(2) + '/'
-                        + (fsize / 1024 / 1024).toFixed(2) + ']M');
-                    // process.stdout.write((curByte / fsize * 100).toFixed(4) + '%  ');
+                    // process.stdout.write((downloadedBytes / totalBytes * 100).toFixed(4) + '%  ');
                 }
             });
-
         //请求文件
         fetch(fileURL, {
             method: 'GET',
             headers: {'Content-Type': 'application/octet-stream'},
+            ...options || {},
             // timeout: 60000,
         }).then(res => {
             //获取请求头中的文件大小数据
-            fsize = res.headers.get("content-length");
-            inteSecond = Math.max(1, Math.round(fsize / 1024 / 1024 / 10));
-
-            /*//创建进度
-            let str = progressStream({
-                length: fsize,
-                time: 100 /!* ms *!/
-            });
-            // 下载进度
-            str.on('progress', function (progressData) {
-                //不换行输出
-                let percentage = Math.round(progressData.percentage) + '%';
-                console.log(percentage);
-            });*/
+            totalBytes = res.headers.get("content-length");
+            logSecondInterval = Math.max(1, Math.round(totalBytes / 1024 / 1024 / 10));
             res.body/*.pipe(str)*/.pipe(fileStream);
         }).catch(e => {
             reject(e);
@@ -616,6 +633,44 @@ export function delFolder(dir_path) {
         fs.rmdirSync(dir_path);
     }
 };
+
+
+/**
+ * 移动文件夹
+ * @param fromFolder
+ * @param toFolder
+ * @returns {Promise<unknown>}
+ */
+export function moveFolder(fromFolder, toFolder) {
+    return new Promise((resolve, reject) => {
+        fse.move(fromFolder, toFolder, {overwrite: true}, err => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        })
+    });
+}
+
+/**
+ * 删除文件夹
+ * @param fromFolder
+ * @param toFolder
+ * @returns {Promise<unknown>}
+ */
+export function removeFolder(folder) {
+    return new Promise((resolve, reject) => {
+        fse.remove(folder, err => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
 
 /**
  * 根据图标生成指定大小的缩略图，以显示在菜单前

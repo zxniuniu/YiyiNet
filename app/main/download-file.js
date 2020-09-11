@@ -5,7 +5,7 @@ import AsyncLock from 'async-lock';
 import {
     downloadFile,
     downloadLarge,
-    extractZip,
+    extractTar,
     getChromedriverExeName,
     getChromedriverFilePath,
     getElectronCachePath,
@@ -14,14 +14,14 @@ import {
     getPythonFilePath,
     getPythonFolder,
     getRedirected,
+    getUserData,
     getV2rayCoreExe,
     getYoutubeDlExe,
-    pastDays
+    moveFolder,
+    pastDays,
+    removeFolder
 } from "../utils";
 import store from "../configs/settings";
-
-let fetch = require('node-fetch');
-let zlib = require('zlib');
 
 // https://doc.fastgit.org/zh-cn/node.html#%E8%8A%82%E7%82%B9%E5%88%97%E8%A1%A8
 let githubUrlLists = ['https://hub.fastgit.org', 'https://github.com.cnpmjs.org', 'https://github.com'];
@@ -313,37 +313,39 @@ function downloadV2rayCore() {
     }
 }
 
-function downloadJre() {
+async function downloadJre() {
     let jreExe = getJrePath();
-    if (!fs.existsSync(jreExe)) {
+    let jreStatus = store.get('INSTALL.JRE_STATUS', false);
+    if (!fs.existsSync(jreExe) || !jreStatus) {
         let version = '8u131', buildNum = '11';
+        // https://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jre-8u131-windows-x64.tar.gz
         let url = getJreDownloadUrl(version, buildNum);
 
-        let fileTar = path.join(getElectronCachePath(), 'jre222.tar.gz');
-        let fileStream = fs.createWriteStream(fileTar)
-            .on('error', function (e) {
-                console.error('error==>', e);
-            }).on('finish', function () {
-                //下载完成后解压缩文件
-                extractZip(fileTar, getJreFolder()).then(() => {
-                    console.log('下载完成:', fileTar);
-                    // store.set('TOOLS.V2RAY_CORE', true);
-                });
+        let fileTar = path.join(getElectronCachePath(), url.substring(url.lastIndexOf('/') + 1, url.length));
+        if (!fs.existsSync(fileTar)) {
+            await downloadLarge(url, fileTar, {
+                headers: {
+                    connection: 'keep-alive',
+                    'Cookie': 'gpw_e24=http://www.oracle.com/; oraclelicense=accept-securebackup-cookie'
+                },
+                agent: null,
+                insecureHTTPParser: true
             });
-        fetch(url, {
-            headers: {
-                connection: 'keep-alive',
-                'Cookie': 'gpw_e24=http://www.oracle.com/; oraclelicense=accept-securebackup-cookie'
-            },
-            agent: null,
-            insecureHTTPParser: true
-        }).then(res => {
-            console.dir(res.headers); // application/x-gzip
+            console.log('Jre下载成功，使用路径:', url);
+        }
 
-            res.body.pipe(fileStream);
-        });
+        //下载完成后解压缩文件
+        let jreFolder = getJreFolder(), userData = getUserData();
+        extractTar(fileTar, userData).then(() => {
+            let subFolder = 'jre1.' + version.replace('u', '.0_');
+            moveFolder(path.join(userData, subFolder), jreFolder).then(() => {
+                console.log('Jre解压成功，解压到:', jreFolder);
+                store.set('INSTALL.JRE_STATUS', true);
 
-        // .pipe(tar.extract(jreDir()));
+                removeFolder(path.join(userData, subFolder)).then(() => {
+                });
+            })
+        })
 
         function getJreDownloadUrl(version, buildNum) {
             let hash = 'd54c1d3a095b4ff2b6607d096fa80163';
@@ -355,6 +357,8 @@ function downloadJre() {
             return 'https://download.oracle.com/otn-pub/java/jdk/' + version + '-b' + buildNum
                 + '/' + hash + '/jre-' + version + '-' + platform + '-' + arch + '.tar.gz';
         }
+    } else {
+        store.set('INSTALL.JRE_STATUS', true);
     }
 }
 
@@ -363,5 +367,7 @@ export function downloadAllTools() {
     downloadYoutubeDl();
 
     downloadV2rayCore();
+
+    downloadJre();
 
 }

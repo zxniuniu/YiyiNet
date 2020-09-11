@@ -1,8 +1,17 @@
 import path from "path";
 import store from './../configs/settings';
-import fse from 'fs-extra';
+import fs from 'fs';
 
-import {fastMozillaUrl, fastNpmUrl, getChromeFilePath, getFirefoxFilePath, getUserData, packageJson} from "../utils";
+import {
+    fastMozillaUrl,
+    fastNpmUrl,
+    getChromeFilePath,
+    getFirefoxFilePath,
+    getUserData,
+    moveFolder,
+    packageJson,
+    removeFolder
+} from "../utils";
 
 export function puppeteerCoreInstallFinishEvent(moduleStr, version) {
     downloadChrome();
@@ -17,7 +26,7 @@ export function puppeteerCoreInstallFinishEvent(moduleStr, version) {
 function downloadChrome() {
     // 下载Chrome
     let chromeFilePath = getChromeFilePath();
-    if (!fse.existsSync(chromeFilePath)) {
+    if (!fs.existsSync(chromeFilePath)) {
         downloadBrowser(chromeFilePath, 'chrome');
     } else {
         store.set('TOOLS.CHROME_STATUS', true);
@@ -31,7 +40,7 @@ function downloadChrome() {
 function downloadFirefox() {
     // 下载Firefox
     let firefoxFilePath = getFirefoxFilePath();
-    if (!fse.existsSync(firefoxFilePath)) {
+    if (!fs.existsSync(firefoxFilePath)) {
         downloadBrowser(firefoxFilePath, 'firefox');
     } else {
         store.set('TOOLS.FIREFOX_STATUS', true);
@@ -72,20 +81,21 @@ async function downloadBrowser(exePath, type) {
     browserFetcher.download(storeVer, (downloadedBytes, totalBytes) => {
         if (Date.now() - startDate >= logSecondInterval * 1000) {
             let speed = (downloadedBytes / 1024 / (Date.now() - curDate) * 1000).toFixed(2);
-            console.log('正在下载' + type + '，完成[' + (100 * downloadedBytes / totalBytes).toFixed(2) + '%]，当前['
+            console.log('正在下载[' + type + ']，完成[' + (100 * downloadedBytes / totalBytes).toFixed(2) + '%]，当前['
                 + (downloadedBytes / 1024 / 1024).toFixed(2) + '/' + (totalBytes / 1024 / 1024).toFixed(2) + ']M，'
                 + '速度[' + speed + 'Kb/S]，预计还需[' + ((totalBytes - downloadedBytes) / 1024 / speed / 60).toFixed(2) + ']分钟');
             startDate = Date.now();
         }
     }).then(revisionInfo => {
         // console.dir(revisionInfo);
-        fse.move(path.dirname(revisionInfo.executablePath), path.dirname(exePath), {overwrite: true}, err => {
+        moveFolder(path.dirname(revisionInfo.executablePath), path.dirname(exePath)).then(err => {
             if (err) {
                 return console.error(err);
             } else {
                 store.set('TOOLS.' + type.toUpperCase() + '_STATUS', true);
-                fse.remove(revisionInfo.folderPath).then(() => {
-                    console.log('浏览器[' + type + ']下载成功，链接：' + revisionInfo.url);
+                console.log('浏览器[' + type + ']下载成功，链接：' + revisionInfo.url);
+
+                removeFolder(revisionInfo.folderPath).then(() => {
                 });
             }
         })
