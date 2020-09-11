@@ -18,9 +18,12 @@ let fetch = require("node-fetch");
 // import {DownloaderHelper} from 'node-downloader-helper';
 
 /*
-var remote = require('electron').remote; var app = remote.app;
-var path = require('path'); var fs = require('fs'); var fetch = require("node-fetch");
-var http = require('http'); var https = require('https'); var net = require('net');
+let remote = require('electron').remote; let app = remote.app;
+let path = require('path'); let fs = require('fs'); let fetch = require("node-fetch");
+let http = require('http'); let https = require('https'); let net = require('net');
+let StreamZip = require('node-stream-zip');
+let fse = require('live-plugin-manager/node_modules/fs-extra');
+let tar = require('live-plugin-manager/node_modules/tar');
 */
 
 /**
@@ -202,6 +205,7 @@ export const getFirefoxFilePath = () => {
     return path.join(getFirefoxFolder(), getFirefoxExeName());
 };
 
+// =====================================================================================================================
 /**
  * 获取Jre所在路径
  */
@@ -214,6 +218,36 @@ export const getJreFolder = () => {
  */
 export const getJrePath = () => {
     return path.join(getJreFolder(), 'bin', 'java.exe');
+};
+
+// =====================================================================================================================
+/**
+ * 获取7Zip所在路径
+ */
+export const get7ZipFolder = () => {
+    return checkPath(path.join(getToolsPath(), '7zip'));
+};
+
+/**
+ * 获取7Zip所在路径（exe路径）
+ */
+export const get7ZipPath = () => {
+    return path.join(get7ZipFolder(), '7za.exe');
+};
+
+// =====================================================================================================================
+/**
+ * 获取Nox所在路径
+ */
+export const getNoxFolder = () => {
+    return checkPath(path.join(getUserData(), 'Nox'));
+};
+
+/**
+ * 获取Jre所在路径（exe路径）
+ */
+export const getNoxPath = () => {
+    return path.join(getNoxFolder(), 'bin', 'Nox.exe');
 };
 
 // =====================================================================================================================
@@ -404,7 +438,7 @@ export function extractTar(tarFile, folder) {
             cwd: folder,
             file: tarFile
         }).then(() => {
-            resolve();
+            resolve(folder);
         }).catch((err) => {
             reject(err);
         })
@@ -578,6 +612,7 @@ export async function downloadLarge(fileURL, filePath, options) {
                     // process.stdout.write((downloadedBytes / totalBytes * 100).toFixed(4) + '%  ');
                 }
             });
+
         //请求文件
         fetch(fileURL, {
             method: 'GET',
@@ -585,16 +620,38 @@ export async function downloadLarge(fileURL, filePath, options) {
             ...options || {},
             // timeout: 60000,
         }).then(res => {
-            //获取请求头中的文件大小数据
-            totalBytes = res.headers.get("content-length");
-            logSecondInterval = Math.max(1, Math.round(totalBytes / 1024 / 1024 / 10));
-            res.body/*.pipe(str)*/.pipe(fileStream);
+            if (res.headers.get('redirected')) {
+                let redUrl = res.headers.get('location') || res.headers.get('content-location');
+                console.log('跳转链接: ' + redUrl + '，原链接：' + fileURL);
+                downloadLarge(redUrl, filePath, options);
+            } else {
+                //获取请求头中的文件大小数据
+                totalBytes = res.headers.get("content-length");
+                logSecondInterval = Math.max(1, Math.round(totalBytes / 1024 / 1024 / 10));
+                res.body/*.pipe(str)*/.pipe(fileStream);
+            }
         }).catch(e => {
             reject(e);
         });
     });
 }
 
+/**
+ * 下载OneDriver共享文件
+ * @param fileUrl
+ * @returns {Promise<void>}
+ */
+export async function downloadOneDriver(fileURL, filePath, options) {
+    // https://github.com/aploium/OneDrive-Direct-Link
+    fileURL = fileURL.replace('1drv.ms', '1drv.ws');
+    return downloadLarge(fileURL, filePath, options);
+}
+
+/**
+ * 睡眠毫秒
+ * @param ms
+ * @returns {Promise<unknown>}
+ */
 export function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }

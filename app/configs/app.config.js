@@ -37,7 +37,8 @@ const config = {
             V2RAY_STATUS: false, // 是否启动
             V2RAY_DATE: 0, // v2ray下载日期
             CHROME_STATUS: false, // 是否下载
-            FIREFOX_STATUS: false // 是否下载
+            FIREFOX_STATUS: false, // 是否下载
+            ZIP7_STATUS: false,
         }
     },
     storeValue: {

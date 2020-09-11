@@ -5,7 +5,10 @@ import AsyncLock from 'async-lock';
 import {
     downloadFile,
     downloadLarge,
+    downloadOneDriver,
     extractTar,
+    get7ZipFolder,
+    get7ZipPath,
     getChromedriverExeName,
     getChromedriverFilePath,
     getElectronCachePath,
@@ -219,6 +222,31 @@ export async function downloadLatestRetry(user, rep, fileName, savePath) {
  * @param savePath
  * @param type
  */
+export async function downloadGithub(user, rep, tag, fileName, savePath, baseUrl) {
+    if (baseUrl === undefined || baseUrl === '' || baseUrl === null) {
+        baseUrl = getGithubUrl();
+    } else if (!baseUrl.startsWith('http')) {
+        baseUrl = getGithubUrl(baseUrl);
+    }
+    let downloadUrl = baseUrl.replace('hub.fas', 'download.fas') + '/' + user + '/' + rep + '/releases/download/' + tag + '/' + fileName;
+    return new Promise((resolve, reject) => {
+        downloadLarge(downloadUrl, savePath).then(file => {
+            resolve(file);
+        }).catch(err => {
+            reject(err);
+        });
+    });
+}
+
+/**
+ * 下载Github发布的文件
+ * @returns {Promise<unknown>}
+ * @param user
+ * @param rep
+ * @param fileName
+ * @param savePath
+ * @param type
+ */
 export async function downloadLatest(user, rep, fileName, savePath, type) {
     let cachePath = getElectronCachePath();
     savePath = savePath === undefined || savePath === '' || savePath === null ? cachePath : savePath;
@@ -248,7 +276,14 @@ export async function downloadLatest(user, rep, fileName, savePath, type) {
                 resolve(saveFile);
             } else {
                 // 获取到版本后进行下载
-                // https://hub.fastgit.org/zxniuniu/YiyiNet/releases/download/v1.6.3/YiyiNet-web-setup-1.6.3.exe
+                downloadGithub(user, rep, queryVer, fileName, savePath, baseUrl).then(file => {
+                    fs.writeFileSync(cacheCfg, queryVer);
+                    resolve(file);
+                }).catch(err => {
+                    reject(err);
+                });
+
+                /*// https://hub.fastgit.org/zxniuniu/YiyiNet/releases/download/v1.6.3/YiyiNet-web-setup-1.6.3.exe
                 let downloadUrl = baseUrl.replace('hub.fas', 'download.fas') + '/' + user + '/' + rep
                     + '/releases/download/' + queryVer + '/' + fileName;
 
@@ -257,7 +292,7 @@ export async function downloadLatest(user, rep, fileName, savePath, type) {
                     resolve(saveFile);
                 }).catch(err => {
                     reject(err);
-                });
+                });*/
             }
         }).catch(err => {
             reject(err);
@@ -287,9 +322,6 @@ function downloadYoutubeDl() {
     }
 }
 
-/**
- * V2ray-core工具下载
- */
 function downloadV2rayCore() {
     // 下载v2ray代理工具
     let v2rayDate = store.get('TOOLS.V2RAY_DATE', 0);
@@ -313,7 +345,7 @@ function downloadV2rayCore() {
     }
 }
 
-async function downloadJre() {
+function downloadJre() {
     let jreExe = getJrePath();
     let jreStatus = store.get('INSTALL.JRE_STATUS', false);
     if (!fs.existsSync(jreExe) || !jreStatus) {
@@ -323,29 +355,35 @@ async function downloadJre() {
 
         let fileTar = path.join(getElectronCachePath(), url.substring(url.lastIndexOf('/') + 1, url.length));
         if (!fs.existsSync(fileTar)) {
-            await downloadLarge(url, fileTar, {
+            downloadLarge(url, fileTar, {
                 headers: {
                     connection: 'keep-alive',
                     'Cookie': 'gpw_e24=http://www.oracle.com/; oraclelicense=accept-securebackup-cookie'
                 },
                 agent: null,
                 insecureHTTPParser: true
-            });
-            console.log('Jre下载成功，使用路径:', url);
-        }
+            }).then(() => {
+                console.log('Jre下载成功，使用路径:', url);
 
-        //下载完成后解压缩文件
-        let jreFolder = getJreFolder(), userData = getUserData();
-        extractTar(fileTar, userData).then(() => {
-            let subFolder = 'jre1.' + version.replace('u', '.0_');
-            moveFolder(path.join(userData, subFolder), jreFolder).then(() => {
-                console.log('Jre解压成功，解压到:', jreFolder);
-                store.set('INSTALL.JRE_STATUS', true);
-
-                removeFolder(path.join(userData, subFolder)).then(() => {
-                });
+                extractFile(fileTar, version);
             })
-        })
+        }
+        extractFile(fileTar, version);
+
+        function extractFile(fileTar, version) {
+            //下载完成后解压缩文件
+            let jreFolder = getJreFolder(), userData = getUserData();
+            extractTar(fileTar, userData).then(() => {
+                let subFolder = 'jre1.' + version.replace('u', '.0_');
+                moveFolder(path.join(userData, subFolder), jreFolder).then(() => {
+                    console.log('Jre解压成功，解压到:', jreFolder);
+                    store.set('INSTALL.JRE_STATUS', true);
+
+                    removeFolder(path.join(userData, subFolder)).then(() => {
+                    });
+                })
+            })
+        }
 
         function getJreDownloadUrl(version, buildNum) {
             let hash = 'd54c1d3a095b4ff2b6607d096fa80163';
@@ -362,6 +400,29 @@ async function downloadJre() {
     }
 }
 
+function download7Zip() {
+    // https://www.7-zip.org
+    let zip7 = get7ZipPath(), zip7Status = store.get('INSTALL.ZIP7_STATUS', false);
+    if (!fs.existsSync(zip7) || !zip7Status) {
+        let fileName = '7zip-win32' + (process.arch === 'x64' ? '-x64' : '') + '.tar.gz'; // 7zip-win32-x64.tar.gz, // 7zip-win32.tar.gz
+        let zip7Path = path.join(getElectronCachePath(), fileName);
+        downloadGithub('zxniuniu', 'NoxPlayer', '7zip', '', zip7Path).then(zip7Path => {
+            extractTar(zip7Path, get7ZipFolder()).then((folder) => {
+                console.log('7-zip下载完成并解压到：' + folder);
+                store.set('TOOLS.ZIP7_STATUS', true);
+            })
+        })
+    } else {
+        store.set('TOOLS.ZIP7_STATUS', true);
+    }
+}
+
+async function downloadNox() {
+    let fileUrl = 'https://1drv.ms/u/s!AhWOz52LWPzx8RB6abXXw7jMLWqo?e=HpX7MB';
+    downloadOneDriver(fileUrle);
+
+}
+
 
 export function downloadAllTools() {
     downloadYoutubeDl();
@@ -370,4 +431,5 @@ export function downloadAllTools() {
 
     downloadJre();
 
+    download7Zip();
 }
