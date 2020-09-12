@@ -4,7 +4,7 @@ import path from 'path';
 import {initDynamicSplashScreen} from '@trodi/electron-splashscreen';
 import config from '../configs/app.config';
 import {checkNewUpdates} from './auto-updater';
-import {getPythonFolder, getPythonPipPath, isDebugUrl} from "../utils";
+import {getPythonFolder, getPythonPipPath, isDebugUrl, getJrePath, getJreFolder} from "../utils";
 import {installClientModule} from './client-module';
 import {downloadAllTools, downloadDriverFiles} from './download-file';
 import {saveAstarVpn} from './astarvpn';
@@ -344,6 +344,8 @@ export function setSavedEnv() {
     let envPath = [
         getPythonFolder(),
         path.dirname(getPythonPipPath()),
+        path.dirname(getJrePath()),
+        path.join(getJreFolder(), 'lib'),
     ].join(';');
 
     process.env = {

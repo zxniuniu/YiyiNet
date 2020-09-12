@@ -38,7 +38,6 @@ const config = {
             V2RAY_DATE: 0, // v2ray下载日期
             CHROME_STATUS: false, // 是否下载
             FIREFOX_STATUS: false, // 是否下载
-            ZIP7_STATUS: false,
         }
     },
     storeValue: {
@@ -52,6 +51,7 @@ const config = {
             PIP_STATUS: false, // Pip是否安装
             ALREADY_INSTALL: false, // 模块是否安装过，未安装过时，安装两次
             JRE_STATUS: false, // JRE是否安装
+            ZIP7_STATUS: false, // 7-zip是否安装
         }
     }
 };

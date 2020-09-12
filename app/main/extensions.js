@@ -1,6 +1,6 @@
 import path from 'path';
 import {BrowserWindow, session} from 'electron';
-import {changePermissions, delFolder, downloadFile, getExtensionsPathCache, getExtensionsPathSys} from "../utils";
+import {changePermissions, removeFolder, downloadFile, getExtensionsPathCache, getExtensionsPathSys} from "../utils";
 import fs from "fs";
 
 import unzip from "unzip-crx";
@@ -112,7 +112,7 @@ export const downloadChromeExtension = (chromeStoreID, forceDownload, attempts =
     return new Promise((resolve, reject) => {
         if (!fs.existsSync(extensionFolder) || forceDownload) {
             if (fs.existsSync(extensionFolder)) {
-                delFolder(extensionFolder);
+                removeFolder(extensionFolder);
             }
             const fileURL = `https://clients2.google.com/service/update2/crx?response=redirect&acceptformat=crx2,crx3&x=id%3D${chromeStoreID}%26uc&prodversion=32`; // eslint-disable-line
             const filePath = path.resolve(`${extensionFolder}.crx`);

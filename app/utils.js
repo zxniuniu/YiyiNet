@@ -18,12 +18,9 @@ let fetch = require("node-fetch");
 // import {DownloaderHelper} from 'node-downloader-helper';
 
 /*
-let remote = require('electron').remote; let app = remote.app;
-let path = require('path'); let fs = require('fs'); let fetch = require("node-fetch");
+let remote = require('electron').remote; let app = remote.app; let path = require('path'); let fs = require('fs'); let fetch = require("node-fetch");
 let http = require('http'); let https = require('https'); let net = require('net');
-let StreamZip = require('node-stream-zip');
-let fse = require('live-plugin-manager/node_modules/fs-extra');
-let tar = require('live-plugin-manager/node_modules/tar');
+let StreamZip = require('node-stream-zip'); let fse = require('live-plugin-manager/node_modules/fs-extra'); let tar = require('live-plugin-manager/node_modules/tar');
 */
 
 /**
@@ -413,7 +410,8 @@ export function extractZip(zipFile, folder) {
         });
         zip.on('error', err => {
             // 如果出错，说明压缩包有问题，将其删除
-            fs.unlinkSync(zipFile);
+            // fs.unlinkSync(zipFile);
+            zip.close();
             reject(err);
         });
         zip.on('ready', () => {
@@ -540,7 +538,7 @@ export async function getRedirected(url) {
             redirect: 'manual',
             follow: 0
         }).then(res => {
-            resolve(res.headers.get('location'));
+            resolve(res.headers.get('location') || res.headers.get('content-location'));
         }).catch(err => {
             reject(err);
         })
@@ -576,9 +574,9 @@ export async function downloadSmall(url, filePath, options) {
 
 /**
  * 下载大文件
- * @param fileURL
+ * @param fileURL 文件下载路径
  * @param filePath 文件保存位置，包括文件名
- * @param options
+ * @param options node-fetch的参数
  * @returns {Promise<unknown>}
  */
 export async function downloadLarge(fileURL, filePath, options) {
@@ -638,7 +636,9 @@ export async function downloadLarge(fileURL, filePath, options) {
 
 /**
  * 下载OneDriver共享文件
- * @param fileUrl
+ * @param fileURL 文件下载路径
+ * @param filePath 文件保存位置，包括文件名
+ * @param options node-fetch的参数
  * @returns {Promise<void>}
  */
 export async function downloadOneDriver(fileURL, filePath, options) {
@@ -648,8 +648,212 @@ export async function downloadOneDriver(fileURL, filePath, options) {
 }
 
 /**
+ * 获取Github基础地址
+ * @param type 类型：github, cnpmjs, fastgit或简写
+ * @returns {string}
+ */
+export function getGithubUrl(type) {
+    // https://doc.fastgit.org/zh-cn/node.html#%E8%8A%82%E7%82%B9%E5%88%97%E8%A1%A8
+    let githubUrlLists = ['https://hub.fastgit.org', 'https://github.com.cnpmjs.org', 'https://github.com'];
+
+    type = type === undefined || type === '' || type === null ? 'fastgit' : type;
+    if (type === 'g' || type === 'git' || type === 'github' || type === 'default') {
+        return githubUrlLists[2];
+    } else if (type === 'c' || type === 'npm' || type === 'cnpm' || type === 'cnpmjs') {
+        return githubUrlLists[1];
+    } else {
+        return githubUrlLists[0];
+    }
+}
+
+/**
+ * 使用不同的镜像路径下载最新release版本
+ * @param user
+ * @param rep
+ * @param fileName 文件名称
+ * @param savePath 保存路径（不含文件名）
+ * @returns {Promise<void>}
+ */
+export async function downloadLatestRetry(user, rep, fileName, savePath) {
+    return new Promise((resolve, reject) => {
+        downloadLatest(user, rep, fileName, savePath, 'cnpmjs').then(fp => {
+            resolve(fp);
+        }).catch(err => {
+            downloadLatest(user, rep, fileName, savePath, 'fastgit').then(fp => {
+                resolve(fp);
+            }).catch(err2 => {
+                downloadLatest(user, rep, fileName, savePath, 'github').then(fp => {
+                    resolve(fp);
+                }).catch(err3 => {
+                    reject('从cnpmjs, fastgit, github尝试下载均失败:' + err + err2 + err3);
+                })
+            })
+        })
+    });
+}
+
+/**
+ * 下载Github发布的文件
+ * @returns {Promise<unknown>}
+ * @param user
+ * @param rep
+ * @param fileName 文件名称
+ * @param savePath 保存路径（不含文件名）
+ * @param baseUrl_type 类型：github, cnpmjs, fastgit或简写
+ */
+export async function downloadGithub(user, rep, tag, fileName, savePath, baseUrl_type) {
+    if (baseUrl_type === undefined || baseUrl_type === '' || baseUrl_type === null) {
+        baseUrl_type = getGithubUrl();
+    } else if (!baseUrl_type.startsWith('http')) {
+        baseUrl_type = getGithubUrl(baseUrl_type);
+    }
+    let downloadUrl = baseUrl_type.replace('hub.fas', 'download.fas') + '/' + user + '/'
+        + rep + '/releases/download/' + tag + '/' + fileName;
+    return new Promise((resolve, reject) => {
+        downloadLarge(downloadUrl, path.join(savePath, fileName)).then(file => {
+            resolve(file);
+        }).catch(err => {
+            reject(err);
+        });
+    });
+}
+
+/**
+ * 获取Github最新的Tag
+ * @returns {Promise<unknown>}
+ * @param user
+ * @param rep
+ * @param baseUrl_type 类型：github, cnpmjs, fastgit或简写
+ */
+export async function getGithubLatestTag(user, rep, type) {
+    return new Promise((resolve, reject) => {
+        // https://hub.fastgit.org/zxniuniu/YiyiNet/releases/latest
+        let baseUrl = getGithubUrl(type);
+        let latestUrl = baseUrl + '/' + user + '/' + rep + '/releases/latest';
+
+        getRedirected(latestUrl).then(newUrl => {
+            if (newUrl === null) {
+                reject('获取[' + user + '/' + rep + ']版本失败，获取结果为空');
+            }else{
+                // 获取最新的版本信息
+                let queryVer = newUrl.substring(newUrl.lastIndexOf('/') + 1, newUrl.length);
+
+                console.log('获取[' + user + '/' + rep + ']新版本[' + queryVer + ']');
+                resolve(queryVer);
+            }
+        }).catch(err => {
+            reject(err);
+        });
+    });
+}
+
+/**
+ * 下载Github发布的文件
+ * @returns {Promise<unknown>}
+ * @param user
+ * @param rep
+ * @param fileName 文件名称
+ * @param savePath 保存路径（不含文件名）
+ * @param type 类型：github, cnpmjs, fastgit或简写
+ */
+export async function downloadLatest(user, rep, fileName, savePath, type) {
+    let cachePath = getElectronCachePath();
+    savePath = savePath === undefined || savePath === '' || savePath === null ? cachePath : savePath;
+
+    return new Promise((resolve, reject) => {
+        // https://hub.fastgit.org/zxniuniu/YiyiNet/releases/latest
+        let baseUrl = getGithubUrl(type);
+        getGithubLatestTag(user, rep, type).then(queryVer => {
+            fileName = fileName.replace('{ver}', queryVer.replace('v', ''));
+            let saveFile = path.join(savePath, fileName);
+
+            // 判断当前文件是否已经下载
+            let cacheCfgName = fileName.substring(0, fileName.lastIndexOf('.')) + '-' + queryVer + '.cfg';
+            let cacheCfg = path.join(cachePath, cacheCfgName);
+            if (fs.existsSync(cacheCfg) && fs.existsSync(saveFile)) {
+                // TODO 解决是下载的最新，还是本来就是最新的
+                resolve(saveFile);
+            } else {
+                // 获取到版本后进行下载
+                downloadGithub(user, rep, queryVer, fileName, savePath, type).then(file => {
+                    fs.writeFileSync(cacheCfg, queryVer);
+                    resolve(file);
+                }).catch(err => {
+                    reject(err);
+                });
+                /*// https://hub.fastgit.org/zxniuniu/YiyiNet/releases/download/v1.6.3/YiyiNet-web-setup-1.6.3.exe
+                let downloadUrl = baseUrl.replace('hub.fas', 'download.fas') + '/' + user + '/'
+                    + rep + '/releases/download/' + queryVer + '/' + fileName;
+
+                downloadLarge(downloadUrl, saveFile).then(file => {
+                    fs.writeFileSync(cacheCfg, queryVer);
+                    resolve(saveFile);
+                }).catch(err => {
+                    reject(err);
+                });*/
+            }
+        }).catch(err => {
+            reject(err);
+        });
+    });
+}
+
+/**
+ * 下载Github发布的多个文件
+ * @returns {Promise<unknown>}
+ * @param user
+ * @param rep
+ * @param fileNames 文件名称
+ * @param savePath 保存路径（不含文件名）
+ * @param type 类型：github, cnpmjs, fastgit或简写
+ */
+export async function downloadLatestMultiFile(user, rep, fileNameList, savePath, type) {
+    let cachePath = getElectronCachePath();
+    savePath = savePath === undefined || savePath === '' || savePath === null ? cachePath : savePath;
+
+    return new Promise((resolve, reject) => {
+        let baseUrl = getGithubUrl(type);
+        getGithubLatestTag(user, rep, type).then(queryVer => {
+            fileNameList.forEach(fileName => {
+                fileName = fileName.replace('{ver}', queryVer.replace('v', ''));
+                let saveFile = path.join(savePath, fileName);
+
+                // 判断当前文件是否已经下载
+                let cacheCfgName = fileName.substring(0, fileName.lastIndexOf('.')) + '-' + queryVer + '.cfg';
+                let cacheCfg = path.join(cachePath, cacheCfgName);
+                if (fs.existsSync(cacheCfg) && fs.existsSync(saveFile)) {
+                    // TODO 解决是下载的最新，还是本来就是最新的
+                    resolve(saveFile);
+                } else {
+                    // 获取到版本后进行下载
+                    downloadGithub(user, rep, queryVer, fileName, savePath, type).then(file => {
+                        fs.writeFileSync(cacheCfg, queryVer);
+                        resolve(file);
+                    }).catch(err => {
+                        reject(err);
+                    });
+                    /*// https://hub.fastgit.org/zxniuniu/YiyiNet/releases/download/v1.6.3/YiyiNet-web-setup-1.6.3.exe
+                    let downloadUrl = baseUrl.replace('hub.fas', 'download.fas') + '/' + user + '/'
+                        + rep + '/releases/download/' + queryVer + '/' + fileName;
+
+                    downloadLarge(downloadUrl, saveFile).then(file => {
+                        fs.writeFileSync(cacheCfg, queryVer);
+                        resolve(saveFile);
+                    }).catch(err => {
+                        reject(err);
+                    });*/
+                }
+            });
+        }).catch(err => {
+            reject(err);
+        });
+    });
+}
+
+// =====================================================================================================================
+/**
  * 睡眠毫秒
- * @param ms
+ * @param ms 暂停毫秒数
  * @returns {Promise<unknown>}
  */
 export function sleep(ms) {
@@ -673,26 +877,6 @@ export const changePermissions = (dir, mode) => {
 };
 
 /**
- * 删除文件夹
- * @param {string} dir_path
- * @see https://stackoverflow.com/a/42505874/3027390
- */
-export function delFolder(dir_path) {
-    if (fs.existsSync(dir_path)) {
-        fs.readdirSync(dir_path).forEach(function (entry) {
-            let entry_path = path.join(dir_path, entry);
-            if (fs.lstatSync(entry_path).isDirectory()) {
-                delFolder(entry_path);
-            } else {
-                fs.unlinkSync(entry_path);
-            }
-        });
-        fs.rmdirSync(dir_path);
-    }
-};
-
-
-/**
  * 移动文件夹
  * @param fromFolder
  * @param toFolder
@@ -712,8 +896,8 @@ export function moveFolder(fromFolder, toFolder) {
 
 /**
  * 删除文件夹
- * @param fromFolder
- * @param toFolder
+ * @param folder
+ * @see https://stackoverflow.com/a/42505874/3027390
  * @returns {Promise<unknown>}
  */
 export function removeFolder(folder) {
@@ -726,8 +910,19 @@ export function removeFolder(folder) {
             }
         });
     });
-}
 
+    /*if (fs.existsSync(dir_path)) {
+        fs.readdirSync(dir_path).forEach(function (entry) {
+            let entry_path = path.join(dir_path, entry);
+            if (fs.lstatSync(entry_path).isDirectory()) {
+                delFolder(entry_path);
+            } else {
+                fs.unlinkSync(entry_path);
+            }
+        });
+        fs.rmdirSync(dir_path);
+    }*/
+}
 
 /**
  * 根据图标生成指定大小的缩略图，以显示在菜单前
@@ -825,20 +1020,6 @@ export function toggleShowHide(mainWindow) {
             mainWindow.focus();
         }
     }
-}
-
-/**
- * 获取Appium端口
- */
-export function getAppiumPort() {
-    return store.get('APPIUM_PORT');
-}
-
-/**
- * 获取chromedriver端口
- */
-export function getChromedriverPort() {
-    return store.get('CHROMEDRIVER_PORT');
 }
 
 ipcMain.answerRenderer('utils', (funcName) => {

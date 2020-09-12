@@ -20,14 +20,17 @@ import {
     getUserData,
     getV2rayCoreExe,
     getYoutubeDlExe,
+    getToolsPath,
     moveFolder,
+    extractZip,
     pastDays,
-    removeFolder
+    removeFolder,
+    getGithubUrl,
+    downloadLatestRetry,
+    downloadGithub,
+    downloadLatest
 } from "../utils";
 import store from "../configs/settings";
-
-// https://doc.fastgit.org/zh-cn/node.html#%E8%8A%82%E7%82%B9%E5%88%97%E8%A1%A8
-let githubUrlLists = ['https://hub.fastgit.org', 'https://github.com.cnpmjs.org', 'https://github.com'];
 
 export function downloadDriverFiles() {
     downloadChromedriver();
@@ -176,130 +179,6 @@ function downloadPython() {
 
 }
 
-export function getGithubUrl(type) {
-    type = type === undefined || type === '' || type === null ? 'fastgit' : type;
-    if (type === 'g' || type === 'git' || type === 'github' || type === 'default') {
-        return githubUrlLists[2];
-    } else if (type === 'c' || type === 'npm' || type === 'cnpm' || type === 'cnpmjs') {
-        return githubUrlLists[1];
-    } else {
-        return githubUrlLists[0];
-    }
-}
-
-/**
- * 使用不同的镜像路径下载最新release版本
- * @param user
- * @param rep
- * @param fileName
- * @param savePath
- * @returns {Promise<void>}
- */
-export async function downloadLatestRetry(user, rep, fileName, savePath) {
-    return new Promise((resolve, reject) => {
-        downloadLatest(user, rep, fileName, savePath, 'cnpmjs').then(fp => {
-            resolve(fp);
-        }).catch(err => {
-            downloadLatest(user, rep, fileName, savePath, 'fastgit').then(fp => {
-                resolve(fp);
-            }).catch(err2 => {
-                downloadLatest(user, rep, fileName, savePath, 'github').then(fp => {
-                    resolve(fp);
-                }).catch(err3 => {
-                    reject('从cnpmjs, fastgit, github尝试下载均失败:' + err + err2 + err3);
-                })
-            })
-        })
-    });
-}
-
-/**
- * 下载Github发布的文件
- * @returns {Promise<unknown>}
- * @param user
- * @param rep
- * @param fileName
- * @param savePath
- * @param type
- */
-export async function downloadGithub(user, rep, tag, fileName, savePath, baseUrl) {
-    if (baseUrl === undefined || baseUrl === '' || baseUrl === null) {
-        baseUrl = getGithubUrl();
-    } else if (!baseUrl.startsWith('http')) {
-        baseUrl = getGithubUrl(baseUrl);
-    }
-    let downloadUrl = baseUrl.replace('hub.fas', 'download.fas') + '/' + user + '/' + rep + '/releases/download/' + tag + '/' + fileName;
-    return new Promise((resolve, reject) => {
-        downloadLarge(downloadUrl, savePath).then(file => {
-            resolve(file);
-        }).catch(err => {
-            reject(err);
-        });
-    });
-}
-
-/**
- * 下载Github发布的文件
- * @returns {Promise<unknown>}
- * @param user
- * @param rep
- * @param fileName
- * @param savePath
- * @param type
- */
-export async function downloadLatest(user, rep, fileName, savePath, type) {
-    let cachePath = getElectronCachePath();
-    savePath = savePath === undefined || savePath === '' || savePath === null ? cachePath : savePath;
-
-    return new Promise((resolve, reject) => {
-        // https://hub.fastgit.org/zxniuniu/YiyiNet/releases/latest
-        let baseUrl = getGithubUrl(type);
-        let latestUrl = baseUrl + '/' + user + '/' + rep + '/releases/latest';
-
-        getRedirected(latestUrl).then(newUrl => {
-            if (newUrl === null) {
-                reject('获取[' + user + '/' + rep + ']版本失败，获取结果为空，跳过下载');
-            }
-            console.log('获取[' + user + '/' + rep + ']版本新路径[' + newUrl + ']');
-
-            // 获取最新的版本信息
-            let queryVer = newUrl.substring(newUrl.lastIndexOf('/') + 1, newUrl.length);
-
-            fileName = fileName.replace('{ver}', queryVer.replace('v', ''));
-            let saveFile = path.join(savePath, fileName);
-
-            // 判断当前文件是否已经下载
-            let cacheCfgName = fileName.substring(0, fileName.lastIndexOf('.')) + '-' + queryVer + '.cfg';
-            let cacheCfg = path.join(cachePath, cacheCfgName);
-            if (fs.existsSync(cacheCfg) && fs.existsSync(saveFile)) {
-                // TODO 解决是下载的最新，还是本来就是最新的
-                resolve(saveFile);
-            } else {
-                // 获取到版本后进行下载
-                downloadGithub(user, rep, queryVer, fileName, savePath, baseUrl).then(file => {
-                    fs.writeFileSync(cacheCfg, queryVer);
-                    resolve(file);
-                }).catch(err => {
-                    reject(err);
-                });
-
-                /*// https://hub.fastgit.org/zxniuniu/YiyiNet/releases/download/v1.6.3/YiyiNet-web-setup-1.6.3.exe
-                let downloadUrl = baseUrl.replace('hub.fas', 'download.fas') + '/' + user + '/' + rep
-                    + '/releases/download/' + queryVer + '/' + fileName;
-
-                downloadLarge(downloadUrl, saveFile).then(file => {
-                    fs.writeFileSync(cacheCfg, queryVer);
-                    resolve(saveFile);
-                }).catch(err => {
-                    reject(err);
-                });*/
-            }
-        }).catch(err => {
-            reject(err);
-        });
-    });
-}
-
 /**
  * Youtube-Dl工具下载
  */
@@ -367,8 +246,9 @@ function downloadJre() {
 
                 extractFile(fileTar, version);
             })
+        }else {
+            extractFile(fileTar, version);
         }
-        extractFile(fileTar, version);
 
         function extractFile(fileTar, version) {
             //下载完成后解压缩文件
@@ -379,8 +259,7 @@ function downloadJre() {
                     console.log('Jre解压成功，解压到:', jreFolder);
                     store.set('INSTALL.JRE_STATUS', true);
 
-                    removeFolder(path.join(userData, subFolder)).then(() => {
-                    });
+                    // removeFolder(path.join(userData, subFolder)).then(() => {});
                 })
             })
         }
@@ -402,27 +281,33 @@ function downloadJre() {
 
 function download7Zip() {
     // https://www.7-zip.org
-    let zip7 = get7ZipPath(), zip7Status = store.get('INSTALL.ZIP7_STATUS', false);
+    // 7za.exe a -t7z -r -m0=LZMA2 -mx=9 test-7z-0-lzma2 jre
+    // 7za.exe a -t7z -r -m0=LZMA2 -mx9 -v90m test-7z-0-lzma2 jre
+    // 7za.exe x test-7z-0-lzma2.7z -oabc
+    let zip7Status = store.get('INSTALL.ZIP7_STATUS', false);
+    let zip7 = get7ZipPath();
     if (!fs.existsSync(zip7) || !zip7Status) {
-        let fileName = '7zip-win32' + (process.arch === 'x64' ? '-x64' : '') + '.tar.gz'; // 7zip-win32-x64.tar.gz, // 7zip-win32.tar.gz
-        let zip7Path = path.join(getElectronCachePath(), fileName);
-        downloadGithub('zxniuniu', 'NoxPlayer', '7zip', '', zip7Path).then(zip7Path => {
-            extractTar(zip7Path, get7ZipFolder()).then((folder) => {
-                console.log('7-zip下载完成并解压到：' + folder);
-                store.set('TOOLS.ZIP7_STATUS', true);
-            })
-        })
+        let fileName = '7zip-windows-' + (process.arch === 'x64' ? 'x64' : 'ia32') + '-{ver}.zip';
+        downloadLatestRetry('zxniuniu', '7-zip', fileName).then(filePath => {
+            let toolsPath = getToolsPath(), zip7Folder = get7ZipFolder();
+            extractZip(filePath, toolsPath).then(() => {
+                moveFolder(path.join(toolsPath, path.basename(filePath, '.zip')), zip7Folder).then(() => {
+                    console.log('工具[7-zip]下载完成并解压到：' + zip7Folder);
+                    store.set('INSTALL.ZIP7_STATUS', true);
+                })
+            });
+        });
     } else {
-        store.set('TOOLS.ZIP7_STATUS', true);
+        store.set('INSTALL.ZIP7_STATUS', true);
     }
+
 }
 
-async function downloadNox() {
+async function downloadNoxPlayer() {
     let fileUrl = 'https://1drv.ms/u/s!AhWOz52LWPzx8RB6abXXw7jMLWqo?e=HpX7MB';
     downloadOneDriver(fileUrle);
 
 }
-
 
 export function downloadAllTools() {
     downloadYoutubeDl();
@@ -432,4 +317,7 @@ export function downloadAllTools() {
     downloadJre();
 
     download7Zip();
+
+
+
 }
