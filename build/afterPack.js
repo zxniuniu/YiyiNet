@@ -108,7 +108,6 @@ async function downloadChromedriver(context) {
     }
 }
 
-
 async function doExtractNodeModules(context) {
     let asar = require('asar');
     let resourcesDir = path.join(context.appOutDir, 'resources');
@@ -121,10 +120,64 @@ async function doExtractNodeModules(context) {
     // await copyDir(path.join(resourcesDir, 'app', 'node_modules'), path.join(resourcesDir, 'node_modules'), console.log);
 
     // 重新压缩asar文件
-    asar.createPackage(appDir, asarDir).then(() => {
-        removeDir(appDir);
-        console.log('\t解压app.asar中的node_modules文件夹到资源目录，并已重新生成app.asar文件');
+    await asar.createPackage(appDir, asarDir);
+    removeDir(appDir);
+    console.log('\t解压app.asar中的node_modules文件夹到资源目录，并已重新生成app.asar文件');
+
+    // 使用modclean清理node_modules文件夹
+    await cleanNodeModulesFolder(context);
+
+}
+
+/**
+ * 使用modclean清理node_modules文件夹
+ * @param context
+ * @returns {Promise<void>}
+ */
+async function cleanNodeModulesFolder(context) {
+    const modclean = require('modclean');
+    // https://github.com/ModClean/modclean/wiki/API#options
+    let options = {
+        cwd: path.join(context.appOutDir, 'resources', 'node_modules'),
+        test: false,
+        removeEmptyDirs: true,
+        patterns: ["default:safe", "default:caution"], // set the patterns to use
+        additionalPatterns: ['license*', '*.ts', '*.map'], // https://www.npmjs.com/package/glob#glob-primer
+        filter: file => {// filter function, for ignoring files, you can use `ignorePatterns` option instead
+            // console.log('\tfile: ' + file.path);
+            /*if(file.name.match(/\.gitignore/i)){ // Skip .gitignore files (keeping them)
+                return false;
+            }*/
+            return true;
+        }
+    };
+    let mc = modclean(options);
+
+    mc.on('file:list', files => {
+        console.log('\t找到 [' + files.length + '] 个需要删除的无用文件，即将自动删除，当前过滤条件：' + options.additionalPatterns);
+        if(debug){
+            console.log('\t当前要删除的文件列表如下：' + files.map(file => file.path).join('|'));
+        }
     });
+
+    /*mc.on('file:deleted', file => {
+        console.log('\t', (mc.options.test? 'TEST' : ''), 'deleted file: ', file.path);
+    });*/
+
+    let files = await mc._find();
+    // console.log('files:'); console.dir(files);
+    await mc._process(files);
+    // console.log('results:'); console.dir(results);
+
+    // await mc.cleanEmptyDirs();
+
+    /*mc.clean()
+        .then(result => {
+            // console.dir(result);
+            console.log(`Successfully removed ${result.deleted.length} files/folders from the project`);
+        }).catch(error => {
+            console.error(error);
+        });*/
 }
 
 async function afterPack(context) {
@@ -151,7 +204,6 @@ async function afterPack(context) {
 
     // 解压app.asar并将node_modules拷贝到文件夹外面
     doExtractNodeModules(context);
-
 }
 
 /*
@@ -214,6 +266,5 @@ function removeDir(dir) {
     }
     fs.rmdirSync(dir)//如果文件夹是空的，就将自己删除掉
 }
-
 
 module.exports = afterPack;
