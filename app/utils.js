@@ -9,6 +9,7 @@ import config from "./configs/app.config";
 import store from './configs/settings';
 import {ipcMain} from 'electron-better-ipc';
 import StreamZip from "node-stream-zip";
+import pFun from 'p-fun';
 
 import fse from "live-plugin-manager/node_modules/fs-extra";
 import tar from 'live-plugin-manager/node_modules/tar';
