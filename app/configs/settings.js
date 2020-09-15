@@ -10,7 +10,37 @@ let defaultStore = {
 };
 
 let store = new Store(defaultStore);
-store.set(config.storeValue);
+
+// 条件设置storeValue，如果存在不设置，不存在刚增加
+setOther();
+
+/**
+ * 合并新值到默认值 中
+ * @param storeValue
+ * @param val
+ * @returns {*}
+ */
+function mergeJson(storeValue, val) {
+    Object.keys(storeValue).forEach(key => {
+        let value = storeValue[key];
+
+        if(val[key] !== undefined) {
+            if (typeof value === 'object') {
+                mergeJson(storeValue[key], val[key]);
+            } else {
+                storeValue[key] = val[key];
+            }
+        }
+    });
+}
+
+function setOther() {
+    let val = store.store; // console.dir(store.store);
+    let storeValue = config.storeValue;
+
+    mergeJson(storeValue, val);
+    store.set(storeValue);
+}
 
 export function storeChangeEvent() {
     // console.log('Store的值[changeEvent]：'); console.dir(store.store);
