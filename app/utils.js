@@ -10,7 +10,7 @@ import store from './configs/settings';
 import {ipcMain} from 'electron-better-ipc';
 import StreamZip from "node-stream-zip";
 import pFun from 'p-fun';
-
+import cp from 'child_process';
 import fse from "live-plugin-manager/node_modules/fs-extra";
 import tar from 'live-plugin-manager/node_modules/tar';
 
@@ -238,7 +238,7 @@ export const get7ZipPath = () => {
  * 获取Nox所在路径
  */
 export const getNoxFolder = () => {
-    return checkPath(path.join(getUserData(), 'Nox'));
+    return checkPath(path.join(getUserData(), 'NoxPlayer'));
 };
 
 /**
@@ -292,6 +292,23 @@ function copyDir(src, dist, callback) {
             })
         }
     }
+}
+
+export function exec(cmd) {
+    console.log('执行Cmd命令：' + cmd);
+    return new Promise(function(resolve, reject) {
+        cp.exec(cmd, {
+            maxBuffer: 1024 * 2000
+        }, function(err, stdout, stderr) {
+            if (err) {
+                reject(err);
+            } else if (stderr.lenght > 0) {
+                reject(new Error(stderr.toString()));
+            } else {
+                resolve(stdout);
+            }
+        });
+    });
 }
 
 /**
@@ -756,46 +773,50 @@ export async function getGithubLatestTag(user, rep, type) {
  * @param fileName 文件名称
  * @param savePath 保存路径（不含文件名）
  * @param type 类型：github, cnpmjs, fastgit或简写
+ * @param queryVer 指定Tag
  */
-export async function downloadLatest(user, rep, fileName, savePath, type) {
+export async function downloadLatest(user, rep, fileName, savePath, type, queryVer) {
     let cachePath = getElectronCachePath();
     savePath = savePath === undefined || savePath === '' || savePath === null ? cachePath : savePath;
 
+    if(queryVer === undefined || queryVer === '' || queryVer === null ) {
+        queryVer = await getGithubLatestTag(user, rep, type); // .then(queryVer => {
+    }
     return new Promise((resolve, reject) => {
         // https://hub.fastgit.org/zxniuniu/YiyiNet/releases/latest
-        let baseUrl = getGithubUrl(type);
-        getGithubLatestTag(user, rep, type).then(queryVer => {
-            fileName = fileName.replace('{ver}', queryVer.replace('v', ''));
-            let saveFile = path.join(savePath, fileName);
+        // let baseUrl = getGithubUrl(type);
 
-            // 判断当前文件是否已经下载
-            let cacheCfgName = fileName.substring(0, fileName.lastIndexOf('.')) + '-' + queryVer + '.cfg';
-            let cacheCfg = path.join(cachePath, cacheCfgName);
-            if (fs.existsSync(cacheCfg) && fs.existsSync(saveFile)) {
-                // TODO 解决是下载的最新，还是本来就是最新的
+        fileName = fileName.replace('{ver}', queryVer.replace('v', ''));
+        let saveFile = path.join(savePath, fileName);
+
+        // 判断当前文件是否已经下载
+        let cacheCfgName = fileName + '.cfg';
+        let cacheCfg = path.join(cachePath, cacheCfgName);
+        if (fs.existsSync(cacheCfg) && fs.existsSync(saveFile)) {
+            // TODO 解决是下载的最新，还是本来就是最新的
+            resolve(saveFile);
+        } else {
+            // 获取到版本后进行下载
+            downloadGithub(user, rep, queryVer, fileName, savePath, type).then(file => {
+                fs.writeFileSync(cacheCfg, queryVer);
+                resolve(file);
+            }).catch(err => {
+                reject(err);
+            });
+            /*// https://hub.fastgit.org/zxniuniu/YiyiNet/releases/download/v1.6.3/YiyiNet-web-setup-1.6.3.exe
+            let downloadUrl = baseUrl.replace('hub.fas', 'download.fas') + '/' + user + '/'
+                + rep + '/releases/download/' + queryVer + '/' + fileName;
+
+            downloadLarge(downloadUrl, saveFile).then(file => {
+                fs.writeFileSync(cacheCfg, queryVer);
                 resolve(saveFile);
-            } else {
-                // 获取到版本后进行下载
-                downloadGithub(user, rep, queryVer, fileName, savePath, type).then(file => {
-                    fs.writeFileSync(cacheCfg, queryVer);
-                    resolve(file);
-                }).catch(err => {
-                    reject(err);
-                });
-                /*// https://hub.fastgit.org/zxniuniu/YiyiNet/releases/download/v1.6.3/YiyiNet-web-setup-1.6.3.exe
-                let downloadUrl = baseUrl.replace('hub.fas', 'download.fas') + '/' + user + '/'
-                    + rep + '/releases/download/' + queryVer + '/' + fileName;
-
-                downloadLarge(downloadUrl, saveFile).then(file => {
-                    fs.writeFileSync(cacheCfg, queryVer);
-                    resolve(saveFile);
-                }).catch(err => {
-                    reject(err);
-                });*/
-            }
-        }).catch(err => {
+            }).catch(err => {
+                reject(err);
+            });*/
+        }
+        /*}).catch(err => {
             reject(err);
-        });
+        });*/
     });
 }
 
@@ -804,50 +825,25 @@ export async function downloadLatest(user, rep, fileName, savePath, type) {
  * @returns {Promise<unknown>}
  * @param user
  * @param rep
- * @param fileNames 文件名称
+ * @param fileNameArray 文件名称，如['a.zip', 'b.zip']
  * @param savePath 保存路径（不含文件名）
  * @param type 类型：github, cnpmjs, fastgit或简写
  */
-export async function downloadLatestMultiFile(user, rep, fileNameList, savePath, type) {
-    let cachePath = getElectronCachePath();
-    savePath = savePath === undefined || savePath === '' || savePath === null ? cachePath : savePath;
+export async function downloadLatestMultiFile(user, rep, fileNameArray, savePath, type) {
+    let queryVer = await getGithubLatestTag(user, rep, type);
 
+    let mapper = fileName => downloadLatest(user, rep, fileName, savePath, type, queryVer);
     return new Promise((resolve, reject) => {
-        let baseUrl = getGithubUrl(type);
-        getGithubLatestTag(user, rep, type).then(queryVer => {
-            fileNameList.forEach(fileName => {
-                fileName = fileName.replace('{ver}', queryVer.replace('v', ''));
-                let saveFile = path.join(savePath, fileName);
-
-                // 判断当前文件是否已经下载
-                let cacheCfgName = fileName.substring(0, fileName.lastIndexOf('.')) + '-' + queryVer + '.cfg';
-                let cacheCfg = path.join(cachePath, cacheCfgName);
-                if (fs.existsSync(cacheCfg) && fs.existsSync(saveFile)) {
-                    // TODO 解决是下载的最新，还是本来就是最新的
-                    resolve(saveFile);
+        pFun.map(fileNameArray, mapper, {concurrency: Math.min(5, fileNameArray.length), stopOnError: false})
+            .then(result => {
+                if (fileNameArray.length === 1) {
+                    resolve(result[0]);
                 } else {
-                    // 获取到版本后进行下载
-                    downloadGithub(user, rep, queryVer, fileName, savePath, type).then(file => {
-                        fs.writeFileSync(cacheCfg, queryVer);
-                        resolve(file);
-                    }).catch(err => {
-                        reject(err);
-                    });
-                    /*// https://hub.fastgit.org/zxniuniu/YiyiNet/releases/download/v1.6.3/YiyiNet-web-setup-1.6.3.exe
-                    let downloadUrl = baseUrl.replace('hub.fas', 'download.fas') + '/' + user + '/'
-                        + rep + '/releases/download/' + queryVer + '/' + fileName;
-
-                    downloadLarge(downloadUrl, saveFile).then(file => {
-                        fs.writeFileSync(cacheCfg, queryVer);
-                        resolve(saveFile);
-                    }).catch(err => {
-                        reject(err);
-                    });*/
+                    resolve(result);
                 }
+            }).catch(err => {
+                reject(err);
             });
-        }).catch(err => {
-            reject(err);
-        });
     });
 }
 

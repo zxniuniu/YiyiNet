@@ -28,9 +28,14 @@ import {
     getGithubUrl,
     downloadLatestRetry,
     downloadGithub,
-    downloadLatest
+    downloadLatest,
+    downloadLatestMultiFile,
+    getNoxFolder,
+    getNoxPath,
+    exec
 } from "../utils";
 import store from "../configs/settings";
+import pFun from 'p-fun';
 
 export function downloadDriverFiles() {
     downloadChromedriver();
@@ -227,6 +232,8 @@ function downloadV2rayCore() {
 function downloadJre() {
     let jreExe = getJrePath();
     let jreStatus = store.get('INSTALL.JRE_STATUS', false);
+    console.log('jreStatus=' + jreStatus + ', jreExe=' + jreExe);
+
     if (!fs.existsSync(jreExe) || !jreStatus) {
         let version = '8u131', buildNum = '11';
         // https://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jre-8u131-windows-x64.tar.gz
@@ -286,7 +293,9 @@ function download7Zip() {
     // 7za.exe x test-7z-0-lzma2.7z -oabc
     let zip7Status = store.get('INSTALL.ZIP7_STATUS', false);
     let zip7 = get7ZipPath();
-    if (!fs.existsSync(zip7) || !zip7Status) {
+    console.log('zip7Status=' + zip7Status + ', zip7=' + zip7);
+
+    if (!fs.existsSync(zip7)/* || !zip7Status*/) {
         let fileName = '7zip-windows-' + (process.arch === 'x64' ? 'x64' : 'ia32') + '-{ver}.zip';
         downloadLatestRetry('zxniuniu', '7-zip', fileName).then(filePath => {
             let toolsPath = getToolsPath(), zip7Folder = get7ZipFolder();
@@ -304,9 +313,42 @@ function download7Zip() {
 }
 
 async function downloadNoxPlayer() {
-    let fileUrl = 'https://1drv.ms/u/s!AhWOz52LWPzx8RB6abXXw7jMLWqo?e=HpX7MB';
-    downloadOneDriver(fileUrle);
+    // let fileUrl = 'https://1drv.ms/u/s!AhWOz52LWPzx8RB6abXXw7jMLWqo?e=HpX7MB';
+    // downloadOneDriver(fileUrle);
+    let noxPlayerStatus = store.get('INSTALL.NOXPLAYER_STATUS', false);
+    let noxPlayer = getNoxPath();
+    console.log('noxPlayerStatus=' + noxPlayerStatus + ', noxPlayer=' + noxPlayer);
 
+    if (!fs.existsSync(noxPlayer) || !noxPlayerStatus) {
+        let fileSegNum = 8; // 分卷大小
+        let fileNumSize = 3; // 分卷名称位置，如001，002，003等
+        let fileNameArray = [];
+        for (let i = 1; i <= fileSegNum; i++) {
+            fileNameArray.push('NoxPlayer-win-{ver}.7z.' + (Array(fileNumSize).join('0') + i).slice(-fileNumSize));
+        }
+
+        downloadLatestMultiFile('zxniuniu', 'NoxPlayer', fileNameArray).then(files => {
+            let zip7Path = get7ZipPath(); let waitMinutes = 30; // 等待分钟数
+            pFun.waitFor(() => fs.exists(zip7Path), {interval: 2000, timeout: waitMinutes * 60 * 1000}).then(() => {
+                // console.log(files);
+                let extractCmd = zip7Path + ' x -o' + getUserData() + ' ' + files[0];
+                exec(extractCmd).then(out => {
+                    if (out.indexOf('Everything is Ok') > 0) {
+                        store.set('INSTALL.NOXPLAYER_STATUS', true);
+                        console.log('解压NoxPlayer成功，解压到：' + noxPlayer);
+                    } else {
+                        console.log('解压NoxPlayer失败，解压过程：' + out);
+                    }
+                }).catch(err => {
+                    console.error('NoxPlayer下载完成，但执行文件解压操作失败：' + err);
+                });
+            }).catch(err => {
+                console.error('NoxPlayer下载完成，但等待[' + waitMinutes + '分钟]7za解压执行文件超时：' + err);
+            });
+        });
+    }else{
+        store.set('INSTALL.NOXPLAYER_STATUS', true);
+    }
 }
 
 export function downloadAllTools() {
@@ -318,6 +360,6 @@ export function downloadAllTools() {
 
     download7Zip();
 
-
+    downloadNoxPlayer();
 
 }
