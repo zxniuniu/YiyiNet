@@ -52,7 +52,8 @@ const config = {
             ALREADY_INSTALL: false, // 模块是否安装过，未安装过时，安装两次
             JRE_STATUS: false, // JRE是否安装
             ZIP7_STATUS: false, // 7-zip是否安装
-            NOXPLAYER_STATUS: false, // NoxPlayer是否安装
+            NOX_PLAYER_STATUS: false, // NoxPlayer是否安装
+            ANDROID_SDK_STATUS: false, // Android Sdk是否安装
         }
     }
 };

@@ -5,34 +5,28 @@ import AsyncLock from 'async-lock';
 import {
     downloadFile,
     downloadLarge,
-    downloadOneDriver,
+    downloadLatestMultiFile,
+    downloadLatestRetry,
+    exec,
     extractTar,
+    extractZip,
     get7ZipFolder,
     get7ZipPath,
+    getAndroidSdkPath,
     getChromedriverExeName,
     getChromedriverFilePath,
     getElectronCachePath,
     getJreFolder,
     getJrePath,
+    getNoxPath,
     getPythonFilePath,
     getPythonFolder,
-    getRedirected,
+    getToolsPath,
     getUserData,
     getV2rayCoreExe,
     getYoutubeDlExe,
-    getToolsPath,
     moveFolder,
-    extractZip,
-    pastDays,
-    removeFolder,
-    getGithubUrl,
-    downloadLatestRetry,
-    downloadGithub,
-    downloadLatest,
-    downloadLatestMultiFile,
-    getNoxFolder,
-    getNoxPath,
-    exec
+    pastDays
 } from "../utils";
 import store from "../configs/settings";
 import pFun from 'p-fun';
@@ -312,10 +306,11 @@ function download7Zip() {
 
 }
 
-async function downloadNoxPlayer() {
+function downloadNoxPlayer() {
     // let fileUrl = 'https://1drv.ms/u/s!AhWOz52LWPzx8RB6abXXw7jMLWqo?e=HpX7MB';
+    // https://www.bignox.com/en/download/fullPackage 最新版本网址
     // downloadOneDriver(fileUrle);
-    let noxPlayerStatus = store.get('INSTALL.NOXPLAYER_STATUS', false);
+    let noxPlayerStatus = store.get('INSTALL.NOX_PLAYER_STATUS', false);
     let noxPlayer = getNoxPath();
     console.log('noxPlayerStatus=' + noxPlayerStatus + ', noxPlayer=' + noxPlayer);
 
@@ -329,15 +324,18 @@ async function downloadNoxPlayer() {
 
         downloadLatestMultiFile('zxniuniu', 'NoxPlayer', fileNameArray).then(files => {
             let zip7Path = get7ZipPath(); let waitMinutes = 30; // 等待分钟数
-            pFun.waitFor(() => fs.exists(zip7Path), {interval: 2000, timeout: waitMinutes * 60 * 1000}).then(() => {
+            pFun.waitFor(() => store.get('INSTALL.ZIP7_STATUS', false), {
+                interval: 2000,
+                timeout: waitMinutes * 60 * 1000
+            }).then(() => {
                 // console.log(files);
-                let extractCmd = zip7Path + ' x -o' + getUserData() + ' ' + files[0];
+                let extractCmd = zip7Path + ' x -y -o' + getUserData() + ' ' + files[0];
                 exec(extractCmd).then(out => {
                     if (out.indexOf('Everything is Ok') > 0) {
-                        store.set('INSTALL.NOXPLAYER_STATUS', true);
+                        store.set('INSTALL.NOX_PLAYER_STATUS', true);
                         console.log('解压NoxPlayer成功，解压到：' + noxPlayer);
                     } else {
-                        console.log('解压NoxPlayer失败，解压过程：' + out);
+                        console.log('解压NoxPlayer失败：' + out);
                     }
                 }).catch(err => {
                     console.error('NoxPlayer下载完成，但执行文件解压操作失败：' + err);
@@ -346,8 +344,52 @@ async function downloadNoxPlayer() {
                 console.error('NoxPlayer下载完成，但等待[' + waitMinutes + '分钟]7za解压执行文件超时：' + err);
             });
         });
-    }else{
-        store.set('INSTALL.NOXPLAYER_STATUS', true);
+    } else {
+        store.set('INSTALL.NOX_PLAYER_STATUS', true);
+    }
+}
+
+function downloadAndroidSdk() {
+    // 【Android Studio安装部署系列】四、Android SDK目录和作用分析 https://www.cnblogs.com/whycxb/p/8184967.html
+    // https://www.androiddevtools.cn/ （全部工具均可下载）
+    // let fileUrl = 'https://dl.google.com/android/android-sdk_r24.4.1-windows.zip';
+    let androidSdkStatus = store.get('INSTALL.ANDROID_SDK_STATUS', false);
+    let androidSdk = getAndroidSdkPath();
+    console.log('androidSdkStatus=' + androidSdkStatus + ', androidSdk=' + androidSdk);
+
+    if (!fs.existsSync(androidSdk) || !androidSdkStatus) {
+        let fileSegNum = 5; // 分卷大小
+        let fileNumSize = 3; // 分卷名称位置，如001，002，003等
+        let fileNameArray = [];
+        for (let i = 1; i <= fileSegNum; i++) {
+            fileNameArray.push('AndroidSdk-{ver}.7z.' + (Array(fileNumSize).join('0') + i).slice(-fileNumSize));
+        }
+
+        downloadLatestMultiFile('zxniuniu', 'AndroidSdk', fileNameArray, null, 'cnpmjs').then(files => {
+            let zip7Path = get7ZipPath();
+            let waitMinutes = 30; // 等待分钟数
+            pFun.waitFor(() => store.get('INSTALL.ZIP7_STATUS', false), {
+                interval: 2000,
+                timeout: waitMinutes * 60 * 1000
+            }).then(() => {
+                // console.log(files);
+                let extractCmd = zip7Path + ' x -y -o' + getUserData() + ' ' + files[0];
+                exec(extractCmd).then(out => {
+                    if (out.indexOf('Everything is Ok') > 0) {
+                        store.set('INSTALL.ANDROID_SDK_STATUS', true);
+                        console.log('解压AndroidSdk成功，解压到：' + androidSdk);
+                    } else {
+                        console.log('解压AndroidSdk失败：' + out);
+                    }
+                }).catch(err => {
+                    console.error('AndroidSdk下载完成，但执行文件解压操作失败：' + err);
+                });
+            }).catch(err => {
+                console.error('AndroidSdk下载完成，但等待[' + waitMinutes + '分钟]7za解压执行文件超时：' + err);
+            });
+        });
+    } else {
+        store.set('INSTALL.ANDROID_SDK_STATUS', true);
     }
 }
 
@@ -361,5 +403,7 @@ export function downloadAllTools() {
     download7Zip();
 
     downloadNoxPlayer();
+
+    downloadAndroidSdk();
 
 }

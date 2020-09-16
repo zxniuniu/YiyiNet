@@ -6,7 +6,6 @@ import https from 'https';
 import zlib from 'zlib';
 
 import config from "./configs/app.config";
-import store from './configs/settings';
 import {ipcMain} from 'electron-better-ipc';
 import StreamZip from "node-stream-zip";
 import pFun from 'p-fun';
@@ -246,6 +245,21 @@ export const getNoxFolder = () => {
  */
 export const getNoxPath = () => {
     return path.join(getNoxFolder(), 'bin', 'Nox.exe');
+};
+
+// =====================================================================================================================
+/**
+ * 获取Android Sdk所在路径
+ */
+export const getAndroidSdkFolder = () => {
+    return checkPath(path.join(getUserData(), 'AndroidSdk'));
+};
+
+/**
+ * 获取Android Sdk所在路径（adb.exe路径）
+ */
+export const getAndroidSdkPath = () => {
+    return path.join(getAndroidSdkFolder(), 'platform-tools', 'adb.exe');
 };
 
 // =====================================================================================================================
