@@ -334,6 +334,8 @@ function downloadNoxPlayer() {
                     if (out.indexOf('Everything is Ok') > 0) {
                         store.set('INSTALL.NOX_PLAYER_STATUS', true);
                         console.log('解压NoxPlayer成功，解压到：' + noxPlayer);
+
+                        overrideAndroidSdkAdbByNoxPlayer();
                     } else {
                         console.log('解压NoxPlayer失败：' + out);
                     }
@@ -378,6 +380,8 @@ function downloadAndroidSdk() {
                     if (out.indexOf('Everything is Ok') > 0) {
                         store.set('INSTALL.ANDROID_SDK_STATUS', true);
                         console.log('解压AndroidSdk成功，解压到：' + androidSdk);
+
+                        overrideAndroidSdkAdbByNoxPlayer();
                     } else {
                         console.log('解压AndroidSdk失败：' + out);
                     }
@@ -390,6 +394,23 @@ function downloadAndroidSdk() {
         });
     } else {
         store.set('INSTALL.ANDROID_SDK_STATUS', true);
+    }
+}
+
+/**
+ * 解决在NoxPlayer或者AndroidSdk下载完成后的Nox中的adb.exe覆盖Sdk中的adb.exe的问题
+ */
+function overrideAndroidSdkAdbByNoxPlayer() {
+    let sdkAdb = getAndroidSdkPath(), noxAdb = path.join(getNoxFolder(), 'bin', 'adb.exe');
+
+    // 只有在两个均存在，且大小不一样时才覆盖
+    if(fs.existsSync(sdkAdb) && fs.existsSync(noxAdb)){
+        let sdkAdbStat = fs.statSync(sdkAdb), noxAdbStat = fs.statSync(noxAdb);
+        if(sdkAdbStat.size !== noxAdbStat.size){
+            fs.renameSync(sdkAdb, sdkAdb.replace('.exe', '_backup.exe'));
+
+            fs.copyFileSync(noxAdb, sdkAdb);
+        }
     }
 }
 
