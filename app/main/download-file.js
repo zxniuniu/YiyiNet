@@ -365,7 +365,7 @@ function downloadAndroidSdk() {
             fileNameArray.push('AndroidSdk-{ver}.7z.' + (Array(fileNumSize).join('0') + i).slice(-fileNumSize));
         }
 
-        downloadLatestMultiFile('zxniuniu', 'AndroidSdk', fileNameArray, null, 'cnpmjs').then(files => {
+        downloadLatestMultiFile('zxniuniu', 'AndroidSdk', fileNameArray).then(files => {
             let zip7Path = get7ZipPath();
             let waitMinutes = 30; // 等待分钟数
             pFun.waitFor(() => store.get('INSTALL.ZIP7_STATUS', false), {

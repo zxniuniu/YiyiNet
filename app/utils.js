@@ -262,6 +262,13 @@ export const getAndroidSdkPath = () => {
     return path.join(getAndroidSdkFolder(), 'platform-tools', 'adb.exe');
 };
 
+/**
+ * 获取Apk保存路径
+ */
+export const getApkFolder = () => {
+    return checkPath(path.join(getUserData(), 'Apk'));
+};
+
 // =====================================================================================================================
 /*
  * 复制目录、子目录，及其中的文件

@@ -8,6 +8,7 @@ import {getPythonFolder, getPythonPipPath, isDebugUrl, getJrePath, getJreFolder}
 import {installClientModule} from './client-module';
 import {downloadAllTools, downloadDriverFiles} from './download-file';
 import {saveAstarVpn} from './astarvpn';
+import {downloadCommonApk} from './apk';
 
 const windowStateKeeper = require('electron-window-state');
 let mainWindow = null;
@@ -261,6 +262,10 @@ export function openBrowserWindow(opts) {
 
         // 获取VPN
         saveAstarVpn();
+        
+        // 下载常用Apk
+        downloadCommonApk();
+        
     });
 
     // 如何监控文件下载进度，并显示进度条 https://newsn.net/say/electron-download-progress.html
