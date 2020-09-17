@@ -1,8 +1,13 @@
 import store from "../configs/settings";
-import {downloadLarge, getApkFolder} from "../utils";
+import utils from "../utils";
 import path from 'path';
 import pFun from 'p-fun';
 import fs from 'fs';
+
+function getXray() {
+    let XRay = require('x-ray');
+    return XRay();
+}
 
 /**
  * 通过App名字搜索得到App的appId
@@ -13,9 +18,7 @@ export function searchMiApp(searchAppName) {
     let searchUrl = 'http://app.mi.com/search?keywords=' + encodeURI(searchAppName);
 
     return new Promise((resolve, reject) => {
-        let XRay = require('x-ray');
-        let xray = XRay();
-
+        let xray = getXray();
         xray(searchUrl, '.applist a@href')(function(err, href) {
             // http://app.mi.com/details?id=com.oray.peanuthull&ref=search
             if(err){
@@ -40,9 +43,7 @@ export function downloadMiApp(appId, appName){
     let detailUrl = 'http://app.mi.com/details?id=' + appId;
 
     return new Promise((resolve, reject) => {
-        let XRay = require('x-ray');
-        let xray = XRay();
-
+        let xray = getXray();
         xray(detailUrl, ['ul.cf li'])(function(err, idAndNum) {
             // ["com.oray.peanuthull", "428716"]
             if(err){
@@ -61,11 +62,11 @@ export function downloadMiApp(appId, appName){
                 // 下载App resolve(appId);
                 let apkUrl = 'http://app.mi.com/download/' + numId + '?id=' + appId;
                 appName = appName === undefined || appName == null ? '' : appName;
-                let apkPath = getApkFolder(), apkFile = /*appName + */appId /*+ '-' + version*/ + '.apk';
+                let apkPath = utils.getApkFolder(), apkFile = /*appName + */appId /*+ '-' + version*/ + '.apk';
                 let apkFilePath = path.join(apkPath, apkFile);
 
                 if(!fs.existsSync(apkFilePath)) {
-                    downloadLarge(apkUrl, apkFilePath).then(file => {
+                    utils.downloadLarge(apkUrl, apkFilePath).then(file => {
                         console.log('Apk[' + appName + ']下载成功，版本[' + version + ']，保存路径:' + file);
                         resolve(file);
                         setStore(appId, appName, apkFile, version);

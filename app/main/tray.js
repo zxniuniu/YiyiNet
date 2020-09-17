@@ -1,6 +1,6 @@
 import {Tray, webContents} from 'electron';
 import {genMenus} from './menus';
-import {getIco, packageJson} from './../utils';
+import utils from './../utils';
 import i18n from '../configs/i18next.config';
 
 var tray = null; // 全局变量
@@ -13,7 +13,7 @@ export function setTray(mainWindow) {
     // 实现tray托盘图标及上下文菜单 https://newsn.net/say/electron-tray.html
     // https://newsn.net/say/electron-tray-switch.html
     // https://newsn.net/say/electron-tray-template-colorful.html
-    const trayIconImage = getIco('app.ico', 0);
+    const trayIconImage = utils.getIco('app.ico', 0);
     trayIconImage.setTemplateImage(true);
     // let trayPress = path.join(__dirname, "./assets/icon/app-gray.ico");
     if (null === tray) {
@@ -24,7 +24,7 @@ export function setTray(mainWindow) {
     }
     // tray.setPressedImage(trayPress);
 
-    tray.setToolTip(packageJson().productName);
+    tray.setToolTip(utils.packageJson().productName);
 
     i18n.on('languageChanged', async (languageCode) => {
         genMenus(mainWindow, tray);

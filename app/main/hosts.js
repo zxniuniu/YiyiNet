@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-import {checkPath, downloadFile, getHttpOrHttps, getUserData} from './../utils';
+import utils from './../utils';
 
 // If `preserveFormatting` is true, then include comments, blank lines and other non-host entries in the result
 let preserveFormatting = true;
@@ -12,7 +12,7 @@ let gitrawUrl = 'raw.githubusercontent.com';
  * @returns {string}
  */
 function getHostsPath() {
-    return checkPath(path.join(getUserData(), 'Hosts'));
+    return utils.checkPath(path.join(utils.getUserData(), 'Hosts'));
 }
 
 /**
@@ -22,7 +22,7 @@ function getHostsPath() {
  */
 function addGithubRawHosts(hostile, done) {
     let githubRaw = 'https://githubusercontent.com.ipaddress.com/raw.githubusercontent.com';
-    let proto = getHttpOrHttps(githubRaw);
+    let proto = utils.getHttpOrHttps(githubRaw);
     let req = proto.get(githubRaw, res => {
         // res.setEncoding('utf8');
         if (res.statusCode === 200) {
@@ -89,7 +89,7 @@ function downloadGooglehosts(hostile, done) {
     let hostsUrl = 'https://raw.githubusercontent.com/googlehosts/hosts/master/hosts-files/hosts';
     let googlehosts = path.join(getHostsPath(), 'googlehosts');
 
-    downloadFile(hostsUrl, googlehosts).then(() => {
+    utils.downloadFile(hostsUrl, googlehosts).then(() => {
         hostile.get(preserveFormatting, function (err, linesNew) {
             if (err) {
                 console.error(err.message);

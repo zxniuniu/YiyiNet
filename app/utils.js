@@ -12,6 +12,7 @@ import pFun from 'p-fun';
 import cp from 'child_process';
 import fse from "live-plugin-manager/node_modules/fs-extra";
 import tar from 'live-plugin-manager/node_modules/tar';
+import store from "./configs/settings";
 
 // https://www.jianshu.com/p/4b58711cb72a
 let fetch = require("node-fetch");
@@ -27,7 +28,7 @@ let StreamZip = require('node-stream-zip'); let fse = require('live-plugin-manag
  * 获取UserData路径
  * @returns {string}
  */
-export const getUserData = () => {
+exports.getUserData = () => {
     return app.getPath('userData');
 };
 
@@ -35,7 +36,7 @@ export const getUserData = () => {
  * 获取appData路径
  * @returns {string}
  */
-export const getAppData = () => {
+exports.getAppData = () => {
     return app.getPath('appData');
 };
 
@@ -43,31 +44,31 @@ export const getAppData = () => {
  * 获取Electron Cache路径
  * @returns {string}
  */
-export const getElectronCachePath = () => {
-    return checkPath(path.join(process.env.LOCALAPPDATA, 'electron', 'Cache'));
+exports.getElectronCachePath = () => {
+    return exports.checkPath(path.join(process.env.LOCALAPPDATA, 'electron', 'Cache'));
 };
 
 /**
  * 获取Adblock路径
  * @returns {string}
  */
-export const getAdblockPath = () => {
-    return checkPath(path.join(getUserData(), 'Adblocker'));
+exports.getAdblockPath = () => {
+    return exports.checkPath(path.join(exports.getUserData(), 'Adblocker'));
 };
 
 /**
  * 获取扩展路径（本地项目数据目录中）
  * @returns {string}
  */
-export const getExtensionsPathCache = () => {
-    return checkPath(path.join(getUserData(), 'Extensions'));
+exports.getExtensionsPathCache = () => {
+    return exports.checkPath(path.join(exports.getUserData(), 'Extensions'));
 };
 
 /**
  * 获取扩展路径（客户端自带）
  * @returns {string}
  */
-export const getExtensionsPathSys = () => {
+exports.getExtensionsPathSys = () => {
     return path.join(__dirname, './../assets/plugins/');
 };
 
@@ -75,11 +76,11 @@ export const getExtensionsPathSys = () => {
  * 获取YiyiNet根目录
  * @returns {string}
  */
-export const getRootPath = () => {
+exports.getRootPath = () => {
     return path.dirname(process.execPath);
 };
 
-export function checkPath(filePath) {
+exports.checkPath = (filePath) => {
     if (!fs.existsSync(filePath)) {
         fs.mkdirSync(filePath, {recursive: true});
     }
@@ -89,36 +90,36 @@ export function checkPath(filePath) {
 /**
  * 获取chromedriver路径
  */
-export const getChromedriverFilePath = () => {
-    return path.join(getRootPath(), getChromedriverExeName());
+exports.getChromedriverFilePath = () => {
+    return path.join(exports.getRootPath(), exports.getChromedriverExeName());
 };
 
 /**
  * 获取工具类保存路径
  */
-export const getToolsPath = () => {
-    return checkPath(path.join(getUserData(), 'Tools'));
+exports.getToolsPath = () => {
+    return exports.checkPath(path.join(exports.getUserData(), 'Tools'));
 };
 
 /**
  * 获取YoutubeDl路径
  */
-export const getYoutubeDlExe = () => {
-    return path.join(getToolsPath(), 'youtube-dl.exe');
+exports.getYoutubeDlExe = () => {
+    return path.join(exports.getToolsPath(), 'youtube-dl.exe');
 };
 
 /**
  * 获取V2rayCore路径
  */
-export const getV2rayCoreExe = () => {
-    let v2rayFolder = checkPath(path.join(getToolsPath(), 'v2ray'));
+exports.getV2rayCoreExe = () => {
+    let v2rayFolder = exports.checkPath(path.join(exports.getToolsPath(), 'v2ray'));
     return path.join(v2rayFolder, 'v2ray.exe');
 };
 
 /**
  * 获取chromedriver文件名（平台兼容）
  */
-export const getChromedriverExeName = () => {
+exports.getChromedriverExeName = () => {
     return 'chromedriver' + (process.platform === 'win32' ? '.exe' : '');
 };
 
@@ -126,147 +127,147 @@ export const getChromedriverExeName = () => {
 /**
  * 获取Python所有Exe
  */
-export const getPythonExeName = () => {
+exports.getPythonExeName = () => {
     return 'python' + (process.platform === 'win32' ? '.exe' : '');
 };
 
 /**
  * 获取Python所在路径
  */
-export const getPythonFolder = () => {
-    return checkPath(path.join(getUserData(), 'Python'));
+exports.getPythonFolder = () => {
+    return exports.checkPath(path.join(exports.getUserData(), 'Python'));
 };
 
 /**
  * 获取Python所在路径
  */
-export const getPythonFilePath = () => {
-    return path.join(getPythonFolder(), getPythonExeName());
+exports.getPythonFilePath = () => {
+    return path.join(exports.getPythonFolder(), exports.getPythonExeName());
 };
 
 /**
  * 获取Python Pip所在路径
  */
-export const getPythonPipPath = () => {
-    return path.join(getPythonFolder(), 'Scripts', 'pip.exe');
+exports.getPythonPipPath = () => {
+    return path.join(exports.getPythonFolder(), 'Scripts', 'pip.exe');
 };
 
 /**
  * 获取Python的Scripts所在路径
  */
-export const getPythonScriptsPath = () => {
-    return checkPath(path.join(getUserData(), 'Scripts'));
+exports.getPythonScriptsPath = () => {
+    return exports.checkPath(path.join(exports.getUserData(), 'Scripts'));
 };
 
 // =====================================================================================================================
 /**
  * 获取Chrome所有Exe
  */
-export const getChromeExeName = () => {
+exports.getChromeExeName = () => {
     return 'chrome' + (process.platform === 'win32' ? '.exe' : '');
 };
 
 /**
  * 获取Chrome所在路径
  */
-export const getChromeFolder = () => {
-    return checkPath(path.join(getUserData(), 'Chrome'));
+exports.getChromeFolder = () => {
+    return exports.checkPath(path.join(exports.getUserData(), 'Chrome'));
 };
 
 /**
  * 获取Chrome所在路径
  */
-export const getChromeFilePath = () => {
-    return path.join(getChromeFolder(), getChromeExeName());
+exports.getChromeFilePath = () => {
+    return path.join(exports.getChromeFolder(), exports.getChromeExeName());
 };
 
 // =====================================================================================================================
 /**
  * 获取Firefox所有Exe
  */
-export const getFirefoxExeName = () => {
+exports.getFirefoxExeName = () => {
     return 'firefox' + (process.platform === 'win32' ? '.exe' : '');
 };
 
 /**
  * 获取Firefox所在路径
  */
-export const getFirefoxFolder = () => {
-    return checkPath(path.join(getUserData(), 'Firefox'));
+exports.getFirefoxFolder = () => {
+    return exports.checkPath(path.join(exports.getUserData(), 'Firefox'));
 };
 
 /**
  * 获取Python所在路径
  */
-export const getFirefoxFilePath = () => {
-    return path.join(getFirefoxFolder(), getFirefoxExeName());
+exports.getFirefoxFilePath = () => {
+    return path.join(exports.getFirefoxFolder(), exports.getFirefoxExeName());
 };
 
 // =====================================================================================================================
 /**
  * 获取Jre所在路径
  */
-export const getJreFolder = () => {
-    return checkPath(path.join(getUserData(), 'Jre'));
+exports.getJreFolder = () => {
+    return exports.checkPath(path.join(exports.getUserData(), 'Jre'));
 };
 
 /**
  * 获取Jre所在路径（exe路径）
  */
-export const getJrePath = () => {
-    return path.join(getJreFolder(), 'bin', 'java.exe');
+exports.getJrePath = () => {
+    return path.join(exports.getJreFolder(), 'bin', 'java.exe');
 };
 
 // =====================================================================================================================
 /**
  * 获取7Zip所在路径
  */
-export const get7ZipFolder = () => {
-    return checkPath(path.join(getToolsPath(), '7zip'));
+exports.get7ZipFolder = () => {
+    return exports.checkPath(path.join(exports.getToolsPath(), '7zip'));
 };
 
 /**
  * 获取7Zip所在路径（exe路径）
  */
-export const get7ZipPath = () => {
-    return path.join(get7ZipFolder(), '7za.exe');
+exports.get7ZipPath = () => {
+    return path.join(exports.get7ZipFolder(), '7za.exe');
 };
 
 // =====================================================================================================================
 /**
  * 获取Nox所在路径
  */
-export const getNoxFolder = () => {
-    return checkPath(path.join(getUserData(), 'NoxPlayer'));
+exports.getNoxFolder = () => {
+    return exports.checkPath(path.join(exports.getUserData(), 'NoxPlayer'));
 };
 
 /**
  * 获取Jre所在路径（exe路径）
  */
-export const getNoxPath = () => {
-    return path.join(getNoxFolder(), 'bin', 'Nox.exe');
+exports.getNoxPath = () => {
+    return path.join(exports.getNoxFolder(), 'bin', 'Nox.exe');
 };
 
 // =====================================================================================================================
 /**
  * 获取Android Sdk所在路径
  */
-export const getAndroidSdkFolder = () => {
-    return checkPath(path.join(getUserData(), 'AndroidSdk'));
+exports.getAndroidSdkFolder = () => {
+    return exports.checkPath(path.join(exports.getUserData(), 'AndroidSdk'));
 };
 
 /**
  * 获取Android Sdk所在路径（adb.exe路径）
  */
-export const getAndroidSdkPath = () => {
-    return path.join(getAndroidSdkFolder(), 'platform-tools', 'adb.exe');
+exports.getAndroidSdkPath = () => {
+    return path.join(exports.getAndroidSdkFolder(), 'platform-tools', 'adb.exe');
 };
 
 /**
  * 获取Apk保存路径
  */
-export const getApkFolder = () => {
-    return checkPath(path.join(getUserData(), 'Apk'));
+exports.getApkFolder = () => {
+    return exports.checkPath(path.join(exports.getUserData(), 'Apk'));
 };
 
 // =====================================================================================================================
@@ -315,7 +316,7 @@ function copyDir(src, dist, callback) {
     }
 }
 
-export function exec(cmd) {
+exports.exec = (cmd) => {
     console.log('执行Cmd命令：' + cmd);
     return new Promise(function(resolve, reject) {
         cp.exec(cmd, {
@@ -337,7 +338,7 @@ export function exec(cmd) {
  * @param startDate
  * @returns {number}
  */
-export function pastDays(startDate) {
+exports.pastDays = (startDate) => {
     return (Date.now() - startDate) / 1000 / 60 / 60 / 24;
 }
 
@@ -346,7 +347,7 @@ export function pastDays(startDate) {
  * @param url
  * @returns {any}
  */
-export function getHttpOrHttps(url) {
+exports.getHttpOrHttps = (url) => {
     return !url.charAt(4).localeCompare('s') ? https : http;
 }
 
@@ -354,7 +355,7 @@ export function getHttpOrHttps(url) {
  * 解析获取最快的链接地址
  * @returns {Promise<PCancelable<unknown> | *>}
  */
-export async function fastUrl(urlArr, urlpath) {
+exports.fastUrl = async (urlArr, urlpath) => {
     let got = require('got');
     let pFun = require('p-fun');
     let taskArr = [];
@@ -369,62 +370,62 @@ export async function fastUrl(urlArr, urlpath) {
  * 解析获取mozilla最快的链接地址
  * @returns {Promise<PCancelable<unknown> | *>}
  */
-export async function fastMozillaUrl(urlpath) {
+exports.fastMozillaUrl = async (urlpath) => {
     let mozillaUrls = ['http://download-origin.cdn.mozilla.net', 'http://archive.mozilla.org', 'http://ftp.mozilla.org',
         'https://archive.mozilla.org', 'https://download-origin.cdn.mozilla.net', 'https://ftp.mozilla.org'];
-    return fastUrl(mozillaUrls, urlpath);
+    return exports.fastUrl(mozillaUrls, urlpath);
 }
 
 /**
  * 解析获取NPM最快的链接地址
  * @returns {Promise<PCancelable<unknown> | *>}
  */
-export async function fastNpmUrl(urlpath) {
+exports.fastNpmUrl = async (urlpath) => {
     let npmUrlArr = ['https://npm.taobao.org/mirrors', 'https://mirrors.huaweicloud.com', 'https://cnpmjs.org/mirrors'];
-    return fastUrl(npmUrlArr, urlpath);
+    return exports.fastUrl(npmUrlArr, urlpath);
 }
 
 /**
  * 解析获取Github最快的链接地址
  * @returns {Promise<PCancelable<unknown> | *>}
  */
-export async function fastGithubUrl(urlpath) {
+exports.fastGithubUrl = async (urlpath) => {
     // http://element-ui.cn/article/show-101839.aspx
     // https://github.com/FastGitORG/github-accelerator
     // https://doc.fastgit.org/zh-cn/
     let githubUrlArr = ['https://hub.fastgit.org', 'https://github.com.cnpmjs.org', 'https://github.com'
         /*'https://g.ioiox.com/https://github.com', 'https://gh.api.99988866.xyz/https://github.com', 'https://github.wuyanzheshui.workers.dev'*/];
-    return fastUrl(githubUrlArr, urlpath);
+    return exports.fastUrl(githubUrlArr, urlpath);
 }
 
 /**
  * 解析获取Github Raw最快的链接地址
  * @returns {Promise<PCancelable<unknown> | *>}
  */
-export async function fastGithubRawUrl(urlpath) {
+exports.fastGithubRawUrl = async (urlpath) => {
     // http://element-ui.cn/article/show-101839.aspx
     // https://doc.fastgit.org/zh-cn/node.html
     let githubRawUrlArr = ['https://raw.fastgit.org', 'https://raw.githubusercontent.com'];
-    return fastUrl(githubRawUrlArr, urlpath);
+    return exports.fastUrl(githubRawUrlArr, urlpath);
 }
 
 /**
  * 解析获取Python最快的镜像地址
  * @returns {Promise<PCancelable<unknown> | *>}
  */
-export async function fastPypiUrl(urlpath) {
+exports.fastPypiUrl = async (urlpath) => {
     // https://www.cnblogs.com/yuki-nana/p/10898774.html
     let pypiUrls = ['https://mirrors.aliyun.com/pypi/simple/', 'https://pypi.douban.com/simple/', 'https://pypi.tuna.tsinghua.edu.cn/simple',
         'https://pypi.mirrors.ustc.edu.cn/simple/'];
-    return fastUrl(pypiUrls, urlpath);
+    return exports.fastUrl(pypiUrls, urlpath);
 }
 
 /**
  * 检查链接地址是否可用
  * isUrlValid('https://www.baidu.com', (flag)=>{console.log(flag)});
  */
-export function isUrlValid(url) {
-    const proto = getHttpOrHttps(url);
+exports.isUrlValid = (url) => {
+    const proto = exports.getHttpOrHttps(url);
     return new Promise((resolve, reject) => {
         let req = proto.get(url, response => {
             return resolve(response.statusCode === 200 || (response.statusCode >= 300 && response.statusCode));
@@ -441,7 +442,7 @@ export function isUrlValid(url) {
  * @param folder
  * @returns {Promise<unknown>}
  */
-export function extractZip(zipFile, folder) {
+exports.extractZip = (zipFile, folder) => {
     return new Promise((resolve, reject) => {
         const zip = new StreamZip({
             file: zipFile,
@@ -469,7 +470,7 @@ export function extractZip(zipFile, folder) {
  * @param folder
  * @returns {Promise<unknown>}
  */
-export function extractTar(tarFile, folder) {
+exports.extractTar = (tarFile, folder) => {
     return new Promise((resolve, reject) => {
         tar.extract({
             cwd: folder,
@@ -488,15 +489,15 @@ export function extractTar(tarFile, folder) {
  * @param filePath
  * @returns {Promise<unknown>}
  */
-export const downloadFile = (url, filePath) => {
-    const proto = getHttpOrHttps(url);
+exports.downloadFile = (url, filePath) => {
+    const proto = exports.getHttpOrHttps(url);
     return new Promise((resolve, reject) => {
         let file = fs.createWriteStream(filePath);
         let request = proto.get(url, response => {
             // console.log('response.headers: '); console.dir(response.headers);
             if (response.statusCode !== 200) {
                 if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-                    return downloadFile(response.headers.location, filePath).then(resolve).catch(reject);
+                    return exports.downloadFile(response.headers.location, filePath).then(resolve).catch(reject);
                 } else {
                     reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
                     return;
@@ -536,7 +537,7 @@ export const downloadFile = (url, filePath) => {
  * @param url
  * @returns {Promise<unknown>}
  */
-export async function getHtml(url) {
+exports.getHtml = async (url) => {
     return new Promise((resolve, reject) => {
         fetch(url, {
             method: 'GET'
@@ -553,7 +554,7 @@ export async function getHtml(url) {
  * @param url
  * @returns {Promise<unknown>}
  */
-export async function getJson(url) {
+exports.getJson = async (url) => {
     return new Promise((resolve, reject) => {
         fetch(url, {
             method: 'GET'
@@ -570,7 +571,7 @@ export async function getJson(url) {
  * @param url
  * @returns {Promise<unknown>}
  */
-export async function getRedirected(url) {
+exports.getRedirected = async (url) => {
     return new Promise((resolve, reject) => {
         fetch(url, {
             method: 'GET',
@@ -591,7 +592,7 @@ export async function getRedirected(url) {
  * @param options
  * @returns {Promise<unknown>}
  */
-export async function downloadSmall(url, filePath, options) {
+exports.downloadSmall = async (url, filePath, options) => {
     return new Promise((resolve, reject) => {
         fetch(url, {
             method: 'GET',
@@ -618,7 +619,7 @@ export async function downloadSmall(url, filePath, options) {
  * @param options node-fetch的参数
  * @returns {Promise<unknown>}
  */
-export async function downloadLarge(fileURL, filePath, options) {
+exports.downloadLarge = async (fileURL, filePath, options) => {
     return new Promise((resolve, reject) => {
         //缓存文件路径
         let tmpFileSavePath = filePath + ".tmp";
@@ -632,7 +633,7 @@ export async function downloadLarge(fileURL, filePath, options) {
                 console.error('error==>', e);
                 reject(e);
             }).on('ready', function () {
-                console.log("开始下载:", fileURL);
+                console.log("准备下载:", fileURL);
             }).on('finish', function () {
                 //下载完成后重命名文件
                 fs.renameSync(tmpFileSavePath, filePath);
@@ -644,7 +645,7 @@ export async function downloadLarge(fileURL, filePath, options) {
                     let speed = (downloadedBytes / 1024 / (Date.now() - curDate) * 1000).toFixed(2);
                     console.log('正在下载[' + fileName + ']，完成[' + (100 * downloadedBytes / totalBytes).toFixed(2) + '%]，当前['
                         + (downloadedBytes / 1024 / 1024).toFixed(2) + '/' + (totalBytes / 1024 / 1024).toFixed(2) + ']M，'
-                        + '速度[' + speed + 'Kb/S]，预计还需[' + ((totalBytes - downloadedBytes) / 1024 / speed / 60).toFixed(2) + ']分钟');
+                        + '速度[' + speed + 'Kb/S]，大约还需[' + ((totalBytes - downloadedBytes) / 1024 / speed / 60).toFixed(2) + ']分钟');
                     startDate = Date.now();
                     // process.stdout.write((downloadedBytes / totalBytes * 100).toFixed(4) + '%  ');
                 }
@@ -660,7 +661,7 @@ export async function downloadLarge(fileURL, filePath, options) {
             if (res.headers.get('redirected')) {
                 let redUrl = res.headers.get('location') || res.headers.get('content-location');
                 console.log('跳转链接: ' + redUrl + '，原链接：' + fileURL);
-                downloadLarge(redUrl, filePath, options);
+                exports.downloadLarge(redUrl, filePath, options);
             } else {
                 //获取请求头中的文件大小数据
                 totalBytes = res.headers.get("content-length");
@@ -680,10 +681,10 @@ export async function downloadLarge(fileURL, filePath, options) {
  * @param options node-fetch的参数
  * @returns {Promise<void>}
  */
-export async function downloadOneDriver(fileURL, filePath, options) {
+exports.downloadOneDriver = async (fileURL, filePath, options) => {
     // https://github.com/aploium/OneDrive-Direct-Link
     fileURL = fileURL.replace('1drv.ms', '1drv.ws');
-    return downloadLarge(fileURL, filePath, options);
+    return exports.downloadLarge(fileURL, filePath, options);
 }
 
 /**
@@ -691,7 +692,7 @@ export async function downloadOneDriver(fileURL, filePath, options) {
  * @param type 类型：github, cnpmjs, fastgit或简写
  * @returns {string}
  */
-export function getGithubUrl(type) {
+exports.getGithubUrl = (type) => {
     // https://doc.fastgit.org/zh-cn/node.html#%E8%8A%82%E7%82%B9%E5%88%97%E8%A1%A8
     let githubUrlLists = ['https://hub.fastgit.org', 'https://github.com.cnpmjs.org', 'https://github.com'];
 
@@ -713,15 +714,15 @@ export function getGithubUrl(type) {
  * @param savePath 保存路径（不含文件名）
  * @returns {Promise<void>}
  */
-export async function downloadLatestRetry(user, rep, fileName, savePath) {
+exports.downloadLatestRetry = async (user, rep, fileName, savePath) => {
     return new Promise((resolve, reject) => {
-        downloadLatest(user, rep, fileName, savePath, 'cnpmjs').then(fp => {
+        exports.downloadLatest(user, rep, fileName, savePath, 'cnpmjs').then(fp => {
             resolve(fp);
         }).catch(err => {
-            downloadLatest(user, rep, fileName, savePath, 'fastgit').then(fp => {
+            exports.downloadLatest(user, rep, fileName, savePath, 'fastgit').then(fp => {
                 resolve(fp);
             }).catch(err2 => {
-                downloadLatest(user, rep, fileName, savePath, 'github').then(fp => {
+                exports.downloadLatest(user, rep, fileName, savePath, 'github').then(fp => {
                     resolve(fp);
                 }).catch(err3 => {
                     reject('从cnpmjs, fastgit, github尝试下载均失败:' + err + err2 + err3);
@@ -740,16 +741,16 @@ export async function downloadLatestRetry(user, rep, fileName, savePath) {
  * @param savePath 保存路径（不含文件名）
  * @param baseUrl_type 类型：github, cnpmjs, fastgit或简写
  */
-export async function downloadGithub(user, rep, tag, fileName, savePath, baseUrl_type) {
+exports.downloadGithub = async (user, rep, tag, fileName, savePath, baseUrl_type) => {
     if (baseUrl_type === undefined || baseUrl_type === '' || baseUrl_type === null) {
-        baseUrl_type = getGithubUrl();
+        baseUrl_type = exports.getGithubUrl();
     } else if (!baseUrl_type.startsWith('http')) {
-        baseUrl_type = getGithubUrl(baseUrl_type);
+        baseUrl_type = exports.getGithubUrl(baseUrl_type);
     }
     let downloadUrl = baseUrl_type/*.replace('hub.fas', 'download.fas')*/ + '/' + user + '/'
         + rep + '/releases/download/' + tag + '/' + fileName;
     return new Promise((resolve, reject) => {
-        downloadLarge(downloadUrl, path.join(savePath, fileName)).then(file => {
+        exports.downloadLarge(downloadUrl, path.join(savePath, fileName)).then(file => {
             resolve(file);
         }).catch(err => {
             reject(err);
@@ -764,13 +765,13 @@ export async function downloadGithub(user, rep, tag, fileName, savePath, baseUrl
  * @param rep
  * @param baseUrl_type 类型：github, cnpmjs, fastgit或简写
  */
-export async function getGithubLatestTag(user, rep, type) {
+exports.getGithubLatestTag = async (user, rep, type) => {
     return new Promise((resolve, reject) => {
         // https://hub.fastgit.org/zxniuniu/YiyiNet/releases/latest
-        let baseUrl = getGithubUrl(type);
+        let baseUrl = exports.getGithubUrl(type);
         let latestUrl = baseUrl + '/' + user + '/' + rep + '/releases/latest';
 
-        getRedirected(latestUrl).then(newUrl => {
+        exports.getRedirected(latestUrl).then(newUrl => {
             if (newUrl === null) {
                 reject('获取[' + user + '/' + rep + ']版本失败，获取结果为空');
             }else{
@@ -796,12 +797,12 @@ export async function getGithubLatestTag(user, rep, type) {
  * @param type 类型：github, cnpmjs, fastgit或简写
  * @param queryVer 指定Tag
  */
-export async function downloadLatest(user, rep, fileName, savePath, type, queryVer) {
-    let cachePath = getElectronCachePath();
+exports.downloadLatest = async (user, rep, fileName, savePath, type, queryVer) => {
+    let cachePath = exports.getElectronCachePath();
     savePath = savePath === undefined || savePath === '' || savePath === null ? cachePath : savePath;
 
     if(queryVer === undefined || queryVer === '' || queryVer === null ) {
-        queryVer = await getGithubLatestTag(user, rep, type); // .then(queryVer => {
+        queryVer = await exports.getGithubLatestTag(user, rep, type); // .then(queryVer => {
     }
     return new Promise((resolve, reject) => {
         // https://hub.fastgit.org/zxniuniu/YiyiNet/releases/latest
@@ -818,7 +819,7 @@ export async function downloadLatest(user, rep, fileName, savePath, type, queryV
             resolve(saveFile);
         } else {
             // 获取到版本后进行下载
-            downloadGithub(user, rep, queryVer, fileName, savePath, type).then(file => {
+            exports.downloadGithub(user, rep, queryVer, fileName, savePath, type).then(file => {
                 fs.writeFileSync(cacheCfg, queryVer);
                 resolve(file);
             }).catch(err => {
@@ -850,12 +851,13 @@ export async function downloadLatest(user, rep, fileName, savePath, type, queryV
  * @param savePath 保存路径（不含文件名）
  * @param type 类型：github, cnpmjs, fastgit或简写
  */
-export async function downloadLatestMultiFile(user, rep, fileNameArray, savePath, type) {
-    let queryVer = await getGithubLatestTag(user, rep, type);
+exports.downloadLatestMultiFile = async (user, rep, fileNameArray, savePath, type) => {
+    let queryVer = await exports.getGithubLatestTag(user, rep, type);
+    let maxConcurrencyDownload = store.get('MAX_CONCURRENCY_DOWNLOAD', 20);
 
-    let mapper = fileName => downloadLatest(user, rep, fileName, savePath, type, queryVer);
+    let mapper = fileName => exports.downloadLatest(user, rep, fileName, savePath, type, queryVer);
     return new Promise((resolve, reject) => {
-        pFun.map(fileNameArray, mapper, {concurrency: Math.min(10, fileNameArray.length), stopOnError: false})
+        pFun.map(fileNameArray, mapper, {concurrency: Math.min(maxConcurrencyDownload, fileNameArray.length), stopOnError: false})
             .then(result => {
                 if (fileNameArray.length === 1) {
                     resolve(result[0]);
@@ -874,7 +876,7 @@ export async function downloadLatestMultiFile(user, rep, fileNameArray, savePath
  * @param ms 暂停毫秒数
  * @returns {Promise<unknown>}
  */
-export function sleep(ms) {
+exports.sleep = (ms) => {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -883,13 +885,13 @@ export function sleep(ms) {
  * @param dir
  * @param mode
  */
-export const changePermissions = (dir, mode) => {
+exports.changePermissions = (dir, mode) => {
     const files = fs.readdirSync(dir);
     files.forEach((file) => {
         const filePath = path.join(dir, file);
         fs.chmodSync(filePath, parseInt(mode, 8));
         if (fs.statSync(filePath).isDirectory()) {
-            changePermissions(filePath, mode);
+            exports.changePermissions(filePath, mode);
         }
     });
 };
@@ -900,7 +902,7 @@ export const changePermissions = (dir, mode) => {
  * @param toFolder
  * @returns {Promise<unknown>}
  */
-export function moveFolder(fromFolder, toFolder) {
+exports.moveFolder = (fromFolder, toFolder) => {
     return new Promise((resolve, reject) => {
         fse.move(fromFolder, toFolder, {overwrite: true}, err => {
             if (err) {
@@ -918,7 +920,7 @@ export function moveFolder(fromFolder, toFolder) {
  * @see https://stackoverflow.com/a/42505874/3027390
  * @returns {Promise<unknown>}
  */
-export function removeFolder(folder) {
+exports.removeFolder = (folder) => {
     return new Promise((resolve, reject) => {
         fse.remove(folder, err => {
             if (err) {
@@ -948,7 +950,7 @@ export function removeFolder(folder) {
  * @param size
  * @returns {*}
  */
-export function getIco(name, size) {
+exports.getIco = (name, size) => {
     if (size === undefined) {
         size = 16;
     }
@@ -964,7 +966,7 @@ export function getIco(name, size) {
  * @param req_module
  * @returns {boolean}
  */
-export function hasModule(req_module) {
+exports.hasModule = (req_module) => {
     try {
         require.resolve(req_module);
         return true;
@@ -976,7 +978,7 @@ export function hasModule(req_module) {
 /**
  * 是否是调试的地址（用于菜单和打开开发者工具）
  */
-export function isDebugUrl() {
+exports.isDebugUrl = () => {
     let url = config.mainUrl;
     return !app.isPackaged || (app.isPackaged && (url.indexOf('localhost') >= 0 || url.indexOf('cnbeta.com') >= 0));
 };
@@ -1012,7 +1014,7 @@ function asarPath() {
  * package.json的内容
  * @returns {*}
  */
-export function packageJson() {
+exports.packageJson = () => {
     let packagePath;
     if (app.isPackaged) {
         packagePath = path.join(__dirname, '..', 'package.json');
@@ -1025,7 +1027,7 @@ export function packageJson() {
 /**
  * 切换显示/隐藏
  */
-export function toggleShowHide(mainWindow) {
+exports.toggleShowHide = (mainWindow) => {
     if (mainWindow !== null) {
         if (mainWindow.isVisible()) {
             if (mainWindow.isFocused()) {

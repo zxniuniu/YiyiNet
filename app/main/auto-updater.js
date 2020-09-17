@@ -10,7 +10,7 @@ import {autoUpdater} from 'electron-updater'; // https://www.electron.build/auto
 import i18n from '../configs/i18next.config';
 
 import store from "./../configs/settings";
-import {getHttpOrHttps, packageJson} from "../utils";
+import utils from "../utils";
 import semver from "semver";
 // import _ from 'lodash';
 
@@ -183,12 +183,12 @@ export function getFeedUrl(newVersion) {
 
 export async function checkNewVersion(curVersion) {
     try {
-        let json = packageJson();
+        let json = utils.packageJson();
         let repositoryUrl = json.repository.url.replace(/https?:\/\/[.a-zA-Z]+/, '');
         releasesUrl = baseFeedUrl + repositoryUrl + '/releases/';
         let latestUrl = releasesUrl + 'latest';
 
-        let proto = getHttpOrHttps(latestUrl);
+        let proto = utils.getHttpOrHttps(latestUrl);
         // Three Ways to Retrieve JSON from the Web using Node.js https://dev.to/isalevine/three-ways-to-retrieve-json-from-the-web-using-node-js-3c88
         const res = await proto.get(latestUrl);
         if (res && res.statusCode === 302) {

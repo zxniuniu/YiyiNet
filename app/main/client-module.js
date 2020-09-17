@@ -1,5 +1,5 @@
 import store from "../configs/settings";
-import {checkPath, getRootPath, packageJson} from "../utils";
+import utils from "../utils";
 
 import {adblockerInstallFinishEvent} from "./adblocker";
 import {hostileInstallFinishEvent} from "./hosts";
@@ -13,7 +13,7 @@ import {pythonShellInstallFinishEvent} from "./python";
  * 安装需在客户端上使用的模块
  */
 export function installClientModule() {
-    let json = packageJson();
+    let json = utils.packageJson();
     // console.dir(json);
     let dependenciesKeys = Object.keys(json.dependencies);
     dependenciesKeys.push('cross-env', 'electron', 'electron-builder', 'electron-rebuild', 'npm-run-all', 'parcel-bundler');
@@ -204,8 +204,8 @@ function moduleInstallDoneEvent(moduleStr, version) {
  */
 export const getNpmInstallPath = () => {
     // 保存在getUserData() + 'node_modules'中未解决加载时的路径问题
-    const savePath = path.join(getRootPath(), 'resources'); // process.resourcesPath
-    return checkPath(path.resolve(`${savePath}/node_modules/`));
+    const savePath = path.join(utils.getRootPath(), 'resources'); // process.resourcesPath
+    return utils.checkPath(path.resolve(`${savePath}/node_modules/`));
 };
 
 /**

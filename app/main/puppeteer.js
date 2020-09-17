@@ -1,17 +1,7 @@
 import path from "path";
 import store from './../configs/settings';
 import fs from 'fs';
-
-import {
-    fastMozillaUrl,
-    fastNpmUrl,
-    getChromeFilePath,
-    getFirefoxFilePath,
-    getUserData,
-    moveFolder,
-    packageJson,
-    removeFolder
-} from "../utils";
+import utils from "../utils";
 
 export function puppeteerCoreInstallFinishEvent(moduleStr, version) {
     downloadChrome();
@@ -25,7 +15,7 @@ export function puppeteerCoreInstallFinishEvent(moduleStr, version) {
  */
 function downloadChrome() {
     // 下载Chrome
-    let chromeFilePath = getChromeFilePath();
+    let chromeFilePath = utils.getChromeFilePath();
     if (!fs.existsSync(chromeFilePath)) {
         downloadBrowser(chromeFilePath, 'chrome');
     } else {
@@ -39,7 +29,7 @@ function downloadChrome() {
  */
 function downloadFirefox() {
     // 下载Firefox
-    let firefoxFilePath = getFirefoxFilePath();
+    let firefoxFilePath = utils.getFirefoxFilePath();
     if (!fs.existsSync(firefoxFilePath)) {
         downloadBrowser(firefoxFilePath, 'firefox');
     } else {
@@ -57,9 +47,9 @@ async function downloadBrowser(exePath, type) {
     type = isFirefox ? 'Firefox' : 'Chrome';
     let puppeteer = require('puppeteer-core');
 
-    let host = isFirefox ? (await fastMozillaUrl()) + '/pub/firefox/nightly/latest-mozilla-central' : (await fastNpmUrl());
+    let host = isFirefox ? (await utils.fastMozillaUrl()) + '/pub/firefox/nightly/latest-mozilla-central' : (await utils.fastNpmUrl());
     let browserFetcher = puppeteer.createBrowserFetcher({
-        path: getUserData(),
+        path: utils.getUserData(),
         host: host,
         product: type.toLowerCase() // chrome, firefox
     });
@@ -67,10 +57,10 @@ async function downloadBrowser(exePath, type) {
     let storeKey = isFirefox ? 'FIREFOX_VER' : 'CHROME_REVISION';
     let storeVer = store.get('TOOLS.' + storeKey, 0);
     if (isFirefox) {
-        storeVer = storeVer === 0 ? packageJson().firefoxVer.version : storeVer;
+        storeVer = storeVer === 0 ? utils.packageJson().firefoxVer.version : storeVer;
     } else {
         // 也可以使用代理获取 http://omahaproxy.appspot.com/deps.json?version=85.0.4183.86
-        let chromeRevisionJson = packageJson().chromiumVer.version.split('&')[1];
+        let chromeRevisionJson = utils.packageJson().chromiumVer.version.split('&')[1];
         storeVer = '' + Math.max(chromeRevisionJson, storeVer);
     }
     store.set('TOOLS.' + storeKey, storeVer);
@@ -88,14 +78,14 @@ async function downloadBrowser(exePath, type) {
         }
     }).then(revisionInfo => {
         // console.dir(revisionInfo);
-        moveFolder(path.dirname(revisionInfo.executablePath), path.dirname(exePath)).then(err => {
+        utils.moveFolder(path.dirname(revisionInfo.executablePath), path.dirname(exePath)).then(err => {
             if (err) {
                 return console.error(err);
             } else {
                 store.set('TOOLS.' + type.toUpperCase() + '_STATUS', true);
                 console.log('浏览器[' + type + ']下载成功，链接：' + revisionInfo.url);
 
-                removeFolder(revisionInfo.folderPath).then(() => {
+                utils.removeFolder(revisionInfo.folderPath).then(() => {
                 });
             }
         })
@@ -109,7 +99,7 @@ async function testChrome() {
     let puppeteer = require('puppeteer-core');
     let browser = await puppeteer.launch({
         headless: false,
-        executablePath: getChromeFilePath(),
+        executablePath: utils.getChromeFilePath(),
         product: 'chrome'
     });
     return browser;

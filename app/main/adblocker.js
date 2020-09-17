@@ -3,17 +3,16 @@ import {session} from "electron";
 import path from "path";
 import fetch from 'node-fetch';
 import store from './../configs/settings';
-
-import {downloadFile, getAdblockPath, isUrlValid} from "../utils";
+import utils from "../utils";
 
 export function adblockerInstallFinishEvent(moduleStr, version) {
     // 如果adblock安装完成，则增加广告过滤
-    let adblockPath = getAdblockPath(), enginePath;
+    let adblockPath = utils.getAdblockPath(), enginePath;
 
     // 解决 raw.githubusercontent.com 无法访问的问题 https://learnku.com/articles/43426
 
     // 如果能够访问，则使用默认的
-    isUrlValid('https://raw.githubusercontent.com/cliqz-oss/adblocker/master/packages/adblocker/assets/ublock-origin/privacy.txt').then(usingDefaultEngine => {
+    utils.isUrlValid('https://raw.githubusercontent.com/cliqz-oss/adblocker/master/packages/adblocker/assets/ublock-origin/privacy.txt').then(usingDefaultEngine => {
         console.log('当前raw.githubusercontent.com [' + (usingDefaultEngine ? '能够' : '不能') + '] 访问，使用 [' + (usingDefaultEngine ? '默认的地址系统加载' : '官方生成的Byte类型') + '] 的拦截器。。。');
 
         if (usingDefaultEngine) {
@@ -36,7 +35,7 @@ export function adblockerInstallFinishEvent(moduleStr, version) {
                 'https://cdn.cliqz.com/adblocking/allowed-lists.json',
                 'https://cdn.cliqz.com/adblocking/mobile/allowed-lists.json'*/
                 let allowedListUrl = 'https://cdn.cliqz.com/adblocker/configs/desktop-full/allowed-lists.json';
-                downloadFile(allowedListUrl, allowedListPath)
+                utils.downloadFile(allowedListUrl, allowedListPath)
                     .then(() => {
                         console.log('解析拦截器地址，通过下载allowed-lists文件：' + allowedListUrl);
                         fs.readFile(allowedListPath, 'utf8', (err, data) => {
@@ -53,7 +52,7 @@ export function adblockerInstallFinishEvent(moduleStr, version) {
                             }
                             // 下载EngineByte
                             if (null !== byteUrl) {
-                                downloadFile(byteUrl, enginePath)
+                                utils.downloadFile(byteUrl, enginePath)
                                     .then(() => {
                                         console.log('成功获取到拦截器地址，即将加载拦截器。。。');
                                         addAdblockPlugin(enginePath, usingDefaultEngine, true);

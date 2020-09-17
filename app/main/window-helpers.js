@@ -4,7 +4,7 @@ import path from 'path';
 import {initDynamicSplashScreen} from '@trodi/electron-splashscreen';
 import config from '../configs/app.config';
 import {checkNewUpdates} from './auto-updater';
-import {getPythonFolder, getPythonPipPath, isDebugUrl, getJrePath, getJreFolder} from "../utils";
+import utils from "../utils";
 import {installClientModule} from './client-module';
 import {downloadAllTools, downloadDriverFiles} from './download-file';
 import {saveAstarVpn} from './astarvpn';
@@ -347,10 +347,10 @@ export function setSavedEnv() {
     const savedEnv = store.get('ENV');
 
     let envPath = [
-        getPythonFolder(),
-        path.dirname(getPythonPipPath()),
-        path.dirname(getJrePath()),
-        path.join(getJreFolder(), 'lib'),
+        utils.getPythonFolder(),
+        path.dirname(utils.getPythonPipPath()),
+        path.dirname(utils.getJrePath()),
+        path.join(utils.getJreFolder(), 'lib'),
     ].join(';');
 
     process.env = {
@@ -365,8 +365,8 @@ export function setSavedEnv() {
 function openDevTools(mainWindow) {
     // 打开开发工具 https://newsn.net/say/electron-param-debug.html
     // 隐藏窗体顶部菜单 https://newsn.net/say/electron-no-application-menu.html
-    console.log('config.isDev：' + config.isDev + '，isDebugUrl：' + isDebugUrl() + '，devToolsPostion：' + config.devToolsPostion);
-    if (config.isDev || isDebugUrl()) {
+    console.log('config.isDev：' + config.isDev + '，utils.isDebugUrl：' + utils.isDebugUrl() + '，devToolsPostion：' + config.devToolsPostion);
+    if (config.isDev || utils.isDebugUrl()) {
         // mainWindow.webContents.openDevTools({'mode': config.devToolsPostion});
         mainWindow.webContents.openDevTools({mode: 'right'})
         // mainWindow.toggleDevTools();

@@ -1,14 +1,13 @@
 import fs from "fs";
 import path from "path";
 import store from './../configs/settings';
-
-import {downloadSmall, fastPypiUrl, getPythonFilePath, getPythonFolder, getPythonPipPath, sleep} from "../utils";
+import utils from "../utils";
 
 export function pythonShellInstallFinishEvent(moduleStr, version) {
     // https://hub.fastgit.org/extrabacon/python-shell#api-reference
     let {PythonShell} = require('python-shell');
     PythonShell.defaultOptions = {
-        pythonPath: getPythonFilePath(),
+        pythonPath: utils.getPythonFilePath(),
         // scriptPath: getPythonScriptsPath(), // 指定这个后，执行的py文件需要是与这个的相对路径
         pythonOptions: ['-u'], // get print results in real-time
         // mode: 'text', // 'text', 'json', 'binary'
@@ -20,17 +19,17 @@ export function pythonShellInstallFinishEvent(moduleStr, version) {
 }
 
 async function installPip(PythonShell) {
-    let pipPath = getPythonPipPath();
+    let pipPath = utils.getPythonPipPath();
     let pipStatus = store.get('INSTALL.PIP_STATUS', false);
 
     console.log('pipPath:' + pipPath + ", pipStatus: " + pipStatus);
     // pip.exe不存在，或者PIP_STATUS为假
     if (!fs.existsSync(pipPath) || !pipStatus) {
         // https://pip.pypa.io/en/stable/installing/#get-pip-py-options
-        let savePath = path.join(getPythonFolder(), 'get-pip.py');
+        let savePath = path.join(utils.getPythonFolder(), 'get-pip.py');
         if (!fs.existsSync(savePath)) {
             let getPipUrl = 'https://bootstrap.pypa.io/get-pip.py';
-            await downloadSmall(getPipUrl, savePath);
+            await utils.downloadSmall(getPipUrl, savePath);
         }
 
         while (true) {
@@ -38,13 +37,13 @@ async function installPip(PythonShell) {
                 require.resolve("p-fun");
                 break;
             } catch (e) {
-                await sleep(1000);
+                await utils.sleep(1000);
             }
         }
 
         let pFun = require('p-fun');
         let waitInterval = 2000, waitMinutes = 30;
-        let fastMirror = await fastPypiUrl();
+        let fastMirror = await utils.fastPypiUrl();
         // 等待python下载安装完成
         pFun.waitFor(() => store.get('TOOLS.PYTHON_STATUS'), {
             interval: waitInterval,
@@ -61,7 +60,7 @@ async function installPip(PythonShell) {
                 // pip安装完成后，修改python路径，以便识别pip
                 if (fs.existsSync(pipPath)) {
                     let pythonVer = store.get('TOOLS.PYTHON_VER');
-                    let _pthFile = path.join(getPythonFolder(), 'python' + pythonVer.replace('.', '').substr(0, 2) + '._pth');
+                    let _pthFile = path.join(utils.getPythonFolder(), 'python' + pythonVer.replace('.', '').substr(0, 2) + '._pth');
                     fs.appendFile(_pthFile, '\r\nScripts\r\nLib\\site-packages', function (err) {
                         if (err) throw err;
                         // 新路径添加完成，表示pip安装成功
@@ -87,7 +86,7 @@ async function installPip(PythonShell) {
  */
 function installPythonModules(PythonShell, fastMirror) {
     // scrapy安装失败 星夜回缘 2020-09-07 09:47:31
-    /*PythonShell.run(getPythonFilePath(), {
+    /*PythonShell.run(utils.getPythonFilePath(), {
         args: ['-m', 'pip', 'install', 'scrapy', '-i', fastMirror]
     }, function (err, result) {
         if (err) throw err;
@@ -102,7 +101,7 @@ function installPythonModules(PythonShell, fastMirror) {
  * @returns {Promise<void>}
  */
 async function installByPip(srcDir, ...args) {
-    let pipExe = getPythonPipPath();
+    let pipExe = utils.getPythonPipPath();
     console.log(`Running "pip install -t ${srcDir} ${args.join(' ')}"`);
     try {
         let execa = require('execa');

@@ -1,5 +1,5 @@
 import {globalShortcut} from 'electron';
-import {toggleShowHide} from './../utils';
+import utils from './../utils';
 
 /**
  * 设置快捷键
@@ -11,7 +11,7 @@ export function setShortcut(mainWindow) {
     let shortcutKey = 'F6'; // 显示隐藏客户端
     globalShortcut.register(shortcutKey, (event, arg) => {
         // CmdOrCtrl+Shift+A， CommandOrControl+X
-        toggleShowHide(mainWindow);
+        utils.toggleShowHide(mainWindow);
     });
 
     /*if (!regSucc) {

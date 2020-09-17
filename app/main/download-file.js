@@ -2,33 +2,7 @@ import fs from "fs";
 import path from "path";
 import StreamZip from "node-stream-zip";
 import AsyncLock from 'async-lock';
-import {
-    downloadFile,
-    downloadLarge,
-    downloadLatestMultiFile,
-    downloadLatestRetry,
-    exec,
-    extractTar,
-    extractZip,
-    get7ZipFolder,
-    get7ZipPath,
-    getAndroidSdkPath,
-    getChromedriverExeName,
-    getChromedriverFilePath,
-    getElectronCachePath,
-    getJreFolder,
-    getJrePath,
-    getNoxFolder,
-    getNoxPath,
-    getPythonFilePath,
-    getPythonFolder,
-    getToolsPath,
-    getUserData,
-    getV2rayCoreExe,
-    getYoutubeDlExe,
-    moveFolder,
-    pastDays
-} from "../utils";
+import utils from "../utils";
 import store from "../configs/settings";
 import pFun from 'p-fun';
 
@@ -42,14 +16,14 @@ export function downloadDriverFiles() {
  * 下载Chromedriver
  */
 function downloadChromedriver() {
-    let chromedriverFilePath = getChromedriverFilePath(); //
+    let chromedriverFilePath = utils.getChromedriverFilePath(); //
     if (fs.existsSync(chromedriverFilePath)) {
         return;
     }
 
-    let chromedriverName = getChromedriverExeName();
+    let chromedriverName = utils.getChromedriverExeName();
     let ver = process.versions.electron, platform = process.platform, arch = process.arch;
-    let cachePath = getElectronCachePath();
+    let cachePath = utils.getElectronCachePath();
 
     // 下载并将chromedriver放到根目录
     let chromedriverFilename = 'chromedriver-v' + ver + '-' + platform + '-' + arch;
@@ -63,7 +37,7 @@ function downloadChromedriver() {
     if (!fs.existsSync(chromedriverLocalZip)) {
         iLock.acquire("downloadChromedriver", function (done) {
             console.log('下载Chromedriver：' + chromedriverUrl);
-            downloadFile(chromedriverUrl, chromedriverLocalZip).then(() => {
+            utils.downloadFile(chromedriverUrl, chromedriverLocalZip).then(() => {
                 done();
             })
         }, function (err, ret) {
@@ -124,7 +98,7 @@ function downloadChromedriver() {
  * 下载Python
  */
 function downloadPython() {
-    let pythonFilePath = getPythonFilePath(); //
+    let pythonFilePath = utils.getPythonFilePath(); //
 
     // let pythonName = getPythonExeName();
     let storeVer = store.get('TOOLS.PYTHON_VER', '3.8.5');
@@ -136,7 +110,7 @@ function downloadPython() {
     }
 
     let arch = process.arch;
-    let cachePath = getElectronCachePath();
+    let cachePath = utils.getElectronCachePath();
 
     // 下载并将python放到目录
     let pythonFilename = 'python-' + ver + '-embed-' + (arch === 'x64' ? 'amd64' : 'win32');
@@ -149,7 +123,7 @@ function downloadPython() {
     if (!fs.existsSync(pythonLocalZip)) {
         iLock.acquire("downloadPython", function (done) {
             console.log('下载Python：' + pythonUrl);
-            downloadFile(pythonUrl, pythonLocalZip).then(() => {
+            utils.downloadFile(pythonUrl, pythonLocalZip).then(() => {
                 done();
             })
         }, function (err, ret) {
@@ -168,7 +142,7 @@ function downloadPython() {
             fs.unlinkSync(pythonLocalZip);
         });
         zip.on('ready', () => {
-            zip.extract(null, getPythonFolder(), (err, count) => {
+            zip.extract(null, utils.getPythonFolder(), (err, count) => {
                 zip.close();
                 store.set('TOOLS.PYTHON_STATUS', true);
                 done();
@@ -185,11 +159,11 @@ function downloadPython() {
 function downloadYoutubeDl() {
     // 下载youtube-dl视频下载工具
     let youtubeDate = store.get('TOOLS.YOUTUBE_DL_DATE', 0);
-    let needDownload = pastDays(youtubeDate) > store.get('TOOLS_DOWNLOAD_INTERVAL_DAYS', 10);
-    let youtubeDlExe = getYoutubeDlExe();
+    let needDownload = utils.pastDays(youtubeDate) > store.get('TOOLS_DOWNLOAD_INTERVAL_DAYS', 10);
+    let youtubeDlExe = utils.getYoutubeDlExe();
 
     if (!fs.existsSync(youtubeDlExe) || needDownload) {
-        downloadLatestRetry('ytdl-org', 'youtube-dl', 'youtube-dl.exe').then(filePath => {
+        utils.downloadLatestRetry('ytdl-org', 'youtube-dl', 'youtube-dl.exe').then(filePath => {
             fs.copyFile(filePath, youtubeDlExe, () => {
                 store.set('TOOLS.YOUTUBE_DL', true);
                 store.set('TOOLS.YOUTUBE_DL_DATE', Date.now());
@@ -204,16 +178,16 @@ function downloadYoutubeDl() {
 function downloadV2rayCore() {
     // 下载v2ray代理工具
     let v2rayDate = store.get('TOOLS.V2RAY_DATE', 0);
-    let needDownload = pastDays(v2rayDate) > store.get('TOOLS_DOWNLOAD_INTERVAL_DAYS', 10);
-    let v2rayExe = getV2rayCoreExe();
+    let needDownload = utils.pastDays(v2rayDate) > store.get('TOOLS_DOWNLOAD_INTERVAL_DAYS', 10);
+    let v2rayExe = utils.getV2rayCoreExe();
 
     if (!fs.existsSync(v2rayExe) || needDownload) {
         let platform = process.platform === 'win32' ? 'windows' : '';
         let arch = process.arch.replace('x', '');
         let v2rayZip = 'v2ray-' + platform + '-' + arch + '.zip';
 
-        downloadLatestRetry('v2ray', 'v2ray-core', v2rayZip).then(filePath => {
-            extractZip(filePath, path.dirname(v2rayExe)).then(() => {
+        utils.downloadLatestRetry('v2ray', 'v2ray-core', v2rayZip).then(filePath => {
+            utils.extractZip(filePath, path.dirname(v2rayExe)).then(() => {
                 store.set('TOOLS.V2RAY_CORE', true);
                 store.set('TOOLS.V2RAY_DATE', Date.now());
             });
@@ -225,7 +199,7 @@ function downloadV2rayCore() {
 }
 
 function downloadJre() {
-    let jreExe = getJrePath();
+    let jreExe = utils.getJrePath();
     let jreStatus = store.get('INSTALL.JRE_STATUS', false);
     console.log('jreStatus=' + jreStatus + ', jreExe=' + jreExe);
 
@@ -234,9 +208,9 @@ function downloadJre() {
         // https://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jre-8u131-windows-x64.tar.gz
         let url = getJreDownloadUrl(version, buildNum);
 
-        let fileTar = path.join(getElectronCachePath(), url.substring(url.lastIndexOf('/') + 1, url.length));
+        let fileTar = path.join(utils.getElectronCachePath(), url.substring(url.lastIndexOf('/') + 1, url.length));
         if (!fs.existsSync(fileTar)) {
-            downloadLarge(url, fileTar, {
+            utils.downloadLarge(url, fileTar, {
                 headers: {
                     connection: 'keep-alive',
                     'Cookie': 'gpw_e24=http://www.oracle.com/; oraclelicense=accept-securebackup-cookie'
@@ -254,14 +228,14 @@ function downloadJre() {
 
         function extractFile(fileTar, version) {
             //下载完成后解压缩文件
-            let jreFolder = getJreFolder(), userData = getUserData();
-            extractTar(fileTar, userData).then(() => {
+            let jreFolder = utils.getJreFolder(), userData = utils.getUserData();
+            utils.extractTar(fileTar, userData).then(() => {
                 let subFolder = 'jre1.' + version.replace('u', '.0_');
-                moveFolder(path.join(userData, subFolder), jreFolder).then(() => {
+                utils.moveFolder(path.join(userData, subFolder), jreFolder).then(() => {
                     console.log('Jre解压成功，解压到:', jreFolder);
                     store.set('INSTALL.JRE_STATUS', true);
 
-                    // removeFolder(path.join(userData, subFolder)).then(() => {});
+                    // reutils.moveFolder(path.join(userData, subFolder)).then(() => {});
                 })
             })
         }
@@ -287,15 +261,15 @@ function download7Zip() {
     // 7za.exe a -t7z -r -m0=LZMA2 -mx9 -v90m test-7z-0-lzma2 jre
     // 7za.exe x test-7z-0-lzma2.7z -oabc
     let zip7Status = store.get('INSTALL.ZIP7_STATUS', false);
-    let zip7 = get7ZipPath();
+    let zip7 = utils.get7ZipPath();
     console.log('zip7Status=' + zip7Status + ', zip7=' + zip7);
 
     if (!fs.existsSync(zip7)/* || !zip7Status*/) {
         let fileName = '7zip-windows-' + (process.arch === 'x64' ? 'x64' : 'ia32') + '-{ver}.zip';
-        downloadLatestRetry('zxniuniu', '7-zip', fileName).then(filePath => {
-            let toolsPath = getToolsPath(), zip7Folder = get7ZipFolder();
-            extractZip(filePath, toolsPath).then(() => {
-                moveFolder(path.join(toolsPath, path.basename(filePath, '.zip')), zip7Folder).then(() => {
+        utils.downloadLatestRetry('zxniuniu', '7-zip', fileName).then(filePath => {
+            let toolsPath = utils.getToolsPath(), zip7Folder = utils.get7ZipFolder();
+            utils.extractZip(filePath, toolsPath).then(() => {
+                utils.moveFolder(path.join(toolsPath, path.basename(filePath, '.zip')), zip7Folder).then(() => {
                     console.log('工具[7-zip]下载完成并解压到：' + zip7Folder);
                     store.set('INSTALL.ZIP7_STATUS', true);
                 })
@@ -312,7 +286,7 @@ function downloadNoxPlayer() {
     // https://www.bignox.com/en/download/fullPackage 最新版本网址
     // downloadOneDriver(fileUrle);
     let noxPlayerStatus = store.get('INSTALL.NOX_PLAYER_STATUS', false);
-    let noxPlayer = getNoxPath();
+    let noxPlayer = utils.getNoxPath();
     console.log('noxPlayerStatus=' + noxPlayerStatus + ', noxPlayer=' + noxPlayer);
 
     if (!fs.existsSync(noxPlayer) || !noxPlayerStatus) {
@@ -323,16 +297,16 @@ function downloadNoxPlayer() {
             fileNameArray.push('NoxPlayer-win-{ver}.7z.' + (Array(fileNumSize).join('0') + i).slice(-fileNumSize));
         }
 
-        downloadLatestMultiFile('zxniuniu', 'NoxPlayer', fileNameArray).then(files => {
-            let zip7Path = get7ZipPath();
+        utils.downloadLatestMultiFile('zxniuniu', 'NoxPlayer', fileNameArray).then(files => {
+            let zip7Path = utils.get7ZipPath();
             let waitMinutes = 30; // 等待分钟数
             pFun.waitFor(() => store.get('INSTALL.ZIP7_STATUS', false), {
                 interval: 2000,
                 timeout: waitMinutes * 60 * 1000
             }).then(() => {
                 // console.log(files);
-                let extractCmd = zip7Path + ' x -y -o' + getUserData() + ' ' + files[0];
-                exec(extractCmd).then(out => {
+                let extractCmd = zip7Path + ' x -y -o' + utils.getUserData() + ' ' + files[0];
+                utils.exec(extractCmd).then(out => {
                     if (out.indexOf('Everything is Ok') > 0) {
                         store.set('INSTALL.NOX_PLAYER_STATUS', true);
                         console.log('解压NoxPlayer成功，解压到：' + noxPlayer);
@@ -360,7 +334,7 @@ async function downloadAndroidSdk() {
     // https://www.androiddevtools.cn/ （全部工具均可下载）
     // let fileUrl = 'https://dl.google.com/android/android-sdk_r24.4.1-windows.zip';
     let androidSdkStatus = store.get('INSTALL.ANDROID_SDK_STATUS', false);
-    let androidSdk = getAndroidSdkPath();
+    let androidSdk = utils.getAndroidSdkPath();
     console.log('androidSdkStatus=' + androidSdkStatus + ', androidSdk=' + androidSdk);
 
     if (!fs.existsSync(androidSdk) || !androidSdkStatus) {
@@ -371,16 +345,16 @@ async function downloadAndroidSdk() {
             fileNameArray.push('AndroidSdk-{ver}.7z.' + (Array(fileNumSize).join('0') + i).slice(-fileNumSize));
         }
 
-        downloadLatestMultiFile('zxniuniu', 'AndroidSdk', fileNameArray).then(files => {
-            let zip7Path = get7ZipPath();
+        utils.downloadLatestMultiFile('zxniuniu', 'AndroidSdk', fileNameArray).then(files => {
+            let zip7Path = utils.get7ZipPath();
             let waitMinutes = 30; // 等待分钟数
             pFun.waitFor(() => store.get('INSTALL.ZIP7_STATUS', false), {
                 interval: 2000,
                 timeout: waitMinutes * 60 * 1000
             }).then(() => {
                 // console.log(files);
-                let extractCmd = zip7Path + ' x -y -o' + getUserData() + ' ' + files[0];
-                exec(extractCmd).then(out => {
+                let extractCmd = zip7Path + ' x -y -o' + utils.getUserData() + ' ' + files[0];
+                utils.exec(extractCmd).then(out => {
                     if (out.indexOf('Everything is Ok') > 0) {
                         store.set('INSTALL.ANDROID_SDK_STATUS', true);
                         console.log('解压AndroidSdk成功，解压到：' + androidSdk);
@@ -431,7 +405,7 @@ function handle7zipExtractError(files, errMsg) {
  * 解决在NoxPlayer或者AndroidSdk下载完成后的Nox中的adb.exe覆盖Sdk中的adb.exe的问题
  */
 function overrideAndroidSdkAdbByNoxPlayer() {
-    let sdkAdb = getAndroidSdkPath(), noxAdb = path.join(getNoxFolder(), 'bin', 'adb.exe');
+    let sdkAdb = utils.getAndroidSdkPath(), noxAdb = path.join(utils.getNoxFolder(), 'bin', 'adb.exe');
 
     // 只有在两个均存在，且大小不一样时才覆盖
     if (fs.existsSync(sdkAdb) && fs.existsSync(noxAdb)) {

@@ -1,6 +1,6 @@
 import path from 'path';
 import {BrowserWindow, session} from 'electron';
-import {changePermissions, removeFolder, downloadFile, getExtensionsPathCache, getExtensionsPathSys} from "../utils";
+import utils from "../utils";
 import fs from "fs";
 
 import unzip from "unzip-crx";
@@ -37,7 +37,7 @@ const getSession = (partition) => {
  * @param partition
  */
 const addExtension = function (extensionFolderName, partition) {
-    const extPath = path.join(getExtensionsPathSys(), extensionFolderName);
+    const extPath = path.join(utils.getExtensionsPathSys(), extensionFolderName);
     // console.log('extPath:' + extPath);
     return getSession(partition).loadExtension(extPath);
 };
@@ -104,7 +104,7 @@ const createPopup = (extensionId, width = 300, height = 350, popupName = 'popup'
  * @returns {Promise<unknown>}
  */
 export const downloadChromeExtension = (chromeStoreID, forceDownload, attempts = 5) => {
-    const extensionsStore = getExtensionsPathCache();
+    const extensionsStore = utils.getExtensionsPathCache();
     if (!fs.existsSync(extensionsStore)) {
         fs.mkdirSync(extensionsStore, {recursive: true});
     }
@@ -112,15 +112,15 @@ export const downloadChromeExtension = (chromeStoreID, forceDownload, attempts =
     return new Promise((resolve, reject) => {
         if (!fs.existsSync(extensionFolder) || forceDownload) {
             if (fs.existsSync(extensionFolder)) {
-                removeFolder(extensionFolder);
+                utils.removeFolder(extensionFolder);
             }
             const fileURL = `https://clients2.google.com/service/update2/crx?response=redirect&acceptformat=crx2,crx3&x=id%3D${chromeStoreID}%26uc&prodversion=32`; // eslint-disable-line
             const filePath = path.resolve(`${extensionFolder}.crx`);
-            downloadFile(fileURL, filePath)
+            utils.downloadFile(fileURL, filePath)
                 .then(() => {
                     unzip(filePath, extensionFolder)
                         .then(() => {
-                            changePermissions(extensionFolder, 755);
+                            utils.changePermissions(extensionFolder, 755);
                             resolve(extensionFolder);
                         })
                         .catch((err) => {
@@ -160,7 +160,7 @@ export const downloadChromeExtension = (chromeStoreID, forceDownload, attempts =
  */
 export const installExtension = (extensionReference, forceDownload = false) => {
     let IDMap = {};
-    const getIDMapPath = () => path.resolve(getExtensionsPathCache(), 'IDMap.json');
+    const getIDMapPath = () => path.resolve(utils.getExtensionsPathCache(), 'IDMap.json');
     if (fs.existsSync(getIDMapPath())) {
         try {
             IDMap = JSON.parse(fs.readFileSync(getIDMapPath(), 'utf8'));

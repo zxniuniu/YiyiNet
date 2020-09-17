@@ -3,7 +3,7 @@ import {app, dialog, Menu, shell} from 'electron';
 import {checkNewUpdates} from './auto-updater';
 import config from '../configs/app.config';
 import i18n from '../configs/i18next.config';
-import {getIco, isDebugUrl, packageJson, toggleShowHide} from '../utils';
+import utils from '../utils';
 import store from './../configs/settings';
 
 let menuTemplates = {mac: {}, other: {}};
@@ -20,7 +20,7 @@ function languageMenu() {
 }
 
 function showAppInfoClickAction() {
-    let json = packageJson();
+    let json = utils.packageJson();
     dialog.showMessageBoxSync({
         "type": 'info',
         "buttons": [],
@@ -305,19 +305,19 @@ function otherMenuHelp() {
 function otherMenuFriend() {
     let submenu = [{
         label: "站内博客",
-        icon: getIco('asana.ico'),
+        icon: utils.getIco('asana.ico'),
         click: function () {
             shell.openExternal(new URL(config.mainUrl).origin + '/blog');
         }
     }, {
         label: "作者博客",
-        icon: getIco('spotify.ico'),
+        icon: utils.getIco('spotify.ico'),
         click: function () {
             shell.openExternal('https://fuyiyi.imdo.co');
         }
     }, menuSep(), {
         label: "小妞图库",
-        icon: getIco('solo.ico'),
+        icon: utils.getIco('solo.ico'),
         click: function () {
             shell.openExternal('http://niuniu.hicp.net');
         }
@@ -325,7 +325,7 @@ function otherMenuFriend() {
 
     return {
         label: "友链", // "友情链接"
-        icon: getIco('link.ico'),
+        icon: utils.getIco('link.ico'),
         submenu: submenu
     };
 }
@@ -334,13 +334,13 @@ function otherMenuSetting() {
     let submenu = [];
     submenu.push({
         label: i18n.t('Languages'),
-        icon: getIco('tallyfy.ico'),
+        icon: utils.getIco('tallyfy.ico'),
         submenu: languageMenu()
     });
 
     return {
         label: i18n.t('Setting'),
-        icon: getIco('edit.ico'),
+        icon: utils.getIco('edit.ico'),
         submenu: submenu
     };
 }
@@ -349,14 +349,14 @@ function otherMenuView() {
     let submenu = [];
     submenu.push({
         label: i18n.t('Toggle Full Screen'),
-        icon: getIco('schoolloop.ico'),
+        icon: utils.getIco('schoolloop.ico'),
         accelerator: 'F11',
         click() {
             mainWindow.setFullScreen(!mainWindow.isFullScreen());
         }
     });
 
-    if (config.isDev || isDebugUrl()) {
+    if (config.isDev || utils.isDebugUrl()) {
         submenu.push({
             label: i18n.t('Reload'),
             accelerator: 'Ctrl+R',
@@ -380,16 +380,16 @@ function otherMenuView() {
     submenu.push(menuSep());
     submenu.push({
         label: i18n.t('Show / Hide'),
-        icon: getIco('codetree.ico'),
+        icon: utils.getIco('codetree.ico'),
         accelerator: 'F6',
-        // icon: getIco('show.ico'),
+        // icon: utils.getIco('show.ico'),
         click: function () {
-            toggleShowHide(mainWindow);
+            utils.toggleShowHide(mainWindow);
         }
     });
     submenu.push({
         label: i18n.t('Force Quit'),
-        icon: getIco('unlockicon.ico'),
+        icon: utils.getIco('unlockicon.ico'),
         click: function () {
             // https://discuss.atom.io/t/how-to-catch-the-event-of-clicking-the-app-windows-close-button-in-electron-app/21425
             store.set("FORCE_QUIT_FLAG", 'force');
@@ -399,7 +399,7 @@ function otherMenuView() {
 
     return {
         label: i18n.t('View'),
-        icon: getIco('programming.ico'),
+        icon: utils.getIco('programming.ico'),
         submenu: submenu
     };
 }
@@ -407,14 +407,14 @@ function otherMenuView() {
 function otherMenuAbout() {
     return {
         label: i18n.t('About'),
-        icon: getIco('update.ico'),
+        icon: utils.getIco('update.ico'),
         submenu: [{
             label: i18n.t('About Software'),
-            icon: getIco('app-gray.ico'),
+            icon: utils.getIco('app-gray.ico'),
             click: showAppInfoClickAction,
         }, {
             label: i18n.t('Check for updates'),
-            icon: getIco('update.ico'),
+            icon: utils.getIco('update.ico'),
             click() {
                 checkNewUpdates(mainWindow, true);
             }
@@ -422,19 +422,19 @@ function otherMenuAbout() {
             type: "separator",
         }, {
             label: "项目主页",
-            icon: getIco('basecamp.ico'),
+            icon: utils.getIco('basecamp.ico'),
             click: function () {
                 shell.openExternal('https://github.com/zxniuniu/YiyiNet');
             }
         }, {
             label: "使用文档",
-            icon: getIco('feedly.ico'),
+            icon: utils.getIco('feedly.ico'),
             click: function () {
                 shell.openExternal('https://fuyiyi.imdo.co/tags/YiyiNet');
             }
         }, {
             label: i18n.t('Search Issues'),
-            icon: getIco('devdocs.ico'),
+            icon: utils.getIco('devdocs.ico'),
             click() {
                 shell.openExternal('https://github.com/zxniuniu/YiyiNet/issues');
             }
@@ -447,7 +447,7 @@ function myMenu() {
         label: 'TEST',// i18n.t('Help'),
         submenu: [{
             label: "检查更新",
-            icon: getIco('update.ico'),
+            icon: utils.getIco('update.ico'),
             click: function () {
                 checkUpdate();
 
@@ -474,7 +474,7 @@ function myMenu() {
                 type: "separator",
             }, {
                 label: '关于软件...',
-                icon: getIco('click.ico'),
+                icon: utils.getIco('click.ico'),
                 click: function () {
                 }
             }

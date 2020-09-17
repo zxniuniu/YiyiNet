@@ -1,5 +1,5 @@
 import store from './../configs/settings';
-import {getChromedriverExeName} from './../utils';
+import utils from './../utils';
 
 /**
  * 停止Chromedriver服务进程
@@ -14,7 +14,7 @@ export function killChromedriver() {
         }
     } else {
         let exec = require('child_process');
-        exec('TASKKILL.EXE /F /IM ' + getChromedriverExeName(), (err, stdout, stderr) => {
+        exec('TASKKILL.EXE /F /IM ' + utils.fgetChromedriverExeName(), (err, stdout, stderr) => {
         });
     }
 }

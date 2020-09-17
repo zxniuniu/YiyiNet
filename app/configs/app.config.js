@@ -43,6 +43,7 @@ const config = {
     storeValue: {
         DEFAULT_LANGUAGE: 'cn', // 默认语言，中文
         TOOLS_DOWNLOAD_INTERVAL_DAYS: 10, // 检查软件更新间隔的天数
+        MAX_CONCURRENCY_DOWNLOAD: 20, // 多个分卷下载时，最多的同时下载个数
         ENV: {
             // https://playwright.dev/#version=v1.3.0&path=docs%2Finstallation.md&q=
             PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1, // 配置playwright不自动下载浏览器
