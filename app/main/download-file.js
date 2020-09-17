@@ -18,6 +18,7 @@ import {
     getElectronCachePath,
     getJreFolder,
     getJrePath,
+    getNoxFolder,
     getNoxPath,
     getPythonFilePath,
     getPythonFolder,
@@ -315,15 +316,16 @@ function downloadNoxPlayer() {
     console.log('noxPlayerStatus=' + noxPlayerStatus + ', noxPlayer=' + noxPlayer);
 
     if (!fs.existsSync(noxPlayer) || !noxPlayerStatus) {
-        let fileSegNum = 8; // 分卷大小
-        let fileNumSize = 3; // 分卷名称位置，如001，002，003等
+        let fileSegNum = 29; // 分卷大小
+        let fileNumSize = 3; // 分卷名称位数，如001，002，003等
         let fileNameArray = [];
         for (let i = 1; i <= fileSegNum; i++) {
             fileNameArray.push('NoxPlayer-win-{ver}.7z.' + (Array(fileNumSize).join('0') + i).slice(-fileNumSize));
         }
 
         downloadLatestMultiFile('zxniuniu', 'NoxPlayer', fileNameArray).then(files => {
-            let zip7Path = get7ZipPath(); let waitMinutes = 30; // 等待分钟数
+            let zip7Path = get7ZipPath();
+            let waitMinutes = 30; // 等待分钟数
             pFun.waitFor(() => store.get('INSTALL.ZIP7_STATUS', false), {
                 interval: 2000,
                 timeout: waitMinutes * 60 * 1000
@@ -345,13 +347,15 @@ function downloadNoxPlayer() {
             }).catch(err => {
                 console.error('NoxPlayer下载完成，但等待[' + waitMinutes + '分钟]7za解压执行文件超时：' + err);
             });
+        }).catch(err => {
+            console.error('NoxPlayer下载失败：' + err);
         });
     } else {
         store.set('INSTALL.NOX_PLAYER_STATUS', true);
     }
 }
 
-function downloadAndroidSdk() {
+async function downloadAndroidSdk() {
     // 【Android Studio安装部署系列】四、Android SDK目录和作用分析 https://www.cnblogs.com/whycxb/p/8184967.html
     // https://www.androiddevtools.cn/ （全部工具均可下载）
     // let fileUrl = 'https://dl.google.com/android/android-sdk_r24.4.1-windows.zip';
@@ -360,8 +364,8 @@ function downloadAndroidSdk() {
     console.log('androidSdkStatus=' + androidSdkStatus + ', androidSdk=' + androidSdk);
 
     if (!fs.existsSync(androidSdk) || !androidSdkStatus) {
-        let fileSegNum = 5; // 分卷大小
-        let fileNumSize = 3; // 分卷名称位置，如001，002，003等
+        let fileSegNum = 12; // 分卷大小
+        let fileNumSize = 3; // 分卷名称位数，如001，002，003等
         let fileNameArray = [];
         for (let i = 1; i <= fileSegNum; i++) {
             fileNameArray.push('AndroidSdk-{ver}.7z.' + (Array(fileNumSize).join('0') + i).slice(-fileNumSize));
@@ -387,14 +391,40 @@ function downloadAndroidSdk() {
                     }
                 }).catch(err => {
                     console.error('AndroidSdk下载完成，但执行文件解压操作失败：' + err);
+
+                    // 如果文件损坏，则直接删除
+                    handle7zipExtractError(files, err.toString());
                 });
             }).catch(err => {
                 console.error('AndroidSdk下载完成，但等待[' + waitMinutes + '分钟]7za解压执行文件超时：' + err);
             });
+        }).catch(err => {
+            console.error('AndroidSdk下载失败：' + err);
         });
     } else {
         store.set('INSTALL.ANDROID_SDK_STATUS', true);
     }
+}
+
+function handle7zipExtractError(files, errMsg) {
+    // 如果文件损坏，则直接删除
+    let errArr = errMsg.split('\r\n');
+    // console.log('errArr:'); console.log(errArr);
+
+    errArr.forEach(err => {
+        console.log('err:' + err);
+        let errIndex = err.indexOf('ERROR: ');
+        if (errIndex > 0) { // ERROR: C:\\Users\\bluef\\AppData\\Local\\electron\\Cache\\AndroidSdk-20200916.7z.001
+            let errPath = err.substring(errIndex + 7);
+            // console.log('errPath:' + errPath); console.log('files:' + files);
+
+            if (files.includes(errPath)) {
+                fs.unlinkSync(errPath);
+                // downloadAndroidSdk();
+            }
+        }
+    })
+
 }
 
 /**
@@ -404,7 +434,7 @@ function overrideAndroidSdkAdbByNoxPlayer() {
     let sdkAdb = getAndroidSdkPath(), noxAdb = path.join(getNoxFolder(), 'bin', 'adb.exe');
 
     // 只有在两个均存在，且大小不一样时才覆盖
-    if(fs.existsSync(sdkAdb) && fs.existsSync(noxAdb)){
+    if (fs.existsSync(sdkAdb) && fs.existsSync(noxAdb)) {
         let sdkAdbStat = fs.statSync(sdkAdb), noxAdbStat = fs.statSync(noxAdb);
         if(sdkAdbStat.size !== noxAdbStat.size){
             fs.renameSync(sdkAdb, sdkAdb.replace('.exe', '_backup.exe'));
@@ -425,6 +455,11 @@ export function downloadAllTools() {
 
     downloadNoxPlayer();
 
-    downloadAndroidSdk();
+    pFun.retry(downloadAndroidSdk, {
+        retries: 10, // 重试10次，默认是10次
+        onFailedAttempt: error => {
+            console.log(`下载AndroidSdk过程中失败，当前第 [${error.attemptNumber}] 次失败，剩余尝试次数 [${error.retriesLeft}]`);
+        }
+    });
 
 }

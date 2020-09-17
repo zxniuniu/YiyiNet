@@ -1,42 +1,15 @@
-import {
-    downloadFile,
-    downloadLarge,
-    downloadLatestMultiFile,
-    downloadLatestRetry,
-    exec,
-    extractTar,
-    extractZip,
-    get7ZipFolder,
-    get7ZipPath,
-    getAndroidSdkPath,
-    getChromedriverExeName,
-    getChromedriverFilePath,
-    getElectronCachePath,
-    getJreFolder,
-    getJrePath,
-    getNoxPath,
-    getPythonFilePath,
-    getPythonFolder,
-    getToolsPath,
-    getUserData,
-    getV2rayCoreExe,
-    getYoutubeDlExe,
-    moveFolder,
-    pastDays,
-    downloadSmall,
-    getApkFolder
-} from "../utils";
+import store from "../configs/settings";
+import {downloadLarge, getApkFolder} from "../utils";
 import path from 'path';
 import pFun from 'p-fun';
 import fs from 'fs';
-import store from "../configs/settings";
 
 /**
  * 通过App名字搜索得到App的appId
  * @param searchAppName
  * @returns {Promise<unknown>}
  */
-export function searchMiApp(searchAppName){
+export function searchMiApp(searchAppName) {
     let searchUrl = 'http://app.mi.com/search?keywords=' + encodeURI(searchAppName);
 
     return new Promise((resolve, reject) => {

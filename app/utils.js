@@ -746,7 +746,7 @@ export async function downloadGithub(user, rep, tag, fileName, savePath, baseUrl
     } else if (!baseUrl_type.startsWith('http')) {
         baseUrl_type = getGithubUrl(baseUrl_type);
     }
-    let downloadUrl = baseUrl_type.replace('hub.fas', 'download.fas') + '/' + user + '/'
+    let downloadUrl = baseUrl_type/*.replace('hub.fas', 'download.fas')*/ + '/' + user + '/'
         + rep + '/releases/download/' + tag + '/' + fileName;
     return new Promise((resolve, reject) => {
         downloadLarge(downloadUrl, path.join(savePath, fileName)).then(file => {
@@ -855,7 +855,7 @@ export async function downloadLatestMultiFile(user, rep, fileNameArray, savePath
 
     let mapper = fileName => downloadLatest(user, rep, fileName, savePath, type, queryVer);
     return new Promise((resolve, reject) => {
-        pFun.map(fileNameArray, mapper, {concurrency: Math.min(5, fileNameArray.length), stopOnError: false})
+        pFun.map(fileNameArray, mapper, {concurrency: Math.min(10, fileNameArray.length), stopOnError: false})
             .then(result => {
                 if (fileNameArray.length === 1) {
                     resolve(result[0]);
