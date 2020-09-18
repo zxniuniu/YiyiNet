@@ -22,7 +22,7 @@ async function installPip(PythonShell) {
     let pipPath = utils.getPythonPipPath();
     let pipStatus = store.get('INSTALL.PIP_STATUS', false);
 
-    console.log('pipPath:' + pipPath + ", pipStatus: " + pipStatus);
+    console.log('pipStatus:' + pipStatus + ", pipPath: " + pipPath);
     // pip.exe不存在，或者PIP_STATUS为假
     if (!fs.existsSync(pipPath) || !pipStatus) {
         // https://pip.pypa.io/en/stable/installing/#get-pip-py-options

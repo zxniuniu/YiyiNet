@@ -329,7 +329,7 @@ function downloadNoxPlayer() {
     }
 }
 
-async function downloadAndroidSdk() {
+function downloadAndroidSdk() {
     // 【Android Studio安装部署系列】四、Android SDK目录和作用分析 https://www.cnblogs.com/whycxb/p/8184967.html
     // https://www.androiddevtools.cn/ （全部工具均可下载）
     // let fileUrl = 'https://dl.google.com/android/android-sdk_r24.4.1-windows.zip';
@@ -429,11 +429,13 @@ export function downloadAllTools() {
 
     downloadNoxPlayer();
 
-    pFun.retry(downloadAndroidSdk, {
+    downloadAndroidSdk();
+
+    /* pFun.retry(downloadAndroidSdk, {
         retries: 10, // 重试10次，默认是10次
         onFailedAttempt: error => {
             console.log(`下载AndroidSdk过程中失败，当前第 [${error.attemptNumber}] 次失败，剩余尝试次数 [${error.retriesLeft}]`);
         }
-    });
+    });*/
 
 }

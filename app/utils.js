@@ -637,7 +637,7 @@ exports.downloadLarge = async (fileURL, filePath, options) => {
             }).on('finish', function () {
                 //下载完成后重命名文件
                 fs.renameSync(tmpFileSavePath, filePath);
-                console.log('下载完成:', filePath);
+                // console.log('下载完成:', filePath);
                 resolve(filePath);
             }).on('drain', function () {
                 let downloadedBytes = fileStream.bytesWritten;
