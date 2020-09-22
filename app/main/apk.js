@@ -125,6 +125,16 @@ export function downloadCommonApk(){
 
         // WTF?
         // https://boards.4chan.org/hm/thread/2098156/chris-evans-dick-pic
+
+        // 轻启动下载
+        let lightstartAppId = 'com.wpengapp.lightstart';
+        let lightstartDownloadUrl = 'https://www.lanzous.com/iqQ2Sg8fw9a'; // 轻启动 v2.15.0 耗子修改★会员版【芊芊精典 MYQQJD.COM】.apk
+
+        let lightstartFilePath = path.join(utils.getApkFolder(), lightstartAppId + '.apk');
+        utils.downloadLanzous(lightstartDownloadUrl, lightstartFilePath).then(() => {
+            setStore(lightstartAppId, '轻启动', lightstartAppId + '.apk', '2.15.0');
+        });
+
     }).catch(e => {
         console.log('拟自动下载Apk文件，但等待x-ray模块安装时超过超时时间[' + waitMinutes + ']分钟：' + e);
     });

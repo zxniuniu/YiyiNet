@@ -654,10 +654,15 @@ exports.downloadLarge = async (fileURL, filePath, options) => {
         //请求文件
         fetch(fileURL, {
             method: 'GET',
-            headers: {'Content-Type': 'application/octet-stream'},
+            headers: {
+                'Content-Type': 'application/octet-stream',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36'
+            },
             ...options || {},
             // timeout: 60000,
         }).then(res => {
+            console.log('res:');
+            console.dir(res);
             if (res.headers.get('redirected')) {
                 let redUrl = res.headers.get('location') || res.headers.get('content-location');
                 console.log('跳转链接: ' + redUrl + '，原链接：' + fileURL);
@@ -672,7 +677,7 @@ exports.downloadLarge = async (fileURL, filePath, options) => {
             reject(e);
         });
     });
-}
+};
 
 /**
  * 下载OneDriver共享文件
@@ -685,7 +690,44 @@ exports.downloadOneDriver = async (fileURL, filePath, options) => {
     // https://github.com/aploium/OneDrive-Direct-Link
     fileURL = fileURL.replace('1drv.ms', '1drv.ws');
     return exports.downloadLarge(fileURL, filePath, options);
-}
+};
+
+/**
+ * 根据蓝奏云地址下载其文件
+ * @param fileURL 文件下载路径
+ * @param filePath 文件保存位置，包括文件名
+ * @param options node-fetch的参数
+ * @returns {Promise<void>}
+ */
+exports.downloadLanzous = async (fileURL, filePath, options) => {
+    // 采用https://api.vvhan.com/lanzou.html接口
+    let apiUrl = 'https://api.vvhan.com/api/lz?url=';
+    let api = apiUrl + fileURL;
+    return new Promise((resolve, reject) => {
+        exports.getJson(api).then(json => {
+            if (!json.success) {
+                reject('通过API[' + apiUrl + ']解析蓝奏云失败');
+            } else {
+                exports.downloadLarge(json.download, filePath, {
+                    ...options || {},
+                    'referer': api,
+                    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                    'accept-encoding': 'gzip, deflate, br',
+                    'accept-language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6,ko;q=0.5,de-DE;q=0.4,de;q=0.3,la;q=0.2',
+                    'dnt': '1',
+                    'sec-fetch-dest': 'document',
+                    'sec-fetch-mode': 'navigate',
+                    'sec-fetch-site': 'cross-site',
+                    'sec-fetch-user': '?1',
+                    'upgrade-insecure-requests': '1'
+                }).then(() => {
+                    console.log('蓝奏云文件[' + fileURL + ']下载成功，使用API[' + apiUrl + ']');
+                    resolve(filePath);
+                }).catch(reject);
+            }
+        }).catch(reject);
+    });
+};
 
 /**
  * 获取Github基础地址

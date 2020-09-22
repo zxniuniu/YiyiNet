@@ -1,0 +1,154 @@
+1、Appium Android bootstrap socket crashed: Error: connect ECONNREFUSED
+I solved the problem adding the appium server argument --suppress-adb-kill-server, it prevents killing the adb server socket， 参见：https://stackoverflow.com/questions/42449770/appium-android-bootstrap-socket-crashed-error-connect-econnrefused
+
+
+// https://github.com/derekhe/android-sdk-offline/blob/master/downloadSDKInfo.js
+// https://www.androiddevtools.cn/
+解析Xml获取最新的Android SDK
+
+
+
+// https://riptutorial.com/node-js/example/9106/spawning-a-process-to-run-an-executable
+// https://ourcodeworld.com/articles/read/154/how-to-execute-an-exe-file-system-application-using-electron-framework
+let cmd = 'C:\\Program Files\\Notepad3\\notepad3.exe', params = ['/?'];
+let execFile = require('child_process').execFile;
+let child = execFile(cmd, params, (err, stdout, stderr) => {
+  if (err) {
+    throw err;
+  }
+  console.log(stdout);
+});
+
+// https://stackoverflow.com/questions/19762350/execute-an-exe-file-using-node-js
+var exec = require('child_process').execFile;
+/**
+ * Function to execute exe
+ * @param {string} fileName The name of the executable file to run.
+ * @param {string[]} params List of string arguments.
+ * @param {string} path Current working directory of the child process.
+ */
+function execute(fileName, params, path) {
+    let promise = new Promise((resolve, reject) => {
+        exec(fileName, params, { cwd: path }, (err, data) => {
+            if (err) reject(err);
+            else resolve(data);
+        });
+
+    });
+    return promise;
+}
+
+
+
+
+
+
+
+
+
+
+let XRay = require('x-ray'); let x = XRay();
+var Request = require('request');
+function makeDriver(opts) {
+	let request = typeof opts === "function" ? opts : Request.defaults(opts);
+	return function driver(context, callback) {
+		var url = context.url;
+
+		request(url, function(err, response, body) {
+			return callback(err, body);
+		})
+	}
+}
+// https://www.vanamco.com/2014/06/24/proxy-requests-in-node-js/
+let options = {
+	method: "GET",
+	jar: true,
+	proxy: 'https://uk.cn-cloudflare.com:443',
+	headers: {
+		'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36"
+	}
+}
+let driver = makeDriver(options)
+x.driver(driver);
+
+// x("https://cn.bing.com/search?q=x-ray", '.b_algo', [{
+x("https://www.google.com/search?q=x-ray", '.g', [{
+   link: 'a@href',
+}])(console.log);
+
+
+x("https://www.lanzous.com/iqQ2Sg8fw9a", 'html')(console.log);
+
+
+ .paginate('#pnnext@href').limit(5)
+ ((err, obj) => {
+   if(err) {
+     callback(err);
+   }
+   else {
+     obj.forEach((item) => {
+       var start = item.link.indexOf('q=')
+       var end = item.link.indexOf('&sa')
+       item.link = item.link.substring(start + 2, end)
+     })
+     callback(null, obj) // do something with the objects?
+   }
+ })
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =====================================================================================================================
+var util = require('util');
+var exec = util.promisify(require('child_process').exec);
+
+async function lsExample() {
+  const { stdout, stderr } = await exec('dir');
+  console.log('stdout:', stdout);
+  console.error('stderr:', stderr);
+}
+lsExample();
+
+var spawn = require('child_process').spawn
+spawn('node', ['C:/Users/Administrator/AppData/Roaming/npm/node_modules/cnpm/bin/cnpm', 'install', 'request'], {
+  'cwd': 'D:/Workspace/Git/electron-v9.0.0-win32-x64/'
+}, (err, stdout, stder) => {
+     console.log('err:' + err);
+     console.log('stdout:' + stdout);
+     console.log('stder:' + stder);
+});
+
+var childProcess = require('child_process')
+var child = childProcess.fork(process.execPath, ['C:/Users/Administrator/AppData/Roaming/npm/node_modules/cnpm/bin/cnpm', 'install', 'request'], {
+        silent: true,
+        detached: true,
+        env: {
+            ELECTRON_RUN_AS_NODE:1
+        }
+    });
+// =====================================================================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
