@@ -380,6 +380,55 @@ function downloadAndroidSdk() {
     }
 }
 
+function downloadJdk() {
+    // https://docs.oracle.com/javase/8/docs/technotes/guides/install/config.html#table_config_file_options
+    // https://docs.oracle.com/javase/8/docs/technotes/guides/install/windows_installer_options.html#CJAJGEHA
+    let jdkStatus = store.get('INSTALL.JDK_STATUS', false);
+    let jdk = utils.getJdkPath();
+    console.log('jdkStatus=' + jdkStatus + ', jdk=' + jdk);
+
+    if (!fs.existsSync(jdk) || !jdkStatus) {
+        let fileSegNum = 4; // 分卷大小
+        let fileNumSize = 3; // 分卷名称位数，如001，002，003等
+        let fileNameArray = [];
+        for (let i = 1; i <= fileSegNum; i++) {
+            fileNameArray.push('jdk-{ver}-' + (process.platform === 'win32' ? 'windows' : '') + '-' + (process.arch === 'x64' ? 'x64' : 'i586')
+                + '.7z.' + (Array(fileNumSize).join('0') + i).slice(-fileNumSize));
+        }
+
+        utils.downloadLatestMultiFile('zxniuniu', 'OracleJdk', fileNameArray).then(files => {
+            let zip7Path = utils.get7ZipPath();
+            let waitMinutes = 30; // 等待分钟数
+            pFun.waitFor(() => store.get('INSTALL.ZIP7_STATUS', false), {
+                interval: 2000,
+                timeout: waitMinutes * 60 * 1000
+            }).then(() => {
+                // console.log(files);
+                let extractCmd = zip7Path + ' x -y -o' + utils.getUserData() + ' ' + files[0];
+                utils.exec(extractCmd).then(out => {
+                    if (out.indexOf('Everything is Ok') > 0) {
+                        store.set('INSTALL.JDK_STATUS', true);
+                        console.log('解压Jdk成功，解压到：' + jdk);
+                    } else {
+                        console.log('解压Jdk失败：' + out);
+                    }
+                }).catch(err => {
+                    console.error('Jdk下载完成，但执行文件解压操作失败：' + err);
+
+                    // 如果文件损坏，则直接删除
+                    handle7zipExtractError(files, err.toString());
+                });
+            }).catch(err => {
+                console.error('Jdk下载完成，但等待[' + waitMinutes + '分钟]7za解压执行文件超时：' + err);
+            });
+        }).catch(err => {
+            console.error('Jdk下载失败：' + err);
+        });
+    } else {
+        store.set('INSTALL.JDK_STATUS', true);
+    }
+}
+
 function handle7zipExtractError(files, errMsg) {
     // 如果文件损坏，则直接删除
     let errArr = errMsg.split('\r\n');
@@ -423,9 +472,11 @@ export function downloadAllTools() {
 
     downloadV2rayCore();
 
-    downloadJre();
-
     download7Zip();
+
+    // Appium需要Jdk，因此取消了Jre的安装，安装的JDK中有Jre
+    // downloadJre();
+    downloadJdk();
 
     downloadNoxPlayer();
 

@@ -86,7 +86,7 @@ export function installModule(needInstall, hasInstall) {
             try {
                 let logStr = '[' + (i + 1) + '/' + moNum + ']安装模块[' + moduleStr + ']';
                 // console.time(logStr + '安装所耗时间');
-                // console.log(logStr + '，版本[' + ver + ']。。。');
+                console.log(logStr + '，版本[' + ver + ']。。。');
                 manager.install(moduleStr, ver).then(res => {
                     console.log(logStr + '，版本[' + ver + ']，安装[成功]：name=' + res.name + '[' + res.version + ']，依赖：' + Object.keys(res.dependencies));
                     // console.dir(res);

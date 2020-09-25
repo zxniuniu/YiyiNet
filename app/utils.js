@@ -208,7 +208,7 @@ exports.getFirefoxFilePath = () => {
  * 获取Jre所在路径
  */
 exports.getJreFolder = () => {
-    return exports.checkPath(path.join(exports.getUserData(), 'Jre'));
+    return exports.checkPath(path.join(exports.getJdkFolder(), 'jre'));
 };
 
 /**
@@ -216,6 +216,20 @@ exports.getJreFolder = () => {
  */
 exports.getJrePath = () => {
     return path.join(exports.getJreFolder(), 'bin', 'java.exe');
+};
+
+/**
+ * 获取Jdk所在路径
+ */
+exports.getJdkFolder = () => {
+    return exports.checkPath(path.join(exports.getUserData(), 'Jdk'));
+};
+
+/**
+ * 获取Jdk所在路径（exe路径）
+ */
+exports.getJdkPath = () => {
+    return path.join(exports.getJdkFolder(), 'bin', 'java.exe');
 };
 
 // =====================================================================================================================

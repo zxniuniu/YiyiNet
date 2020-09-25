@@ -56,6 +56,7 @@ export function storeChangeEvent() {
 export function resetDefaultObject() {
     // 重置已经存在的值
     store.reset(Object.keys(config.defaultStoreValue));
+    store.set('FORCE_QUIT_FLAG', false);
 
     // 安装的模块（启动时重置安装的模块的标识）
     resetObjKey('MODULE,CHROMEDRIVER,APPIUM,TOOLS');

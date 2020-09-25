@@ -10,7 +10,9 @@ const config = {
 
     protocol: 'yiyinet',
     showMenuBar: false,
-    devToolsPostion: 'right',
+
+    // https://www.electronjs.org/docs/api/web-contents#contentsopendevtoolsoptions
+    devToolsPostion: 'undocked', // right, bottom, undocked, detach // In undocked mode it's possible to dock back. In detach mode it's not.
 
     user: 'zxniuniu',
     repo: 'YiyiNet',
@@ -51,7 +53,7 @@ const config = {
         INSTALL: {
             PIP_STATUS: false, // Pip是否安装
             ALREADY_INSTALL: false, // 模块是否安装过，未安装过时，安装两次
-            JRE_STATUS: false, // JRE是否安装
+            JDK_STATUS: false, // Jdk是否安装
             ZIP7_STATUS: false, // 7-zip是否安装
             NOX_PLAYER_STATUS: false, // NoxPlayer是否安装
             ANDROID_SDK_STATUS: false, // Android Sdk是否安装

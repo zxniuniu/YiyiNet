@@ -368,7 +368,7 @@ function openDevTools(mainWindow) {
     console.log('config.isDev：' + config.isDev + '，utils.isDebugUrl：' + utils.isDebugUrl() + '，devToolsPostion：' + config.devToolsPostion);
     if (config.isDev || utils.isDebugUrl()) {
         // mainWindow.webContents.openDevTools({'mode': config.devToolsPostion});
-        mainWindow.webContents.openDevTools({mode: 'right'})
+        mainWindow.webContents.openDevTools({mode: config.devToolsPostion})
         // mainWindow.toggleDevTools();
     }
 }
