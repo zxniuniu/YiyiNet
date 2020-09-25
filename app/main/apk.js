@@ -83,9 +83,9 @@ export function downloadMiApp(appId, appName){
     });
 }
 
-function setStore(appId, appName, fileName, version) {
+function setStore(appId, appName, apkFile, version) {
     store.set('APK.' + appId + '.NAME', appName);
-    store.set('APK.' + appId + '.FILE', fileName);
+    store.set('APK.' + appId + '.FILE', apkFile);
     store.set('APK.' + appId + ".VER", version);
     store.set('APK.' + appId + ".STATUS", true);
 }
@@ -129,9 +129,10 @@ export function downloadCommonApk(){
         // WTF?
         // https://boards.4chan.org/hm/thread/2098156/chris-evans-dick-pic
 
-        downloadLanzousApk('https://www.lanzous.com/iqQ2Sg8fw9a', 'com.wpengapp.lightstart', '轻启动', 'test').then((fileName) => {
-            setStore('com.wpengapp.lightstart', '轻启动', fileName, 'test');
-        });
+        // 测试蓝奏云文件下载
+        /*utils.downloadLanzousApk('https://www.lanzous.com/i8rc3vg', 'com.wpengapp.lightstart', '轻启动', 'test').then((filePath) => {
+            setStore('com.wpengapp.lightstart', '轻启动', path.basename(filePath), 'test');
+        });*/
 
     }).catch(e => {
         console.log('拟自动下载Apk文件，但等待x-ray模块安装时超过超时时间[' + waitMinutes + ']分钟：' + e);

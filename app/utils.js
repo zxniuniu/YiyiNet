@@ -20,7 +20,7 @@ let fetch = require("node-fetch");
 
 /*
 let remote = require('electron').remote; let app = remote.app; let path = require('path'); let fs = require('fs'); let fetch = require("node-fetch");
-let http = require('http'); let https = require('https'); let net = require('net');
+let http = require('http'); let https = require('https'); let net = require('net'); let zlib = require('zlib');
 let StreamZip = require('node-stream-zip'); let fse = require('live-plugin-manager/node_modules/fs-extra'); let tar = require('live-plugin-manager/node_modules/tar');
 */
 
@@ -665,18 +665,21 @@ exports.downloadLarge = async (fileURL, filePath, options) => {
                 }
             });
 
-        //请求文件
-        fetch(fileURL, {
+        let defaultOption = {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/octet-stream',
+                // 'Content-Type': 'application/octet-stream',
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36'
             },
-            ...options || {},
             // timeout: 60000,
+        };
+
+        //请求文件
+        fetch(fileURL, {
+            ...defaultOption,
+            ...options || {}
         }).then(res => {
-            console.log('res:');
-            console.dir(res);
+            // console.log('res:'); console.dir(res);
             if (res.headers.get('redirected')) {
                 let redUrl = res.headers.get('location') || res.headers.get('content-location');
                 console.log('跳转链接: ' + redUrl + '，原链接：' + fileURL);
@@ -717,25 +720,22 @@ exports.downloadLanzous = async (fileURL, filePath, options) => {
     // 采用https://api.vvhan.com/lanzou.html接口
     let apiUrl = 'https://api.vvhan.com/api/lz?url=';
     let api = apiUrl + fileURL;
+
     return new Promise((resolve, reject) => {
         exports.getJson(api).then(json => {
             if (!json.success) {
                 reject('通过API[' + apiUrl + ']解析蓝奏云失败');
             } else {
+                let defaultOption = {
+                    headers: {
+                        'accept-language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6,ko;q=0.5,de-DE;q=0.4,de;q=0.3,la;q=0.2' // 一定不能删除，否则无法下载
+                    }
+                };
                 exports.downloadLarge(json.download, filePath, {
-                    ...options || {},
-                    'referer': api,
-                    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-                    'accept-encoding': 'gzip, deflate, br',
-                    'accept-language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6,ko;q=0.5,de-DE;q=0.4,de;q=0.3,la;q=0.2',
-                    'dnt': '1',
-                    'sec-fetch-dest': 'document',
-                    'sec-fetch-mode': 'navigate',
-                    'sec-fetch-site': 'cross-site',
-                    'sec-fetch-user': '?1',
-                    'upgrade-insecure-requests': '1'
+                    ...defaultOption,
+                    ...options || {}
                 }).then(() => {
-                    console.log('蓝奏云文件[' + fileURL + ']下载成功，使用API[' + apiUrl + ']');
+                    console.log('蓝奏云文件[' + fileURL + ']下载成功，保存到：' + filePath + '，解析地址API[' + api + ']');
                     resolve(filePath);
                 }).catch(reject);
             }
@@ -767,7 +767,6 @@ exports.downloadLanzousApk = async (fileURL, appId, appName, version, options) =
         }
     });
 };
-
 
 /**
  * 获取Github基础地址

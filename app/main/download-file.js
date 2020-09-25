@@ -212,7 +212,7 @@ function downloadJre() {
         if (!fs.existsSync(fileTar)) {
             utils.downloadLarge(url, fileTar, {
                 headers: {
-                    connection: 'keep-alive',
+                    'connection': 'keep-alive',
                     'Cookie': 'gpw_e24=http://www.oracle.com/; oraclelicense=accept-securebackup-cookie'
                 },
                 agent: null,

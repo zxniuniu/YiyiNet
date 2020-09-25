@@ -20,9 +20,6 @@ import unhandled from 'electron-unhandled';
 import {debugInfo, openNewGitHubIssue} from 'electron-util';
 import {installExtensions} from './main/extensions';
 
-// 设置默认日志
-Object.assign(console, log.functions);
-
 // 处理未捕获的异常
 unhandled({
     showDialog: false,
@@ -34,6 +31,9 @@ unhandled({
         });
     }
 });
+
+// 设置默认日志
+Object.assign(console, log.functions);
 
 // 设置logs路径，默认为YiyiNet/YiyiNet/logs
 app.setAppLogsPath(path.join(app.getPath('userData'), 'Logs'));
