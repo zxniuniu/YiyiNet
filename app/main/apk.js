@@ -62,7 +62,7 @@ export function downloadMiApp(appId, appName){
                 // 下载App resolve(appId);
                 let apkUrl = 'http://app.mi.com/download/' + numId + '?id=' + appId;
                 appName = appName === undefined || appName == null ? '' : appName;
-                let apkPath = utils.getApkFolder(), apkFile = /*appName + */appId /*+ '-' + version*/ + '.apk';
+                let apkPath = utils.getApkFolder(), apkFile = /*appName + */appId + '-' + version + '.apk';
                 let apkFilePath = path.join(apkPath, apkFile);
 
                 if(!fs.existsSync(apkFilePath)) {
@@ -123,16 +123,14 @@ export function downloadCommonApk(){
         // downloadMiAppByName('微信');
         downloadMiApp('com.tencent.mm', '微信');
 
+        // downloadMiAppByName('轻启动');
+        downloadMiApp('com.wpengapp.lightstart', '轻启动');
+
         // WTF?
         // https://boards.4chan.org/hm/thread/2098156/chris-evans-dick-pic
 
-        // 轻启动下载
-        let lightstartAppId = 'com.wpengapp.lightstart';
-        let lightstartDownloadUrl = 'https://www.lanzous.com/iqQ2Sg8fw9a'; // 轻启动 v2.15.0 耗子修改★会员版【芊芊精典 MYQQJD.COM】.apk
-
-        let lightstartFilePath = path.join(utils.getApkFolder(), lightstartAppId + '.apk');
-        utils.downloadLanzous(lightstartDownloadUrl, lightstartFilePath).then(() => {
-            setStore(lightstartAppId, '轻启动', lightstartAppId + '.apk', '2.15.0');
+        downloadLanzousApk('https://www.lanzous.com/iqQ2Sg8fw9a', 'com.wpengapp.lightstart', '轻启动', 'test').then((fileName) => {
+            setStore('com.wpengapp.lightstart', '轻启动', fileName, 'test');
         });
 
     }).catch(e => {

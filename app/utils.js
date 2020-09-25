@@ -744,6 +744,32 @@ exports.downloadLanzous = async (fileURL, filePath, options) => {
 };
 
 /**
+ *
+ * @param fileURL App下载的蓝奏云地址
+ * @param appId AppId
+ * @param appName App名称
+ * @param version App版本
+ * @param options
+ * @returns {Promise<void>}
+ */
+exports.downloadLanzousApk = async (fileURL, appId, appName, version, options) => {
+    version = version === undefined || version === null ? '' : '-' + version;
+    let apkName = appId + version + '.apk';
+    let filePath = path.join(exports.getApkFolder(), apkName);
+
+    return new Promise((resolve, reject) => {
+        if (!fs.existsSync(filePath)) {
+            exports.downloadLanzous(fileURL, filePath, options).then(() => {
+                resolve(filePath);
+            }).catch(reject);
+        } else {
+            resolve(filePath);
+        }
+    });
+};
+
+
+/**
  * 获取Github基础地址
  * @param type 类型：github, cnpmjs, fastgit或简写
  * @returns {string}
