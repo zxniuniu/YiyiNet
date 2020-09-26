@@ -5,6 +5,8 @@ import AsyncLock from 'async-lock';
 import utils from "../utils";
 import store from "../configs/settings";
 import pFun from 'p-fun';
+import {removeNoxplayerStartAds} from './nox';
+
 
 export function downloadDriverFiles() {
     downloadChromedriver();
@@ -312,6 +314,9 @@ function downloadNoxPlayer() {
                         console.log('解压NoxPlayer成功，解压到：' + noxPlayer);
 
                         overrideAndroidSdkAdbByNoxPlayer();
+
+                        // 去除NoxPlayer启动的广告
+                        removeNoxplayerStartAds();
                     } else {
                         console.log('解压NoxPlayer失败：' + out);
                     }
