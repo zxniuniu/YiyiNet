@@ -177,3 +177,5 @@ function handleUrl(urlStr) {
     const win = BrowserWindow.getFocusedWindow();
     console.log(await electronDl(win, url));
 });*/
+
+exports.utils = require('./utils');

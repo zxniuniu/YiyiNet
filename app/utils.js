@@ -256,10 +256,17 @@ exports.getNoxFolder = () => {
 };
 
 /**
- * 获取Jre所在路径（exe路径）
+ * 获取Nox所在路径（exe路径）
  */
 exports.getNoxPath = () => {
     return path.join(exports.getNoxFolder(), 'bin', 'Nox.exe');
+};
+
+/**
+ * 获取Nox配置文件所在路径
+ */
+exports.getNoxConfigPath = () => {
+    return path.join(exports.getUserData(), '..', '..', 'Local', 'Nox');
 };
 
 // =====================================================================================================================
