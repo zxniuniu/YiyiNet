@@ -464,11 +464,40 @@ function overrideAndroidSdkAdbByNoxPlayer() {
     // 只有在两个均存在，且大小不一样时才覆盖
     if (fs.existsSync(sdkAdb) && fs.existsSync(noxAdb)) {
         let sdkAdbStat = fs.statSync(sdkAdb), noxAdbStat = fs.statSync(noxAdb);
-        if(sdkAdbStat.size !== noxAdbStat.size){
+        if (sdkAdbStat.size !== noxAdbStat.size) {
             fs.renameSync(sdkAdb, sdkAdb.replace('.exe', '_backup.exe'));
 
             fs.copyFileSync(noxAdb, sdkAdb);
         }
+    }
+}
+
+
+/**
+ * nircmd下载
+ */
+function downloadNircmd() {
+    // https://www.nirsoft.net/utils/nircmd.html
+    let nircmdDate = store.get('TOOLS.NIRCMD_DATE', 0);
+    let needDownload = utils.pastDays(nircmdDate) > store.get('TOOLS_DOWNLOAD_INTERVAL_DAYS', 10);
+    let nircmdExe = utils.getNircmdExe(), toolsPath = utils.getToolsPath();
+
+    if (!fs.existsSync(nircmdExe) || needDownload) {
+        let fileName = 'nircmd' + (process.arch === 'x64' ? '-x64' : '') + '.zip';
+        let fileUrl = 'https://www.nirsoft.net/utils/' + fileName;
+        utils.downloadLarge(fileUrl, path.join(utils.getElectronCachePath(), fileName)).then(filePath => {
+            utils.extractZip(filePath, toolsPath).then(() => {
+                store.set('TOOLS.NIRCMD', true);
+                store.set('TOOLS.NIRCMD_DATE', Date.now());
+
+                // 不需要该两个文件，因此删除
+                fs.unlinkSync(path.join(toolsPath, 'nircmd.exe'));
+                fs.unlinkSync(path.join(toolsPath, 'NirCmd.chm'));
+            });
+            console.log('工具[nircmd]下载成功，路径：' + filePath);
+        });
+    } else {
+        store.set('TOOLS.NIRCMD', true);
     }
 }
 
@@ -494,4 +523,5 @@ export function downloadAllTools() {
         }
     });*/
 
+    downloadNircmd();
 }
