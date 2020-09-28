@@ -269,6 +269,13 @@ exports.getNoxConfigPath = () => {
     return path.join(exports.getUserData(), '..', '..', 'Local', 'Nox');
 };
 
+/**
+ * 获取Nox中的adb.exe所在路径
+ */
+exports.getNoxAdb = () => {
+    return path.join(exports.getNoxFolder(), 'bin', 'adb.exe');
+};
+
 // =====================================================================================================================
 /**
  * 获取Android Sdk所在路径
@@ -346,19 +353,48 @@ function copyDir(src, dist, callback) {
     }
 }
 
-exports.exec = (cmd) => {
-    console.log('执行Cmd命令：' + cmd);
-    return new Promise(function(resolve, reject) {
+exports.execCmd = (cmd) => {
+    console.log('执行cmd命令：' + cmd);
+    return new Promise(function (resolve, reject) {
         cp.exec(cmd, {
             maxBuffer: 1024 * 2000
-        }, function(err, stdout, stderr) {
+        }, function (err, stdout, stderr) {
             if (err) {
                 reject(err);
-            } else if (stderr.lenght > 0) {
+            } else if (stderr.length > 0) {
                 reject(new Error(stderr.toString()));
             } else {
                 resolve(stdout);
             }
+        });
+    });
+}
+
+exports.execa = (file, args) => {
+    console.log('执行execa命令：' + file + ' ' + args);
+    let execa = require('execa');
+    return execa(file, args);
+}
+
+/**
+ * 采用execa获取命令行数据数组
+ * @param file
+ * @param args
+ * @param options
+ * @returns {*}
+ */
+exports.execaLines = (file, args, options) => {
+    console.log('执行execa命令：' + file + ' ' + args);
+    let execa = require('execa');
+    return new Promise(function (resolve, reject) {
+        execa(file, args, options || {}).then(res => {
+            if (res.stderr) {
+                reject(res.stderr);
+            }
+            let outList = res.stdout.split(require('os').EOL).filter(line => line !== '' && !line.startsWith('List of devices attached'));
+            resolve(outList);
+        }).catch(err => {
+            reject(err);
         });
     });
 }

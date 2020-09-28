@@ -308,7 +308,7 @@ function downloadNoxPlayer() {
             }).then(() => {
                 // console.log(files);
                 let extractCmd = zip7Path + ' x -y -o' + utils.getUserData() + ' ' + files[0];
-                utils.exec(extractCmd).then(out => {
+                utils.execCmd(extractCmd).then(out => {
                     if (out.indexOf('Everything is Ok') > 0) {
                         store.set('INSTALL.NOX_PLAYER_STATUS', true);
                         console.log('解压NoxPlayer成功，解压到：' + noxPlayer);
@@ -316,7 +316,11 @@ function downloadNoxPlayer() {
                         overrideAndroidSdkAdbByNoxPlayer();
 
                         // 去除NoxPlayer启动的广告，以及取消更新提示等
-                        nox.configNoxPlayerBeforeStart();
+                        nox.configNoxPlayerBeforeStart('6.6.1.2201').then(() => {
+                            console.log('去除NoxPlayer广告成功，以及去除默认的更新[版本=6.6.1.2201]提示成功');
+
+                            nox.startNoxPlayer();
+                        });
                     } else {
                         console.log('解压NoxPlayer失败：' + out);
                     }
@@ -331,6 +335,8 @@ function downloadNoxPlayer() {
         });
     } else {
         store.set('INSTALL.NOX_PLAYER_STATUS', true);
+
+        nox.startNoxPlayer();
     }
 }
 
@@ -359,7 +365,7 @@ function downloadAndroidSdk() {
             }).then(() => {
                 // console.log(files);
                 let extractCmd = zip7Path + ' x -y -o' + utils.getUserData() + ' ' + files[0];
-                utils.exec(extractCmd).then(out => {
+                utils.execCmd(extractCmd).then(out => {
                     if (out.indexOf('Everything is Ok') > 0) {
                         store.set('INSTALL.ANDROID_SDK_STATUS', true);
                         console.log('解压AndroidSdk成功，解压到：' + androidSdk);
@@ -410,7 +416,7 @@ function downloadJdk() {
             }).then(() => {
                 // console.log(files);
                 let extractCmd = zip7Path + ' x -y -o' + utils.getUserData() + ' ' + files[0];
-                utils.exec(extractCmd).then(out => {
+                utils.execCmd(extractCmd).then(out => {
                     if (out.indexOf('Everything is Ok') > 0) {
                         store.set('INSTALL.JDK_STATUS', true);
                         console.log('解压Jdk成功，解压到：' + jdk);
