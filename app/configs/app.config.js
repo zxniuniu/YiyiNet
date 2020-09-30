@@ -17,6 +17,8 @@ const config = {
     user: 'zxniuniu',
     repo: 'YiyiNet',
 
+    execNoxPlayerWhenStart: true, // 项目加载时，是否自动启动NoxPlayer
+
     // Store保存的数据
     defaultStoreValue: {
         FORCE_QUIT_FLAG: false, // 是否是强制退出，如果是则退出，否则隐藏主窗口

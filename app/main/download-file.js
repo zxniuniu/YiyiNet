@@ -6,7 +6,7 @@ import utils from "../utils";
 import store from "../configs/settings";
 import pFun from 'p-fun';
 import nox from './nox';
-
+import config from "../configs/app.config";
 
 export function downloadDriverFiles() {
     downloadChromedriver();
@@ -319,7 +319,9 @@ function downloadNoxPlayer() {
                         nox.configNoxPlayerBeforeStart('6.6.1.2201').then(() => {
                             console.log('去除NoxPlayer广告成功，以及去除默认的更新[版本=6.6.1.2201]提示成功');
 
-                            nox.startNoxPlayer();
+                            if (config.execNoxPlayerWhenStart) {
+                                nox.startNoxPlayer();
+                            }
                         });
                     } else {
                         console.log('解压NoxPlayer失败：' + out);
@@ -336,7 +338,10 @@ function downloadNoxPlayer() {
     } else {
         store.set('INSTALL.NOX_PLAYER_STATUS', true);
 
-        nox.startNoxPlayer();
+        // console.log('config.startNoxPlayer: ' + config.startNoxPlayer);
+        if (config.execNoxPlayerWhenStart) {
+            nox.startNoxPlayer();
+        }
     }
 }
 

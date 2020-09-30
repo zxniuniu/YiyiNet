@@ -16,6 +16,7 @@ import store from "./configs/settings";
 
 // https://www.jianshu.com/p/4b58711cb72a
 let fetch = require("node-fetch");
+var eol = require('os').EOL;
 // import {DownloaderHelper} from 'node-downloader-helper';
 
 /*
@@ -371,7 +372,7 @@ exports.execCmd = (cmd) => {
 }
 
 exports.execa = (file, args) => {
-    console.log('执行execa命令：' + file + ' ' + args);
+    // console.log('执行execa命令：' + file + ' ' + args);
     let execa = require('execa');
     return execa(file, args);
 }
@@ -383,18 +384,21 @@ exports.execa = (file, args) => {
  * @param options
  * @returns {*}
  */
-exports.execaLines = (file, args, options) => {
-    console.log('执行execa命令：' + file + ' ' + args);
+exports.execaLines = (file, args, options = {}) => {
+    // console.log('执行execa命令：' + file + ' ' + args);
     let execa = require('execa');
     return new Promise(function (resolve, reject) {
-        execa(file, args, options || {}).then(res => {
+        execa(file, args, options).then(res => {
             if (res.stderr) {
                 reject(res.stderr);
             }
-            let outList = res.stdout.split(require('os').EOL).filter(line => line !== '' && !line.startsWith('List of devices attached'));
+            let outList = res.stdout.split(eol).filter(line => line !== '' && !line.startsWith('List of devices attached'))
+                .map(str => str.replace(eol, ''));
+            // console.log('outList:' + outList);
             resolve(outList);
         }).catch(err => {
-            reject(err);
+            // console.log(err);
+            resolve([]);
         });
     });
 }
