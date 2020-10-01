@@ -178,7 +178,15 @@ exports.startNoxPlayer = async (index = 0) => {
     let nox = utils.execa(noxExe, ['-clone:Nox_' + index]);
     store.set('INSTALL.NOX_PLAYER_PID', nox.pid);
 
-    exports.checkEmulatorStatus();
+    await exports.checkEmulatorStatus();
+}
+
+/**
+ * 获取模拟器ID
+ */
+exports.getEmulators = async (index = 0) => {
+    let deviceLines = await utils.execaLines(utils.getNoxAdb(), ['devices']);
+    return deviceLines[index].split(' ')[0];
 }
 
 /**
@@ -201,7 +209,7 @@ exports.checkEmulatorStatus = async (index = 0) => {
         let results = pFun.map(commands, mapper, {concurrency: commands.length, stopOnError: false});
         console.log('第[' + tryTime + '/' + tryTimes + ']次：' + results);
 
-        if (results[0] === 1 && results[1] === 'stopped') {
+        if (results[0] === '1' && results[1] === 'stopped') {
             console.log('获取取已经启动的模拟器，地址：' + results[0].split(' ')[0]);
             break;
         }

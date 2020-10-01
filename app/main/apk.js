@@ -44,39 +44,45 @@ export function downloadMiApp(appId, appName){
 
     return new Promise((resolve, reject) => {
         let xray = getXray();
-        xray(detailUrl, ['ul.cf li'])(function(err, idAndNum) {
+        xray(detailUrl, ['div.container>div>div>div'])(function(err, idAndNum) {
             // ["com.oray.peanuthull", "428716"]
             if(err){
                 reject(err);
             }else{
                 let version = '', numId = '';
-                for(let i = 0; i < idAndNum.length; i = i + 2){
+                for(let i = 0; i < idAndNum.length; i = i + 1){
                     let key = idAndNum[i], value = idAndNum[i + 1];
                     if(key.startsWith('版本号')){
                         version = value;
-                    }else if(key.startsWith('appId')){
+                        i = i + 1;
+                    }else if(key.startsWith('appId') || key.startsWith('appID')){
                         numId = value;
+                        i = i + 1;
                     }
                 }
 
-                // 下载App resolve(appId);
-                let apkUrl = 'http://app.mi.com/download/' + numId + '?id=' + appId;
-                appName = appName === undefined || appName == null ? '' : appName;
-                let apkPath = utils.getApkFolder(), apkFile = /*appName + */appId + '-' + version + '.apk';
-                let apkFilePath = path.join(apkPath, apkFile);
+                if(version === '' || numId === ''){
+                    reject(new Error('解析[appId=' + appId + ',appName=' + appName + ']失败，未获取到版本，以及App的应用ID'));
+                }else {
+                    // 下载App resolve(appId);
+                    let apkUrl = 'http://app.mi.com/download/' + numId + '?id=' + appId;
+                    appName = appName === undefined || appName == null ? '' : appName;
+                    let apkPath = utils.getApkFolder(), apkFile = /*appName + */appId + '-' + version + '.apk';
+                    let apkFilePath = path.join(apkPath, apkFile);
 
-                if(!fs.existsSync(apkFilePath)) {
-                    utils.downloadLarge(apkUrl, apkFilePath).then(file => {
-                        console.log('Apk[' + appName + ']下载成功，版本[' + version + ']，保存路径:' + file);
-                        resolve(file);
+                    if (!fs.existsSync(apkFilePath)) {
+                        utils.downloadLarge(apkUrl, apkFilePath).then(file => {
+                            console.log('Apk[' + appName + ']下载成功，版本[' + version + ']，保存路径:' + file);
+                            resolve(file);
+                            setStore(appId, appName, apkFile, version);
+                        }).catch(err => {
+                            reject(err);
+                        })
+                    } else {
+                        console.log('Apk已存在，查询版本与本地相同，均为[' + version + ']，无需更新：' + apkFilePath);
+                        resolve(apkFilePath);
                         setStore(appId, appName, apkFile, version);
-                    }).catch(err => {
-                        reject(err);
-                    })
-                }else{
-                    console.log('Apk已存在，查询版本与本地相同，均为[' + version + ']，无需更新：' + apkFilePath);
-                    resolve(apkFilePath);
-                    setStore(appId, appName, apkFile, version);
+                    }
                 }
             }
         })
