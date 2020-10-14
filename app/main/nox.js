@@ -204,9 +204,10 @@ exports.checkEmulatorStatus = async (index = 0) => {
     let mapper = async (command) => {
         return await utils.execaLines(noxAdb, command.split(' '));
     }
+
     let tryTime = 0, tryTimes = 60;
     while (tryTime++ <= tryTimes) {
-        let results = pFun.map(commands, mapper, {concurrency: commands.length, stopOnError: false});
+        let results = await pFun.map(commands, mapper, {concurrency: commands.length, stopOnError: false});
         console.log('第[' + tryTime + '/' + tryTimes + ']次：' + results);
 
         if (results[0] === '1' && results[1] === 'stopped') {

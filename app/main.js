@@ -179,7 +179,9 @@ function handleUrl(urlStr) {
 });*/
 
 exports.utils = require('./utils');
+
 exports.nox = require('./main/nox');
 exports.ini = require('./main/ini');
+
 exports.store = require('./configs/settings');
 exports.config = require('./configs/app.config');

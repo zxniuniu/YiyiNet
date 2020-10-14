@@ -6,7 +6,6 @@ import utils from "../utils";
 import store from "../configs/settings";
 import pFun from 'p-fun';
 import nox from './nox';
-import config from "../configs/app.config";
 
 export function downloadDriverFiles() {
     downloadChromedriver();
@@ -318,10 +317,7 @@ function downloadNoxPlayer() {
                         // 去除NoxPlayer启动的广告，以及取消更新提示等
                         nox.configNoxPlayerBeforeStart('6.6.1.2201').then(() => {
                             console.log('去除NoxPlayer广告成功，以及去除默认的更新[版本=6.6.1.2201]提示成功');
-
-                            if (config.execNoxPlayerWhenStart) {
-                                nox.startNoxPlayer();
-                            }
+                            startNoxByConfig();
                         });
                     } else {
                         console.log('解压NoxPlayer失败：' + out);
@@ -337,11 +333,15 @@ function downloadNoxPlayer() {
         });
     } else {
         store.set('INSTALL.NOX_PLAYER_STATUS', true);
+        startNoxByConfig();
+    }
+}
 
-        // console.log('config.startNoxPlayer: ' + config.startNoxPlayer);
-        if (config.execNoxPlayerWhenStart) {
-            nox.startNoxPlayer();
-        }
+function startNoxByConfig() {
+    // 当前是否在启动时打开Nox模拟器
+    let currentStartNox = true;
+    if (currentStartNox) {
+        nox.startNoxPlayer();
     }
 }
 
