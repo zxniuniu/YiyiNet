@@ -39,6 +39,12 @@ exports.removeNoxPlayerStartAds = () => {
  */
 exports.removeNoxPlayerUpdateNotice = (version = '6.6.1.2201') => {
     let utilConfig = path.join(utils.getNoxConfigPath(), 'util_conf.ini');
+    if (!fs.existsSync(utilConfig)) {
+        fs.writeFileSync(utilConfig, '', function (err) {
+            if (err) {console.log(err);}
+        });
+    }
+
     let noxConfig = ini.readSync(utilConfig);
     if (noxConfig.online_update.ignore_version !== version) {
         noxConfig.online_update.ignore_version = version;
@@ -46,7 +52,6 @@ exports.removeNoxPlayerUpdateNotice = (version = '6.6.1.2201') => {
     }
 
     /*let txtContent = '[online_update]\r\nignore_version=' + version + '\r\n';
-
     if (!fs.existsSync(noxConfig)) {
         fs.writeFileSync(noxConfig, txtContent, function (err) {
             if (err) {
