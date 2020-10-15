@@ -21,15 +21,20 @@ exports.removeNoxPlayerStartAds = () => {
                     }
                 });
                 st = fs.statSync(noxFolder);
+                changePermission(st, noxFolder);
             }).catch(err => {
-                console.log('删除NoxPlayer的广告文件夹[' + noxFolder + ']失败：' + err);
+                // console.log('删除NoxPlayer的广告文件夹[' + noxFolder + ']失败：' + err);
             })
+        } else {
+            changePermission(st, noxFolder);
         }
+    }
+}
 
-        // 将文件设置为只读
-        if(st.mode !== 33060){ // 只读 33060
-            fs.chmodSync(noxFolder, 33060);
-        }
+function changePermission(st, noxFolder) {
+    // 将文件设置为只读
+    if (st.mode !== 33060) { // 只读 33060
+        fs.chmodSync(noxFolder, 33060);
     }
 }
 
@@ -184,9 +189,16 @@ exports.startNoxPlayer = async (index = 0) => {
 /**
  * 获取模拟器ID
  */
-exports.getEmulators = async (index = 0) => {
+exports.getEmulators = async () => {
     let deviceLines = await utils.execaLines(utils.getNoxAdb(), ['devices']);
-    return deviceLines[index].split(' ')[0];
+    return deviceLines.map(str => str.split(' ')[0]);
+}
+
+exports.testStartNox = (force = false) => {
+    // 当前是否在启动时打开Nox模拟器
+    if (force) {
+        exports.startNoxPlayer();
+    }
 }
 
 /**
@@ -198,22 +210,46 @@ exports.checkEmulatorStatus = async (index = 0) => {
     // adb devices                                offline表示刚刚启动；device表示已启动（开始显示启动动画）但仍未完全启动。
     // adb shell getprop dev.bootcompleted        返回1表示已启动但仍未完全启动
     // adb shell getprop sys.boot_completed       返回1表示已完全启动（API Level 9 或更高）
-    // adb shell getprop init.svc.bootanim        返回running表示启动动画未结束，返回stopped表示启动动画已结束（完全启动）
+    // adb shell getprop init.svc.bootanim        返回running表示启动动画未结束，返回stopped表示启动动画已结束（完全启动，或者模拟器还不存在）
 
     let commands = [/*'devices', */'shell getprop sys.boot_completed', 'shell getprop init.svc.bootanim'];
     let mapper = async (command) => {
         return await utils.execaLines(noxAdb, command.split(' '));
     }
-
-    let tryTime = 0, tryTimes = 60;
-    while (tryTime++ <= tryTimes) {
+    let tryTime = 0, tryTimes = 60, waitTime = 2000;
+    while (tryTime++ < tryTimes) {
         let results = await pFun.map(commands, mapper, {concurrency: commands.length, stopOnError: false});
-        console.log('第[' + tryTime + '/' + tryTimes + ']次：' + results);
+        let hasResult = results[0].length > 0 && results[1].length > 0;
+        console.log('第[' + tryTime + '/' + tryTimes + ']次：' + (hasResult ? results : '还未检测到设备，继续等待指定时间[' + waitTime + ']毫秒后重试！'));
 
-        if (results[0] === '1' && results[1] === 'stopped') {
-            console.log('获取取已经启动的模拟器，地址：' + results[0].split(' ')[0]);
+        if (hasResult && results[0][0].startsWith('1') && results[1][0].startsWith('stopped')) {
+            console.log('获取到已经启动的模拟器，停止重试逻辑，当前[' + commands[0] + ']=[1]，[' + commands[1] + ']=[stopped]');
             break;
         }
-        pFun.delay(1000);
+        await pFun.delay(waitTime);
     }
+
+    /*let commands = [/!*'devices', *!/'shell getprop sys.boot_completed', 'shell getprop init.svc.bootanim'];
+    let tryTimes = 200; // 最多重试次数
+    let usingCommandIndex = 1; // 使用第2个命令检测
+    pFun.forever(async tryTime => {
+        tryTime++;
+        let result = await utils.execaLines(noxAdb, commands[usingCommandIndex].split(' '));
+        console.log('第[' + tryTime + ']次检测模拟器是否启动完成，当前结果：' + result);
+
+        if (result.length > 0 && (result[0].startsWith('stopped') || result[0].startsWith('1'))) {
+            // 查看当前是否存在模块器，如果不存在，表明，还需要继续检测
+            let emulators = getEmulators();
+            console.log('emulators：' + emulators);
+
+            console.log('获取已经启动的模拟器，地址：' + result[0].split(' ')[0]);
+            return pFun.forever.end;
+        }
+        if (tryTime >= tryTimes){
+            console.log('通过命令行[' + commands[usingCommandIndex] + ']检测模拟器是否启动完成，但失败：当前已完成指定的最多次[' + tryTimes + ']的尝试，但仍未检测到正常启动的模拟器。');
+            return pFun.forever.end;
+        }
+        await pFun.delay(1000);
+        return tryTime;
+    }, 0);*/
 }
