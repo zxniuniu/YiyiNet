@@ -1,5 +1,5 @@
 // Chrome添加命令行参数
-export function addCommandLine() {
+export function commandLine() {
     // console.log('addCommandLine:');
     // addPepFlashCommandLine(); // 是否设置Flash位置信息
     // app.commandLine.appendSwitch('--ignore-gpu-blacklist');

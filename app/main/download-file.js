@@ -187,7 +187,7 @@ function downloadV2rayCore() {
         let arch = process.arch.replace('x', '');
         let v2rayZip = 'v2ray-' + platform + '-' + arch + '.zip';
 
-        utils.downloadLatestRetry('v2ray', 'v2ray-core', v2rayZip).then(filePath => {
+        utils.downloadLatestRetry('v2fly', 'v2ray-core', v2rayZip).then(filePath => {
             utils.extractZip(filePath, path.dirname(v2rayExe)).then(() => {
                 store.set('TOOLS.V2RAY_CORE', true);
                 store.set('TOOLS.V2RAY_DATE', Date.now());

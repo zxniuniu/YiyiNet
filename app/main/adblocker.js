@@ -6,14 +6,18 @@ import store from './../configs/settings';
 import utils from "../utils";
 
 export function adblockerInstallFinishEvent(moduleStr, version) {
+    if(true){ // 暂时取消adblocker的加载
+        return;
+    }
+
     // 如果adblock安装完成，则增加广告过滤
     let adblockPath = utils.getAdblockPath(), enginePath;
 
     // 解决 raw.githubusercontent.com 无法访问的问题 https://learnku.com/articles/43426
-
+    let domain = 'raw.fastgit.org'; // raw.githubusercontent.com, raw.fastgit.org
     // 如果能够访问，则使用默认的
-    utils.isUrlValid('https://raw.githubusercontent.com/cliqz-oss/adblocker/master/packages/adblocker/assets/ublock-origin/privacy.txt').then(usingDefaultEngine => {
-        console.log('当前raw.githubusercontent.com [' + (usingDefaultEngine ? '能够' : '不能') + '] 访问，使用 [' + (usingDefaultEngine ? '默认的地址系统加载' : '官方生成的Byte类型') + '] 的拦截器。。。');
+    utils.isUrlValid('https://' + domain + '/cliqz-oss/adblocker/master/packages/adblocker/assets/ublock-origin/privacy.txt').then(usingDefaultEngine => {
+        console.log('当前' + domain + ' [' + (usingDefaultEngine ? '能够' : '不能') + '] 访问，使用 [' + (usingDefaultEngine ? '默认的地址系统加载' : '官方生成的Byte类型') + '] 的拦截器。。。');
 
         if (usingDefaultEngine) {
             enginePath = path.join(adblockPath, 'adblocker-default.bin');

@@ -11,7 +11,7 @@ import {openBrowserWindow, setSavedEnv} from './main/window-helpers';
 import {killAllServiceByYiyiNet} from './main/service';
 import {setAutoLaunch} from './main/auto-launch';
 import {setProtocol} from './main/protocal';
-import {addCommandLine} from './main/add-command-line';
+import {commandLine} from './main/command-line';
 import {initializeIpc} from './main/ipcevent';
 import store, {resetDefaultObject} from "./configs/settings";
 import log from 'electron-log';
@@ -38,7 +38,7 @@ Object.assign(console, log.functions);
 // 设置logs路径，默认为YiyiNet/YiyiNet/logs
 app.setAppLogsPath(path.join(app.getPath('userData'), 'Logs'));
 
-addCommandLine();
+commandLine();
 
 // 启动前重置部分参数
 resetDefaultObject();
