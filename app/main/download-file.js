@@ -176,6 +176,9 @@ function downloadYoutubeDl() {
     }
 }
 
+/**
+ * 下载V2ray
+ */
 function downloadV2rayCore() {
     // 下载v2ray代理工具
     let v2rayDate = store.get('TOOLS.V2RAY_DATE', 0);
@@ -282,6 +285,9 @@ function download7Zip() {
 
 }
 
+/**
+ * Nox
+ */
 function downloadNoxPlayer() {
     // let fileUrl = 'https://1drv.ms/u/s!AhWOz52LWPzx8RB6abXXw7jMLWqo?e=HpX7MB';
     // https://www.bignox.com/en/download/fullPackage 最新版本网址
@@ -337,6 +343,9 @@ function downloadNoxPlayer() {
     }
 }
 
+/**
+ * Android SDK
+ */
 function downloadAndroidSdk() {
     // 【Android Studio安装部署系列】四、Android SDK目录和作用分析 https://www.cnblogs.com/whycxb/p/8184967.html
     // https://www.androiddevtools.cn/ （全部工具均可下载）
@@ -388,6 +397,9 @@ function downloadAndroidSdk() {
     }
 }
 
+/**
+ * JDK下载
+ */
 function downloadJdk() {
     // https://docs.oracle.com/javase/8/docs/technotes/guides/install/config.html#table_config_file_options
     // https://docs.oracle.com/javase/8/docs/technotes/guides/install/windows_installer_options.html#CJAJGEHA
@@ -475,7 +487,6 @@ function overrideAndroidSdkAdbByNoxPlayer() {
     }
 }
 
-
 /**
  * nircmd下载
  */
@@ -504,6 +515,31 @@ function downloadNircmd() {
     }
 }
 
+/**
+ * 下载Aria2
+ */
+function downloadAria2() {
+    let aria2Date = store.get('TOOLS.ARIA2_DATE', 0);
+    let needDownload = utils.pastDays(aria2Date) > store.get('TOOLS_DOWNLOAD_INTERVAL_DAYS', 10);
+    let aria2Exe = utils.getAria2Exe();
+
+    if (!fs.existsSync(aria2Exe) || needDownload) {
+        let platform = process.platform === 'win32' ? 'win' : '';
+        let arch = process.arch.replace('x', '');
+        let aria2Zip = 'aria2-{version}-' + platform + '-' + arch + 'bit-build1.zip';
+
+        utils.downloadLatestRetry('aria2', 'aria2', aria2Zip).then(filePath => {
+            utils.extractZip(filePath, path.dirname(aria2Exe)).then(() => {
+                store.set('TOOLS.ARIA2', true);
+                store.set('TOOLS.ARIA2_DATE', Date.now());
+            });
+            console.log('工具[aria2]下载成功，路径：' + filePath);
+        });
+    } else {
+        store.set('TOOLS.ARIA2', true);
+    }
+}
+
 export function downloadAllTools() {
     downloadYoutubeDl();
 
@@ -519,12 +555,8 @@ export function downloadAllTools() {
 
     downloadAndroidSdk();
 
-    /* pFun.retry(downloadAndroidSdk, {
-        retries: 10, // 重试10次，默认是10次
-        onFailedAttempt: error => {
-            console.log(`下载AndroidSdk过程中失败，当前第 [${error.attemptNumber}] 次失败，剩余尝试次数 [${error.retriesLeft}]`);
-        }
-    });*/
-
     downloadNircmd();
+
+    downloadAria2();
+
 }

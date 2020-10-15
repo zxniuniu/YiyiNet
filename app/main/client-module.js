@@ -197,7 +197,6 @@ function moduleInstallDoneEvent(moduleStr, version) {
     return {'module': needInstall, 'type': type, 'succ': true, 'msg': '安装成功'};
 }*/
 
-
 /**
  * 获取NPM模块安装路径
  * @returns {string}
@@ -260,6 +259,53 @@ export const npmConfig = () => {
         'utp-native-binary-host-mirror': 'https://npm.taobao.org/mirrors/utp-native/v{version}',
         'zmq-prebuilt-binary-host-mirror': 'https://npm.taobao.org/mirrors/zmq-prebuilt/v{version}'
     }
+    /* 直接命令行运行，设置NPM参数，加快下载及编译
+    npm config set chromedriver-cdnurl https://npm.taobao.org/mirrors/chromedriver
+    npm config set chromedriver_cdnurl https://npm.taobao.org/mirrors/chromedriver
+    npm config set couchbase-binary-host-mirror https://npm.taobao.org/mirrors/couchbase/v{version}
+    npm config set debug-binary-host-mirror https://npm.taobao.org/mirrors/node-inspector
+    npm config set disturl https://npm.taobao.org/dist
+    npm config set electron-mirror https://npm.taobao.org/mirrors/electron/
+    npm config set electron_builder_binaries_mirror http://npm.taobao.org/mirrors/electron-builder-binaries/
+    npm config set electron_mirror https://npm.taobao.org/mirrors/electron/
+    npm config set flow-bin-binary-host-mirror https://npm.taobao.org/mirrors/flow/v
+    npm config set fse-binary-host-mirror https://npm.taobao.org/mirrors/fsevents
+    npm config set fuse-bindings-binary-host-mirror https://npm.taobao.org/mirrors/fuse-bindings/v{version}
+    npm config set git4win-mirror https://npm.taobao.org/mirrors/git-for-windows
+    npm config set gl-binary-host-mirror https://npm.taobao.org/mirrors/gl/v{version}
+    npm config set grpc-node-binary-host-mirror https://npm.taobao.org/mirrors
+    npm config set hackrf-binary-host-mirror https://npm.taobao.org/mirrors/hackrf/v{version}
+    npm config set leveldown-binary-host-mirror https://npm.taobao.org/mirrors/leveldown/v{version}
+    npm config set leveldown-hyper-binary-host-mirror https://npm.taobao.org/mirrors/leveldown-hyper/v{version}
+    npm config set mknod-binary-host-mirror https://npm.taobao.org/mirrors/mknod/v{version}
+    npm config set node-sqlite3-binary-host-mirror https://npm.taobao.org/mirrors
+    npm config set node-tk5-binary-host-mirror https://npm.taobao.org/mirrors/node-tk5/v{version}
+    npm config set node_inspector_cdnurl http://npm.taobao.org/mirrors/node-inspector/
+    npm config set node_sqlite3_binary_host_mirror http://npm.taobao.org/mirrors
+    npm config set nodegit-binary-host-mirror https://npm.taobao.org/mirrors/nodegit/v{version}/
+    npm config set npm_config_disturl https://npm.taobao.org/mirrors/atom-shell
+    npm config set npm_config_profiler_binary_host_mirror http://npm.taobao.org/mirrors/node-inspector/
+    npm config set operadriver-cdnurl https://npm.taobao.org/mirrors/operadriver
+    npm config set operadriver_cdnurl http://npm.taobao.org/mirrors/operadriver
+    npm config set phantomjs-cdnurl https://npm.taobao.org/mirrors/phantomjs
+    npm config set phantomjs_cdnurl http://npm.taobao.org/mirrors/phantomjs
+    npm config set profiler-binary-host-mirror https://npm.taobao.org/mirrors/node-inspector/
+    npm config set profiler_binary_host_mirror http://npm.taobao.org/mirrors/node-inspector/
+    npm config set puppeteer-download-host https://npm.taobao.org/mirrors
+    npm config set puppeteer_download_host https://npm.taobao.org/mirrors
+    npm config set python-mirror https://npm.taobao.org/mirrors/python
+    npm config set python_mirror http://npm.taobao.org/mirrors/python
+    npm config set rabin-binary-host-mirror https://npm.taobao.org/mirrors/rabin/v{version}
+    npm config set registry https://registry.npm.taobao.org/
+    npm config set sass-binary-site https://npm.taobao.org/mirrors/node-sass
+    npm config set sass_binary_site https://npm.taobao.org/mirrors/node-sass/
+    npm config set selenium_cdnurl https://npm.taobao.org/mirrors/selenium
+    npm config set sodium-prebuilt-binary-host-mirror https://npm.taobao.org/mirrors/sodium-prebuilt/v{version}
+    npm config set sqlite3-binary-site https://npm.taobao.org/mirrors/sqlite3
+    npm config set utf-8-validate-binary-host-mirror https://npm.taobao.org/mirrors/utf-8-validate/v{version}
+    npm config set utp-native-binary-host-mirror https://npm.taobao.org/mirrors/utp-native/v{version}
+    npm config set zmq-prebuilt-binary-host-mirror https://npm.taobao.org/mirrors/zmq-prebuilt/v{version}
+    */
 };
 
 /**
