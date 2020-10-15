@@ -317,7 +317,7 @@ function downloadNoxPlayer() {
                         // 去除NoxPlayer启动的广告，以及取消更新提示等
                         nox.configNoxPlayerBeforeStart('6.6.1.2201').then(() => {
                             console.log('去除NoxPlayer广告成功，以及去除默认的更新[版本=6.6.1.2201]提示成功');
-                            startNoxByConfig();
+                            nox.testStartNox();
                         });
                     } else {
                         console.log('解压NoxPlayer失败：' + out);
@@ -333,15 +333,7 @@ function downloadNoxPlayer() {
         });
     } else {
         store.set('INSTALL.NOX_PLAYER_STATUS', true);
-        startNoxByConfig();
-    }
-}
-
-function startNoxByConfig() {
-    // 当前是否在启动时打开Nox模拟器
-    let currentStartNox = true;
-    if (currentStartNox) {
-        nox.startNoxPlayer();
+        nox.testStartNox();
     }
 }
 

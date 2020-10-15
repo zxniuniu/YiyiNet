@@ -183,8 +183,8 @@ function decode(str) {
         delete out[del]
     })
 
-    console.log('out:' + out);
-    console.log(out.toString());
+    // console.log('out:' + out);
+    // console.log(out.toString());
     return new Proxy(out, stateHandler);
 }
 
