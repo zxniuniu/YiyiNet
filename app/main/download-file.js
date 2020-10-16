@@ -529,9 +529,13 @@ function downloadAria2() {
         let aria2Zip = 'aria2-{version}-' + platform + '-' + arch + 'bit-build1.zip';
 
         utils.downloadLatestRetry('aria2', 'aria2', aria2Zip).then(filePath => {
-            utils.extractZip(filePath, path.dirname(aria2Exe)).then(() => {
-                store.set('TOOLS.ARIA2', true);
-                store.set('TOOLS.ARIA2_DATE', Date.now());
+            let filename = path.basename(filePath, '.zip');
+            let toolsPath = utils.getToolsPath();
+            utils.extractZip(filePath, toolsPath).then(() => {
+                utils.moveFolder(path.join(toolsPath, filename), path.dirname(utils.getAria2Exe())).then(() => {
+                    store.set('TOOLS.ARIA2', true);
+                    store.set('TOOLS.ARIA2_DATE', Date.now());
+                });
             });
             console.log('工具[aria2]下载成功，路径：' + filePath);
         });

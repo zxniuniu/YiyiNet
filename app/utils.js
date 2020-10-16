@@ -882,6 +882,7 @@ exports.downloadLatestRetry = async (user, rep, fileName, savePath) => {
  * @returns {Promise<unknown>}
  * @param user
  * @param rep
+ * @param tag
  * @param fileName 文件名称
  * @param savePath 保存路径（不含文件名）
  * @param baseUrl_type 类型：github, cnpmjs, fastgit或简写
@@ -952,8 +953,10 @@ exports.downloadLatest = async (user, rep, fileName, savePath, type, queryVer) =
     return new Promise((resolve, reject) => {
         // https://hub.fastgit.org/zxniuniu/YiyiNet/releases/latest
         // let baseUrl = getGithubUrl(type);
-
-        fileName = fileName.replace('{ver}', queryVer.replace('v', ''));
+        if (fileName.indexOf('{version}') > 0) {
+            fileName = fileName.replace('{version}', '{ver}');
+        }
+        fileName = fileName.replace('{ver}', queryVer.replace('v', '').replace('release-', ''));
         let saveFile = path.join(savePath, fileName);
 
         // 判断当前文件是否已经下载
