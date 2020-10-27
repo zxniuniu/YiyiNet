@@ -519,7 +519,7 @@ function downloadNircmd() {
  * 下载Aria2
  */
 function downloadAria2() {
-    let aria2Date = store.get('TOOLS.ARIA2_DATE', 0);
+    let aria2Date = store.get('ARIA2.DATE', 0);
     let needDownload = utils.pastDays(aria2Date) > store.get('TOOLS_DOWNLOAD_INTERVAL_DAYS', 10);
     let aria2Exe = utils.getAria2Exe();
 
@@ -533,14 +533,14 @@ function downloadAria2() {
             let toolsPath = utils.getToolsPath();
             utils.extractZip(filePath, toolsPath).then(() => {
                 utils.moveFolder(path.join(toolsPath, filename), path.dirname(utils.getAria2Exe())).then(() => {
-                    store.set('TOOLS.ARIA2', true);
-                    store.set('TOOLS.ARIA2_DATE', Date.now());
+                    store.set('ARIA2.DOWNLOAD', true);
+                    store.set('ARIA2.DATE', Date.now());
                 });
             });
             console.log('工具[aria2]下载成功，路径：' + filePath);
         });
     } else {
-        store.set('TOOLS.ARIA2', true);
+        store.set('ARIA2.DOWNLOAD', true);
     }
 }
 

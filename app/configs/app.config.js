@@ -32,6 +32,12 @@ const config = {
             PORT: 4723, // APPIUM端口
             PID: 0 // APPIUM的PID，用于结束进程
         },
+        ARIA2: {
+            DOWNLOAD: false, // aria2是否下载
+            STATUS: false, // ARIA2是否启动
+            PORT: 6800, // ARIA2端口
+            PID: 0 // ARIA2的PID，用于结束进程
+        },
         TOOLS: {
             YOUTUBE_DL: false, // 是否下载
             YOUTUBE_DL_DATE: 0, // YoutubeDl最新下载日期
