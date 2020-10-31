@@ -535,6 +535,9 @@ function downloadAria2() {
                 utils.moveFolder(path.join(toolsPath, filename), path.dirname(utils.getAria2Exe())).then(() => {
                     store.set('ARIA2.DOWNLOAD', true);
                     store.set('ARIA2.DATE', Date.now());
+
+                    let conf = 'aria2.conf';
+                    utils.copyFile(path.join(__dirname, './../assets/conf/', conf), path.join(path.dirname(utils.getAria2Exe()), conf));
                 });
             });
             console.log('工具[aria2]下载成功，路径：' + filePath);

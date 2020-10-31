@@ -318,6 +318,16 @@ exports.getNircmdExe = () => {
 
 // =====================================================================================================================
 /*
+ * 复制文件
+ * @param src {String} 要复制的文件
+ * @param dist {String} 复制到目标文件
+ */
+exports.copyFile = (src, dist) => {
+    console.log('复制文件：' + src + ' -> ' + dist);
+    fse.copySync(src, dist);
+}
+
+/*
  * 复制目录、子目录，及其中的文件
  * @param src {String} 要复制的目录
  * @param dist {String} 复制到目标目录
