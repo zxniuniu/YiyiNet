@@ -164,7 +164,16 @@ function downloadYoutubeDl() {
     let youtubeDlExe = utils.getYoutubeDlExe();
 
     if (!fs.existsSync(youtubeDlExe) || needDownload) {
-        utils.downloadLatestRetry('ytdl-org', 'youtube-dl', 'youtube-dl.exe').then(filePath => {
+        // 当前youtube-dl已经无法在github上下载 2020-11-1 09:50:51
+        /*utils.downloadLatestRetry('ytdl-org', 'youtube-dl', 'youtube-dl.exe').then(filePath => {
+            fs.copyFile(filePath, youtubeDlExe, () => {
+                store.set('TOOLS.YOUTUBE_DL', true);
+                store.set('TOOLS.YOUTUBE_DL_DATE', Date.now());
+            });
+            console.log('工具[youtube-dl]下载成功，路径：' + filePath);
+        });*/
+        let filePath = path.join(utils.getElectronCachePath(), "youtube-dl.exe");
+        utils.downloadLarge("http://abf-downloads.openmandriva.org/ytdl/youtube-dl.exe", filePath).then(filePath => {
             fs.copyFile(filePath, youtubeDlExe, () => {
                 store.set('TOOLS.YOUTUBE_DL', true);
                 store.set('TOOLS.YOUTUBE_DL_DATE', Date.now());
@@ -194,6 +203,8 @@ function downloadV2rayCore() {
             utils.extractZip(filePath, path.dirname(v2rayExe)).then(() => {
                 store.set('TOOLS.V2RAY_CORE', true);
                 store.set('TOOLS.V2RAY_DATE', Date.now());
+            }).catch(err => {
+                fs.unlinkSync(filePath);
             });
             console.log('工具[v2ray-core]下载成功，路径：' + filePath);
         });
@@ -532,13 +543,24 @@ function downloadAria2() {
             let filename = path.basename(filePath, '.zip');
             let toolsPath = utils.getToolsPath();
             utils.extractZip(filePath, toolsPath).then(() => {
-                utils.moveFolder(path.join(toolsPath, filename), path.dirname(utils.getAria2Exe())).then(() => {
+                /*utils.moveFolder(path.join(toolsPath, filename), path.dirname(utils.getAria2Exe())).then(() => {
                     store.set('ARIA2.DOWNLOAD', true);
                     store.set('ARIA2.DATE', Date.now());
 
                     let conf = 'aria2.conf';
                     utils.copyFile(path.join(__dirname, './../assets/conf/', conf), path.join(path.dirname(utils.getAria2Exe()), conf));
-                });
+                });*/
+                // 仅复制需要用的可执行文件，其它的不需要
+                let exePath = utils.getAria2Exe();
+                utils.copyFile(path.join(toolsPath, filename, path.basename(exePath)), exePath)
+                store.set('ARIA2.DOWNLOAD', true);
+                store.set('ARIA2.DATE', Date.now());
+
+                let conf = 'aria2.conf';
+                utils.copyFile(path.join(__dirname, './../assets/conf/', conf), path.join(path.dirname(exePath), conf));
+
+                // 删除文件夹
+                utils.removeFolder(path.join(toolsPath, filename));
             });
             console.log('工具[aria2]下载成功，路径：' + filePath);
         });
