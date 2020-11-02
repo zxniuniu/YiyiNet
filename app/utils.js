@@ -124,6 +124,13 @@ exports.getAria2Exe = () => {
     let aria2Folder = exports.checkPath(path.join(exports.getToolsPath(), 'aria2'));
     return path.join(aria2Folder, 'aria2c.exe');
 };
+/**
+ * 获取Aria2配置文件路径
+ */
+exports.getAria2Conf = () => {
+    let aria2Folder = exports.checkPath(path.join(exports.getToolsPath(), 'aria2'));
+    return path.join(aria2Folder, 'aria2.conf');
+};
 
 /**
  * 获取chromedriver文件名（平台兼容）

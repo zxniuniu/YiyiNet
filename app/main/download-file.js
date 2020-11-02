@@ -556,9 +556,7 @@ function downloadAria2() {
                 store.set('ARIA2.DOWNLOAD', true);
                 store.set('ARIA2.DATE', Date.now());
 
-                let conf = 'aria2.conf';
-                utils.copyFile(path.join(__dirname, './../assets/conf/', conf), path.join(path.dirname(exePath), conf));
-
+                utils.copyFile(path.join(__dirname, './../assets/conf/', 'aria2.conf'), utils.getAria2Conf());
                 // 删除文件夹
                 utils.removeFolder(path.join(toolsPath, filename));
             });
