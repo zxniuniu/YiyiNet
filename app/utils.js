@@ -322,6 +322,20 @@ exports.getNircmdExe = () => {
     return path.join(exports.getToolsPath(), 'nircmdc.exe');
 };
 
+// =====================================================================================================================
+/**
+ * 获取Chrome Profile路径
+ */
+exports.getChromeProfilePath = () => {
+    return exports.checkPath(path.join(exports.getUserData(), '/Profile/Chrome'));
+};
+
+/**
+ * 获取Firefox Profile路径
+ */
+exports.getFirefoxProfilePath = () => {
+    return exports.checkPath(path.join(exports.getUserData(), '/Profile/Firefox'));
+};
 
 // =====================================================================================================================
 /*
