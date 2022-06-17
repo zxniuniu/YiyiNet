@@ -85,7 +85,7 @@
     "cross-env": "^7.0.2",
     "crypto-js": "^4.0.0",
     "download": "^8.0.0",
-    "electron": "^10.1.0",
+    "electron": "^15.5.5",
     "electron-builder": "^22.7.0",
     "execa": "^4.0.3",
     "filenamify-url": "^2.1.1",
