@@ -54,7 +54,7 @@
   "homepage": "https://fuyiyi.imdo.co",
   "dependencies": {
     "@trodi/electron-splashscreen": "^1.0.0",
-    "async": "^3.2.0",
+    "async": "^3.2.2",
     "async-lock": "^1.2.4",
     "electron-better-ipc": "^1.1.1",
     "electron-context-menu": "^2.2.0",
